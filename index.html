@@ -89,41 +89,41 @@ utterance.volume = 1;                        // 音量
             // ... [Keep all your data definitions: animals, quotes, etc.]
 
             const quotes = {
-                'A': {
+                'a': {
                     text: '买了这么多设备一定读了不少书吧？',
                     // jpText: 'たくさんの端末を買ったんだから、きっとたくさん本を読んでいますよね？',
                   //  krText: '이렇게 많은 기기를 샀으니 책도 많이 읽었겠죠?',
                   //  enText: 'You must have read lots of books with all these devices, right?',
                   //  ruText: 'Наверное, вы прочитали много книг на всех этих устройствах?',
-                    pitch: 1.7,
-                    rate: 0.85
+                    pitch: 1,
+                    rate: 1
                 },
-                'P': {
+                'p': {
                     text: '屯了这么多电纸书，感觉好有面子！',
                     // jpText: 'こんなにたくさんの電子書籍端末を集めて、とても面目躍如ですね！',
                     // krText: '이렇게 많은 전자책을 모았으니 정말 체면이 섰네요!',
                     // enText: 'Hoarding so many e-readers makes me feel so prestigious!',
                     // ruText: 'Накопление стольких электронных книг придаёт мне престиж!',
-                    pitch: 1.4,
-                    rate: 1.2
+                    pitch: 1,
+                    rate: 1
                 },
-                'O': {
+                'o': {
                     text: '又有新设备发布了，我的钱包在颤抖...',
                     // jpText: 'また新しい端末が発売されて、私の財布が震えています...',
                     // krText: '또 새로운 기기가 출시됐네요, 제 지갑이 떨고 있어요...',
                     // enText: 'Another new device released, my wallet is trembling...',
                     // ruText: 'Вышло новое устройство, мой кошелёк дрожит...',
-                    pitch: 0.7,
-                    rate: 0.7
+                    pitch: 1,
+                    rate: 1
                 },
-                'V': {
+                'v': {
                     text: '我不是在买设备，我是在买知识！',
                     // jpText: '端末を買っているんじゃない、知識を買っているんです！',
                     // krText: '난 기기를 사는 게 아니라 지식을 사는 거예요!',
                     // enText: "I'm not buying devices, I'm buying knowledge!",
                     // ruText: 'Я покупаю не устройства, а знания!',
-                    pitch: 1.6,
-                    rate: 1.3
+                    pitch: 1,
+                    rate: 1
                 }
             };
 
@@ -211,21 +211,10 @@ utterance.volume = 1;                        // 音量
                                         className="text-8xl font-bold text-orange-500 hover:text-orange-600 cursor-pointer transition-all duration-300 hover:scale-110 transform"
                                     >
                                         {letter}
-                                        {clickCount > 0 && (
-                                            <span className="absolute -top-2 -right-2 text-xs text-orange-400">
-                                                {10 - clickCount}
-                                            </span>
-                                        )}
+                
                                     </div>
-                                    <div className="text-xs tracking-widest text-orange-400 opacity-60 text-center mt-2">
-                                        {letterMeanings[letter].word}
-                                    </div>
-                                    {hoveredLetter === letter && (
-                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-10 mt-4 w-48 border-2 border-orange-500">
-                                            <div className="text-orange-600 font-medium">{letterMeanings[letter].fun}</div>
-                                            <div className="text-orange-800 mt-1 text-sm">{letterMeanings[letter].zh}</div>
-                                        </div>
-                                    )}
+                     
+            
                                 </div>
                             ))}
                         </div>
