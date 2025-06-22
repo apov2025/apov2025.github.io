@@ -192,6 +192,25 @@
             background-color: #555;
         }
 
+        .btn-github {
+            background-color: #24292e;
+            color: #fff;
+            margin-right: 8px;
+        }
+
+        .btn-github:hover {
+            background-color: #444;
+        }
+
+        .btn-fdroid {
+            background-color: #1976d2;
+            color: #fff;
+        }
+
+        .btn-fdroid:hover {
+            background-color: #1565c0;
+        }
+
         @media (max-width: 600px) {
             .header h1 {
                 font-size: 36px;
@@ -249,7 +268,8 @@
                 <div class="app-name">EinkBro</div>
                 <div class="app-description">专为电子墨水屏优化的网页浏览器</div>
                 <div class="app-buttons">
-                    <a href="#" class="btn btn-download" onclick="downloadApp('einkbro')">下载</a>
+                    <a href="https://github.com/plateaukao/einkbro" class="btn btn-github" target="_blank">GitHub</a>
+                    <a href="https://f-droid.org/en/packages/info.plateaukao.einkbro/" class="btn btn-fdroid" target="_blank">F-Droid</a>
                 </div>
             </div>
         </div>
@@ -263,75 +283,17 @@
                 <div class="app-name">KOReader</div>
                 <div class="app-description">强大的电子书阅读器，支持多种格式</div>
                 <div class="app-buttons">
-                    <a href="#" class="btn btn-download" onclick="downloadApp('koreader')">下载</a>
+                    <a href="https://koreader.rocks/" class="btn btn-download" target="_blank">KOReader 主页</a>
                 </div>
             </div>
         </div>
-
-        <div class="app-item">
-            <div class="app-icon">
-                <img src="assets/images/app-icons/icon-kindle.png" alt="Kindle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <span style="display: none;">📚</span>
-            </div>
-            <div class="app-content">
-                <div class="app-name">Kindle</div>
-                <div class="app-description">亚马逊官方电子书阅读应用</div>
-                <div class="app-buttons">
-                    <a href="#" class="btn btn-download" onclick="downloadApp('kindle')">下载</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="app-item">
-            <div class="app-icon">
-                <img src="assets/images/app-icons/icon-libby.jpg" alt="Libby" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <span style="display: none;">📱</span>
-            </div>
-            <div class="app-content">
-                <div class="app-name">Libby</div>
-                <div class="app-description">图书馆电子书借阅应用</div>
-                <div class="app-buttons">
-                    <a href="#" class="btn btn-download" onclick="downloadApp('libby')">下载</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="app-item">
-            <div class="app-icon">
-                <img src="assets/images/app-icons/icon-wechat-read.png" alt="微信读书" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <span style="display: none;">📖</span>
-            </div>
-            <div class="app-content">
-                <div class="app-name">微信读书</div>
-                <div class="app-description">腾讯官方电子书阅读应用</div>
-                <div class="app-buttons">
-                    <a href="#" class="btn btn-download" onclick="downloadApp('wechat-reading')">下载</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="app-item">
-            <div class="app-icon">
-                <img src="assets/images/app-icons/icon-eudic.png" alt="欧路词典" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <span style="display: none;">📖</span>
-            </div>
-            <div class="app-content">
-                <div class="app-name">欧路词典</div>
-                <div class="app-description">专业的英语学习词典应用</div>
-                <div class="app-buttons">
-                    <a href="#" class="btn btn-download" onclick="downloadApp('eudic')">下载</a>
-                </div>
-            </div>
-        </div>
-    </div>
+       
 
     <script src="js/qr-footer.js"></script>
     <script>
         function downloadApp(appName) {
             // 这里可以添加下载链接
             const downloadUrls = {
-                'einkbro': '#',
-                'koreader': '#',
                 'kindle': '#',
                 'libby': '#',
                 'wechat-reading': '#',
