@@ -215,7 +215,7 @@
 </head>
 <body>
     <div class="header">
-        <img src="assets/images/logos/logo-apov.JPG" alt="apov" style="max-width: 200px; height: auto; margin-bottom: 10px;">
+        <img src="assets/images/qrcode/qrcode-apov_wechat-account.JPG" alt="apov wechat" style="max-width: 300px; height: auto; margin-bottom: 20px; border-radius: 8px;">
         <div class="tabs">
             <a href="index.html" class="tab">apov 公众号/读者群</a>
             <a href="devices.html" class="tab active">墨水屏选购指南</a>
@@ -230,41 +230,5 @@
     
     </div>
 
-    
-
-    <script src="js/qr-footer.js"></script>
-    <script>
-        function openDevice(deviceName) {
-            // 设备详情页面的导航逻辑
-            const devicePages = {
-                'p6': 'devices/onyx-p6.html',
-                'nomad': 'devices/supernote-nomad.html',
-                'obook-5': 'devices/guowen-obook5.html',
-                'quote-0': 'devices/quote-0.html'
-            };
-            
-            if (devicePages[deviceName]) {
-                window.location.href = devicePages[deviceName];
-            } else {
-                console.log(`打开设备: ${deviceName}`);
-            }
-
-        }
-
-        // 简单搜索功能
-        document.querySelector('.search-input').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const deviceItems = document.querySelectorAll('.device-item');
-            
-            deviceItems.forEach(item => {
-                const description = item.querySelector('.device-description').textContent.toLowerCase();
-                if (description.includes(searchTerm)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-    </script>
 </body>
 </html> 
