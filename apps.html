@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>墨水屏 app - apov</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            color: #222;
+            line-height: 1.6;
+            padding: 40px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            color: #111;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 18px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 40px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background-color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab:hover {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .tab.active {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .tab:not(:last-child) {
+            border-right: 1px solid #ddd;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .app-item {
+            background-color: #fff;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: border-color 0.2s ease;
+            justify-content: center;
+        }
+
+        .app-item:hover {
+            border-color: #666;
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background-color: #fff;
+            border: none;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            position: relative;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .app-icon span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .app-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .app-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #111;
+            margin-bottom: 8px;
+        }
+
+        .app-description {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .app-buttons {
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn-download {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .btn-download:hover {
+            background-color: #555;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 36px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                max-width: 300px;
+            }
+
+            .tab {
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .tab:last-child {
+                border-bottom: none;
+            }
+
+            .app-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .app-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .app-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="header">
+        <img src="assets/images/logos/logo-apov.JPG" alt="apov" style="max-width: 200px; height: auto; margin-bottom: 10px;">
+        <div class="tabs">
+            <a href="index.html" class="tab">apov 公众号/读者群</a>
+            <a href="devices.html" class="tab">墨水屏选购指南</a>
+            <a href="apps.html" class="tab active">墨水屏 app</a>
+        </div>
+    </div>
+
+    <div class="app-grid">
+        <div class="app-item">
+            <div class="app-icon">
+                <img src="assets/images/app-icons/icon-einkbro.png" alt="EinkBro" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display: none;">🌐</span>
+            </div>
+            <div class="app-content">
+                <div class="app-name">EinkBro</div>
+                <div class="app-description">专为电子墨水屏优化的网页浏览器</div>
+                <div class="app-buttons">
+                    <a href="#" class="btn btn-download" onclick="downloadApp('einkbro')">下载</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-item">
+            <div class="app-icon">
+                <img src="assets/images/app-icons/icon-koreader.png" alt="KOReader" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display: none;">📖</span>
+            </div>
+            <div class="app-content">
+                <div class="app-name">KOReader</div>
+                <div class="app-description">强大的电子书阅读器，支持多种格式</div>
+                <div class="app-buttons">
+                    <a href="#" class="btn btn-download" onclick="downloadApp('koreader')">下载</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-item">
+            <div class="app-icon">
+                <img src="assets/images/app-icons/icon-kindle.png" alt="Kindle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display: none;">📚</span>
+            </div>
+            <div class="app-content">
+                <div class="app-name">Kindle</div>
+                <div class="app-description">亚马逊官方电子书阅读应用</div>
+                <div class="app-buttons">
+                    <a href="#" class="btn btn-download" onclick="downloadApp('kindle')">下载</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-item">
+            <div class="app-icon">
+                <img src="assets/images/app-icons/icon-libby.jpg" alt="Libby" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display: none;">📱</span>
+            </div>
+            <div class="app-content">
+                <div class="app-name">Libby</div>
+                <div class="app-description">图书馆电子书借阅应用</div>
+                <div class="app-buttons">
+                    <a href="#" class="btn btn-download" onclick="downloadApp('libby')">下载</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-item">
+            <div class="app-icon">
+                <img src="assets/images/app-icons/icon-wechat-read.png" alt="微信读书" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display: none;">📖</span>
+            </div>
+            <div class="app-content">
+                <div class="app-name">微信读书</div>
+                <div class="app-description">腾讯官方电子书阅读应用</div>
+                <div class="app-buttons">
+                    <a href="#" class="btn btn-download" onclick="downloadApp('wechat-reading')">下载</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-item">
+            <div class="app-icon">
+                <img src="assets/images/app-icons/icon-eudic.png" alt="欧路词典" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display: none;">📖</span>
+            </div>
+            <div class="app-content">
+                <div class="app-name">欧路词典</div>
+                <div class="app-description">专业的英语学习词典应用</div>
+                <div class="app-buttons">
+                    <a href="#" class="btn btn-download" onclick="downloadApp('eudic')">下载</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/qr-footer.js"></script>
+    <script>
+        function downloadApp(appName) {
+            // 这里可以添加下载链接
+            const downloadUrls = {
+                'einkbro': '#',
+                'koreader': '#',
+                'kindle': '#',
+                'libby': '#',
+                'wechat-reading': '#',
+                'eudic': '#'
+            };
+            
+            const url = downloadUrls[appName];
+            if (url && url !== '#') {
+                window.open(url, '_blank');
+            } else {
+                alert('下载链接即将添加，敬请期待！');
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,28 @@
+/* 统一页面样式 */
+body {
+    background-color: #f5f5f5; /* 浅灰色背景，与logo背景协调 */
+}
+
+/* 二维码样式 */
+.qr-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #eee;
+    text-align: center;
+}
+
+.qr-section img {
+    width: 250px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+    .qr-section img {
+        width: 220px;
+        height: 220px;
+    }
+} 

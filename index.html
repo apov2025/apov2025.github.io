@@ -4,243 +4,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>apov: a point of view</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <style>
-        @keyframes nyan-slide {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100vw); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .animate-nyan {
-            animation: nyan-slide 4s linear forwards;
-            top: 30%;
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            color: #222;
+            line-height: 1.6;
+            padding: 40px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            color: #111;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 18px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 40px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background-color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab:hover {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .tab.active {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .tab:not(:last-child) {
+            border-right: 1px solid #ddd;
+        }
+
+        .about-section {
+            background-color: #fff;
+            padding: 40px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .about-section h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #111;
+        }
+
+        .about-section p {
+            font-size: 18px;
+            color: #444;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .about-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .follow-btn {
+            display: inline-block;
+            background-color: #333;
+            color: #fff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .follow-btn:hover {
+            background-color: #555;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 36px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                max-width: 300px;
+            }
+
+            .tab {
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .tab:last-child {
+                border-bottom: none;
+            }
+
+            .about-section {
+                padding: 30px 20px;
+            }
         }
     </style>
+    <link rel="stylesheet" href="css/common.css">
 </head>
-<body class="bg-orange-50">
-    <div id="root"></div>
+<body>
+    <div class="header">
+        <img src="assets/images/logos/logo-apov.JPG" alt="apov" style="max-width: 200px; height: auto; margin-bottom: 10px;">
+        <div class="tabs">
+            <a href="index.html" class="tab active">apov 公众号/读者群</a>
+            <a href="devices.html" class="tab">墨水屏选购指南</a>
+            <a href="apps.html" class="tab">墨水屏 app</a>
+        </div>
+    </div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+    <div class="about-section">
+        <p>
+            apov 是一个泛数码爱好者账号，但侧重关注电子纸，电子阅读，数字极简，数字生活健康等方面的内容。欢迎联系管理员（微信：weilaifuture65）加入 apov 读者群。
+        </p>
+    </div>
 
-        function App() {
-            const [clickCount, setClickCount] = useState(0);
-            const [showAnimal, setShowAnimal] = useState(false);
-            const [currentQuote, setCurrentQuote] = useState('');
-            const [currentAnimal, setCurrentAnimal] = useState(null);
-            const [hoveredLetter, setHoveredLetter] = useState(null);
-            const [activeQuote, setActiveQuote] = useState(null);
-
-            const speakText = useCallback(async (text, options = {}) => {
-                if (!window.speechSynthesis) return;
-                
-                try {
-                    // Cancel any ongoing speech
-                    window.speechSynthesis.cancel();
-
-                    // Create new utterance
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    
-                    // 获取可用的语音列表
-let voices = window.speechSynthesis.getVoices();
-if (voices.length === 0) {
-    // 如果语音列表还没加载出来，监听 onvoiceschanged 事件
-    await new Promise(resolve => {
-        window.speechSynthesis.onvoiceschanged = () => {
-            voices = window.speechSynthesis.getVoices();
-            resolve();
-        };
-    });
-}
-
-// 找到中文语音
-const chineseVoice = 
-    voices.find(voice => voice.lang === 'zh-CN') ||
-    voices.find(voice => voice.lang.startsWith('zh')) ||
-    voices[0];
-
-// 设置朗读属性
-utterance.voice = chineseVoice;              // 使用中文语音
-utterance.pitch = options.pitch || 1;        // 音高
-utterance.rate = options.rate || 1;          // 语速
-utterance.lang = 'zh-CN';                    // 设置语言为中文
-utterance.volume = 1;                        // 音量
-
-
-                    // Speak
-                    window.speechSynthesis.speak(utterance);
-                } catch (error) {
-                    console.error('Speech synthesis error:', error);
-                }
-            }, []);
-
-            const handleQuoteClick = useCallback((letter) => {
-                setActiveQuote(letter);
-                const quoteData = quotes[letter];
-                speakText(quoteData.text, {
-                    pitch: quoteData.pitch,
-                    rate: quoteData.rate
-                });
-                setTimeout(() => setActiveQuote(null), 500);
-            }, [speakText]);
-
-            // ... [Keep all your data definitions: animals, quotes, etc.]
-
-            const quotes = {
-                'a': {
-                    text: '买了这么多设备一定读了不少书吧？',
-                    // jpText: 'たくさんの端末を買ったんだから、きっとたくさん本を読んでいますよね？',
-                  //  krText: '이렇게 많은 기기를 샀으니 책도 많이 읽었겠죠?',
-                  //  enText: 'You must have read lots of books with all these devices, right?',
-                  //  ruText: 'Наверное, вы прочитали много книг на всех этих устройствах?',
-                    pitch: 1,
-                    rate: 1
-                },
-                'p': {
-                    text: '屯了这么多电纸书，感觉好有面子！',
-                    // jpText: 'こんなにたくさんの電子書籍端末を集めて、とても面目躍如ですね！',
-                    // krText: '이렇게 많은 전자책을 모았으니 정말 체면이 섰네요!',
-                    // enText: 'Hoarding so many e-readers makes me feel so prestigious!',
-                    // ruText: 'Накопление стольких электронных книг придаёт мне престиж!',
-                    pitch: 1,
-                    rate: 1
-                },
-                'o': {
-                    text: '又有新设备发布了，我的钱包在颤抖...',
-                    // jpText: 'また新しい端末が発売されて、私の財布が震えています...',
-                    // krText: '또 새로운 기기가 출시됐네요, 제 지갑이 떨고 있어요...',
-                    // enText: 'Another new device released, my wallet is trembling...',
-                    // ruText: 'Вышло новое устройство, мой кошелёк дрожит...',
-                    pitch: 1,
-                    rate: 1
-                },
-                'v': {
-                    text: '我不是在买设备，我是在买知识！',
-                    // jpText: '端末を買っているんじゃない、知識を買っているんです！',
-                    // krText: '난 기기를 사는 게 아니라 지식을 사는 거예요!',
-                    // enText: "I'm not buying devices, I'm buying knowledge!",
-                    // ruText: 'Я покупаю не устройства, а знания!',
-                    pitch: 1,
-                    rate: 1
-                }
-            };
-
-            const animals = [
-                { emoji: "😺", style: "bg-orange-500" },
-                { emoji: "🦊", style: "bg-orange-400" },
-                { emoji: "🦉", style: "bg-amber-700" },
-                { emoji: "🐹", style: "bg-yellow-600" },
-                { emoji: "🐸", style: "bg-green-500" },
-                { emoji: "🦄", style: "bg-purple-500" },
-                { emoji: "🐼", style: "bg-gray-600" },
-                { emoji: "🦁", style: "bg-orange-600" }
-            ];
-
-            const funnyQuotes = [
-                "买就完事了，反正钱包要炸也比脑子空好！",
-                "多买几台，万一穿越了呢？",
-                "没有最多，只有更多，继续买！",
-                "读书？不存在的，收藏就是快乐！",
-                "硬件攒够了，总有一天会看书的！",
-                "我不是在买设备，我是在买梦想！",
-                "大家都懂的，买到就是赚到~",
-                "囤货使我快乐，快乐使我囤货！"
-            ];
-
-            const letterMeanings = {
-                'A': { word: 'A', fun: 'Addicted to Purchasing Our Valuables', zh: '入坑就要买全套' },
-                'P': { word: 'Point', fun: 'Purchase Orders Victory', zh: '败家之眼' },
-                'O': { word: 'Of', fun: 'Obsessed with Varieties', zh: '收集就是快乐' },
-                'V': { word: 'View', fun: 'Virtually Empty Wallet', zh: '我的钱包啊' }
-            };
-
-            const handleLetterClick = useCallback((letter) => {
-                handleQuoteClick(letter);
-                setClickCount(prev => {
-                    const newCount = prev + 1;
-                    if (newCount === 10) {
-                        const randAnimal = animals[Math.floor(Math.random() * animals.length)];
-                        const randQuote = funnyQuotes[Math.floor(Math.random() * funnyQuotes.length)];
-                        setCurrentAnimal(randAnimal);
-                        setCurrentQuote(randQuote);
-                        setShowAnimal(true);
-                        setTimeout(() => {
-                            setShowAnimal(false);
-                            setClickCount(0);
-                        }, 5000);
-                        return 0;
-                    }
-                    return newCount;
-                });
-            }, [handleQuoteClick]);
-
-            // ... [Keep your JSX return content the same]
-            return (
-                <div className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden">
-                    <div className="w-full h-4 bg-orange-500 fixed top-0"></div>
-
-                    {showAnimal && (
-                        <div className="fixed inset-0 pointer-events-none z-50">
-                            <div className="absolute left-0 animate-nyan">
-                                <div className="flex items-center">
-                                    <div className={`${currentAnimal.style} p-4 rounded-full flex items-center justify-center`}>
-                                        <span className="text-4xl">{currentAnimal.emoji}</span>
-                                    </div>
-                                    <div className="w-64 h-16 ml-2 bg-white rounded-lg border-2 border-orange-500 flex items-center justify-center">
-                                        <p className="text-orange-800 font-medium px-4 text-sm">{currentQuote}</p>
-                                    </div>
-                                    <div className="w-32 h-4 bg-gradient-to-r from-orange-500 via-orange-300 to-transparent"></div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="max-w-5xl w-full mt-16">
-                        <div className="flex justify-around mb-16">
-                            {Object.keys(quotes).map((letter) => (
-                                <div 
-                                    key={letter}
-                                    className="group relative"
-                                    onMouseEnter={() => setHoveredLetter(letter)}
-                                    onMouseLeave={() => setHoveredLetter(null)}
-                                >
-                                    <div 
-                                        onClick={() => handleLetterClick(letter)}
-                                        className="text-8xl font-bold text-orange-500 hover:text-orange-600 cursor-pointer transition-all duration-300 hover:scale-110 transform"
-                                    >
-                                        {letter}
-                
-                                    </div>
-                     
+    <script src="js/qr-footer.js"></script>
+    <script>
+        // 简单的tab激活状态管理
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
             
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="text-center mb-16">
-                            <div className="font-medium text-orange-800 mb-3 text-xl">
-                                欢迎来到 apov 禅意花园
-                                </div>
-                            <div className="text-xs italic text-orange-600">
-                                微信公众号：apov
-                            </div>
-
-                            <div className="text-xs italic text-orange-600">
-                                管理员微信：weilaifuture65
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div className="w-full h-4 bg-orange-500 fixed bottom-0"></div>
-                </div>
-            );
-        }
-
-        ReactDOM.render(<App />, document.getElementById('root'));
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    // 移除所有active类
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // 添加active类到当前tab
+                    this.classList.add('active');
+                });
+            });
+        });
     </script>
 </body>
 </html>
