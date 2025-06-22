@@ -193,12 +193,19 @@
             
             .tabs {
                 flex-direction: column;
-                max-width: 300px;
+                max-width: 100%;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
 
             .tab {
                 border-right: none;
                 border-bottom: 1px solid #ddd;
+                padding: 18px 20px;
+                font-size: 16px;
+                font-weight: 600;
+                min-height: 56px;
+                touch-action: manipulation;
             }
 
             .tab:last-child {
@@ -212,6 +219,17 @@
             
             .search-input {
                 width: 250px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 32px;
+            }
+            .tab {
+                padding: 16px 15px;
+                font-size: 15px;
+                min-height: 52px;
             }
         }
     </style>
