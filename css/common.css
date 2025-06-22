@@ -1,10 +1,134 @@
-/* 统一页面样式 */
+/* E-ink 优化字体样式 */
 body {
     background-color: #ffffff; /* 纯白背景 */
-    font-family: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'Helvetica Neue', Arial, sans-serif;
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 500; /* 增加字重以提高 e-ink 可读性 */
+    font-size: 16px;
+    line-height: 1.7; /* 提高行高以改善可读性 */
+    color: #000; /* 纯黑文字提高对比度 */
+    -webkit-font-smoothing: subpixel-antialiased; /* E-ink 设备更适合 */
+    -moz-osx-font-smoothing: auto;
+}
+
+/* 标题字体优化 */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 600;
+    color: #000;
+    line-height: 1.4;
+}
+
+/* 按钮和导航元素字体 */
+.tab, .btn, button, input {
+    font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 600; /* 按钮使用更重的字体 */
+}
+
+/* 描述性文字 */
+.description, .subtitle, .app-description, .device-description {
+    font-weight: 500;
+    color: #333; /* 稍微浅一点但仍保持高对比度 */
+}
+
+/* 优化的导航标签样式 - 解决边框对齐问题 */
+.tabs {
+    border: 2px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+}
+
+.tab {
+    position: relative;
+    background-color: #fff;
+    border: none;
+    color: #666;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    /* 移除内边距，让活动状态完全填充 */
+}
+
+.tab:hover {
+    background-color: #f8f8f8;
+    color: #333;
+}
+
+.tab.active {
+    background-color: #333;
+    color: #fff;
+    /* 确保完全填充到边框 */
+    margin: 0;
+}
+
+/* 桌面版标签分隔线 */
+.tab:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 60%;
+    background-color: #ddd;
+    transition: opacity 0.2s ease;
+}
+
+.tab.active::after,
+.tab.active + .tab::before {
+    opacity: 0;
+}
+
+/* 移动设备优化 */
+@media (max-width: 600px) {
+    .tabs {
+        flex-direction: column;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .tab {
+        border-bottom: 1px solid #ddd;
+        padding: 18px 20px;
+        font-size: 16px;
+        min-height: 56px;
+        touch-action: manipulation;
+        /* 移除圆角以确保完美对齐 */
+        border-radius: 0;
+    }
+    
+    .tab:first-child {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    
+    .tab:last-child {
+        border-bottom: none;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+    
+    .tab:not(:last-child)::after {
+        display: none;
+    }
+    
+    .tab.active {
+        /* 确保活动标签在移动设备上完美对齐 */
+        margin: -1px;
+        border: 1px solid #333;
+        z-index: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .tab {
+        padding: 16px 15px;
+        font-size: 15px;
+        min-height: 52px;
+    }
 }
 
 /* 二维码样式 */

@@ -12,15 +12,9 @@
         }
 
         body {
-            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'Helvetica Neue', Arial, sans-serif;
-            color: #222;
-            line-height: 1.6;
             padding: 40px 20px;
             max-width: 600px;
             margin: 0 auto;
-            font-weight: 400;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         .header {
@@ -32,27 +26,20 @@
 
         .header h1 {
             font-size: 48px;
-            font-weight: normal;
+            font-weight: 600;
             letter-spacing: 2px;
-            color: #111;
             margin-bottom: 10px;
         }
 
         .header .subtitle {
             font-size: 18px;
-            color: #666;
             font-style: italic;
             margin-bottom: 30px;
         }
 
         .tabs {
-            display: flex;
             justify-content: center;
-            gap: 0;
             margin-bottom: 40px;
-            border: 2px solid #333;
-            border-radius: 8px;
-            overflow: hidden;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
@@ -60,33 +47,8 @@
 
         .tab {
             flex: 1;
-            padding: 15px 20px;
-            background-color: #fff;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            color: #666;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .tab:hover {
-            background-color: #f0f0f0;
-            color: #333;
-        }
-
-        .tab.active {
-            background-color: #333;
-            color: #fff;
-        }
-
-        .tab:not(:last-child) {
-            border-right: 1px solid #ddd;
-        }
 
         .search-bar {
             margin-bottom: 40px;
@@ -144,7 +106,6 @@
             font-weight: bold;
             color: #333;
             position: relative;
-            font-family: 'Arial', sans-serif;
             overflow: hidden;
         }
 
@@ -161,7 +122,6 @@
             justify-content: center;
             width: 100%;
             height: 100%;
-            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'Helvetica Neue', Arial, sans-serif;
         }
 
         .device-icon::after {
@@ -177,7 +137,6 @@
 
         .device-description {
             font-size: 16px;
-            color: #444;
             margin-top: 15px;
             font-style: italic;
             min-height: 48px;
@@ -192,24 +151,7 @@
             }
             
             .tabs {
-                flex-direction: column;
                 max-width: 100%;
-                border-radius: 12px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            }
-
-            .tab {
-                border-right: none;
-                border-bottom: 1px solid #ddd;
-                padding: 18px 20px;
-                font-size: 16px;
-                font-weight: 600;
-                min-height: 56px;
-                touch-action: manipulation;
-            }
-
-            .tab:last-child {
-                border-bottom: none;
             }
 
             .device-grid {
@@ -225,11 +167,6 @@
         @media (max-width: 480px) {
             .header h1 {
                 font-size: 32px;
-            }
-            .tab {
-                padding: 16px 15px;
-                font-size: 15px;
-                min-height: 52px;
             }
         }
     </style>

@@ -12,15 +12,9 @@
         }
 
         body {
-            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'Helvetica Neue', Arial, sans-serif;
-            color: #222;
-            line-height: 1.6;
             padding: 40px 20px;
             max-width: 600px;
             margin: 0 auto;
-            font-weight: 400;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         .header {
@@ -32,27 +26,20 @@
 
         .header h1 {
             font-size: 48px;
-            font-weight: normal;
+            font-weight: 600;
             letter-spacing: 2px;
-            color: #111;
             margin-bottom: 10px;
         }
 
         .header .subtitle {
             font-size: 18px;
-            color: #666;
             font-style: italic;
             margin-bottom: 30px;
         }
 
         .tabs {
-            display: flex;
             justify-content: center;
-            gap: 0;
             margin-bottom: 40px;
-            border: 2px solid #333;
-            border-radius: 8px;
-            overflow: hidden;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
@@ -60,33 +47,8 @@
 
         .tab {
             flex: 1;
-            padding: 15px 20px;
-            background-color: #fff;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            color: #666;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .tab:hover {
-            background-color: #f0f0f0;
-            color: #333;
-        }
-
-        .tab.active {
-            background-color: #333;
-            color: #fff;
-        }
-
-        .tab:not(:last-child) {
-            border-right: 1px solid #ddd;
-        }
 
         .app-grid {
             display: grid;
@@ -125,7 +87,6 @@
             font-weight: bold;
             color: #333;
             position: relative;
-            font-family: 'Arial', sans-serif;
             overflow: hidden;
             flex-shrink: 0;
         }
@@ -143,7 +104,6 @@
             justify-content: center;
             width: 100%;
             height: 100%;
-            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'Helvetica Neue', Arial, sans-serif;
         }
 
         .app-content {
@@ -158,16 +118,12 @@
 
         .app-name {
             font-size: 20px;
-            font-weight: bold;
-            color: #111;
             margin-bottom: 8px;
         }
 
         .app-description {
             font-size: 16px;
-            color: #666;
             margin-bottom: 15px;
-            line-height: 1.5;
         }
 
         .app-buttons {
@@ -180,7 +136,6 @@
             border: none;
             border-radius: 6px;
             font-size: 13px;
-            font-weight: 500;
             text-decoration: none;
             cursor: pointer;
             transition: background-color 0.2s ease;
@@ -229,35 +184,9 @@
             }
             
             .tabs {
-                flex-direction: column;
                 max-width: 100%;
-                border-radius: 12px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            }
-
-            .tab {
-                border-right: none;
-                border-bottom: 1px solid #ddd;
-                padding: 18px 20px;
-                font-size: 16px;
-                font-weight: 600;
-                min-height: 56px;
-                touch-action: manipulation;
-            }
-
-            .tab:last-child {
-                border-bottom: none;
             }
             
-            .tab:hover {
-                background-color: #f8f8f8;
-            }
-            
-            .tab.active {
-                background-color: #333;
-                color: #fff;
-                font-weight: 700;
-            }
 
             .app-grid {
                 grid-template-columns: 1fr;
@@ -309,11 +238,6 @@
                 font-size: 32px;
             }
             
-            .tab {
-                padding: 16px 15px;
-                font-size: 15px;
-                min-height: 52px;
-            }
             
             .app-item {
                 padding: 20px 15px;
