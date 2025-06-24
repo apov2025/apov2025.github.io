@@ -473,6 +473,18 @@ ul {
         4: 'assets/articles/devices.md',
         5: 'assets/articles/resources.md'
     };
+    // 新增：缓存所有 markdown 内容
+    const articleCache = {};
+    // 预加载所有 markdown 文件
+    window.addEventListener('DOMContentLoaded', function() {
+        Object.entries(articleFiles).forEach(([groupNum, filePath]) => {
+            fetch(filePath).then(r => r.text()).then(md => {
+                articleCache[groupNum] = marked.parse(md);
+            }).catch(() => {
+                articleCache[groupNum] = '<div style="color:#f00;text-align:center;">加载失败</div>';
+            });
+        });
+    });
     function showGroupArticle(groupNum) {
         var articles = document.querySelectorAll('.article-container');
         var btns = document.querySelectorAll('.device-btn');
@@ -489,12 +501,12 @@ ul {
         });
         if (willShow) {
             const contentDiv = document.getElementById(`group${groupNum}-article-content`);
-            contentDiv.innerHTML = '<div style="color:#aaa;text-align:center;">加载中...</div>';
-            fetch(articleFiles[groupNum]).then(r => r.text()).then(md => {
-                contentDiv.innerHTML = marked.parse(md);
-            }).catch(() => {
-                contentDiv.innerHTML = '<div style="color:#f00;text-align:center;">加载失败</div>';
-            });
+            // 直接显示缓存内容
+            if (articleCache[groupNum]) {
+                contentDiv.innerHTML = articleCache[groupNum];
+            } else {
+                contentDiv.innerHTML = '<div style="color:#aaa;text-align:center;">正在加载...</div>';
+            }
         }
     }
     document.getElementById('group2-btn').onclick = function() { showGroupArticle(2); };
