@@ -391,12 +391,34 @@ ul {
         .article-container li {
             font-weight: 400;
         }
+
+        .article-container p {
+            margin-bottom: 1.1em;
+        }
+
+        .article-container h1 {
+            font-size: 1.35em;
+            margin-top: 1.3em;
+            margin-bottom: 0.7em;
+        }
+        .article-container h2 {
+            font-size: 1.18em;
+            margin-top: 1.2em;
+            margin-bottom: 0.7em;
+        }
+        .article-container h3 {
+            font-size: 1.08em;
+            margin-top: 1.1em;
+            margin-bottom: 0.7em;
+        }
     </style>
     <link rel="stylesheet" href="css/common.css">
 </head>
 <body>
     <div class="header">
-        <img src="assets/images/logos/logo-long-center.png" alt="apov logo" style="width: 100%; min-width:180px; max-width:600px; height: auto; margin: 0 auto 10px auto; border-radius: 0; display: block;">
+        <a href="index.html" style="display:block;">
+            <img src="assets/images/logos/logo-long-center.png" alt="apov logo" style="width: 100%; min-width:180px; max-width:600px; height: auto; margin: 0 auto 10px auto; border-radius: 0; display: block; cursor: pointer;">
+        </a>
         <div style="height: 1.2em;"></div>
     </div>
 
@@ -415,39 +437,25 @@ ul {
         </button>
         <button class="device-btn" id="group4-btn" title="设备推荐">
             <span class="device-emoji">📱</span>
-            <span class="device-title">设备推荐</span>
+            <span class="device-title">设备</span>
         </button>
         <button class="device-btn" id="group5-btn" title="app 推荐">
             <span class="device-emoji">📝</span>
-            <span class="device-title">资源推荐</span>
+            <span class="device-title">资源</span>
         </button>
     </div>
-    <div id="group2-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>apov 公众号</h3>
-        <p>apov 公众号是一个专注于墨水屏、数字极简和数字生活方式的内容平台。自创办以来，已经吸引了超过 4000 名关注者，粉丝遍布全球 30 多个国家和地区。账号主要发表墨水屏产品资讯和观点，偶尔也会发产品简评。</p>
-        <div style="text-align:center; margin-top:18px;">
-            <img src="assets/images/qrcode/qrcode-apov-wechat-account.JPG" alt="apov 公众号二维码" style="width:220px; max-width:90%; height:auto; border-radius:10px;">
-            <div style="font-size:14px; color:#888; margin-top:6px;">apov 公众号二维码</div>
-        </div>
-    </div>
-    <div id="group3-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>apov 读者群</h3>
-        <p>apov 读者群是公众号读者的微信群，目前总数有近一千名成员（1 群已满，2 群和 rmpp 互助群开放加入中）。大家在这里自由交流墨水屏设备的使用体验、选购建议、软件技巧、数字阅读等话题。</p>
-        <p>群内氛围友好，欢迎新手提问，也有不少深度用户乐于分享经验。如果你希望结识志同道合的朋友，获取一手的墨水屏资讯和真实用户体验，欢迎加入读者群。扫描下面的二维码加管理员微信即可，请标注"读者群"。</p>
-        <div style="text-align:center; margin-top:18px;">
-            <img src="assets/images/qrcode/qrcode-apov-group-manager.png" alt="apov 读者群二维码" style="width:220px; max-width:90%; height:auto; border-radius:10px;">
-            <div style="font-size:14px; color:#888; margin-top:6px;">apov 读者群管理员微信</div>
-        </div>
-    </div>
-    <div id="group4-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>设备推荐</h3>
-        <p>（内容准备中）</p>
-    </div>
-    <div id="group5-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>资源推荐</h3>
-        <p>（内容准备中）</p>
-    </div>
+    <div id="group2-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;"><div id="group2-article-content"></div></div>
+    <div id="group3-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;"><div id="group3-article-content"></div></div>
+    <div id="group4-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;"><div id="group4-article-content"></div></div>
+    <div id="group5-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;"><div id="group5-article-content"></div></div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+    const articleFiles = {
+        2: 'assets/articles/article-2.md',
+        3: 'assets/articles/article-3.md',
+        4: 'assets/articles/article-4.md',
+        5: 'assets/articles/article-5.md'
+    };
     function showGroupArticle(groupNum) {
         var articles = document.querySelectorAll('.article-container');
         var btns = document.querySelectorAll('.device-btn');
@@ -462,11 +470,21 @@ ul {
                 btn.classList.remove('active');
             }
         });
+        if (willShow) {
+            const contentDiv = document.getElementById(`group${groupNum}-article-content`);
+            contentDiv.innerHTML = '<div style="color:#aaa;text-align:center;">加载中...</div>';
+            fetch(articleFiles[groupNum]).then(r => r.text()).then(md => {
+                contentDiv.innerHTML = marked.parse(md);
+            }).catch(() => {
+                contentDiv.innerHTML = '<div style="color:#f00;text-align:center;">加载失败</div>';
+            });
+        }
     }
     document.getElementById('group2-btn').onclick = function() { showGroupArticle(2); };
     document.getElementById('group3-btn').onclick = function() { showGroupArticle(3); };
     document.getElementById('group4-btn').onclick = function() { showGroupArticle(4); };
     document.getElementById('group5-btn').onclick = function() { showGroupArticle(5); };
+    // 页面加载时不自动展开任何按钮
     </script>
 
 </body>
