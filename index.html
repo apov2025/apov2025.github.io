@@ -300,16 +300,17 @@ ul {
 
         .device-group-row {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-            gap: 28px;
+            gap: 18px;
             margin-bottom: 28px;
         }
         .device-btn {
             background: #fff;
             border: 3px solid #bbb;
             border-radius: 12px;
-            padding: 0;
+            padding: 16px 6px 10px 6px;
             width: 120px;
             height: 120px;
             cursor: pointer;
@@ -319,18 +320,13 @@ ul {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px 6px 10px 6px;
+            margin: 0;
         }
         .device-btn.active {
             border: 4px solid #111;
         }
         .device-emoji {
             font-size: 3em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
             margin-bottom: 0.25em;
         }
         .device-title {
@@ -347,15 +343,18 @@ ul {
                 gap: 10px;
             }
             .device-btn {
-                width: 70px;
-                height: 70px;
+                width: 44vw;
+                min-width: 110px;
+                max-width: 160px;
+                height: 90px;
                 padding: 8px 2px 5px 2px;
+                margin-bottom: 8px;
             }
             .device-emoji {
-                font-size: 1.7em;
+                font-size: 2em;
             }
             .device-title {
-                font-size: 0.95em;
+                font-size: 0.98em;
             }
         }
 
@@ -424,7 +423,7 @@ ul {
         </button>
     </div>
     <div id="group2-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>apov公众号</h3>
+        <h3>apov 公众号</h3>
         <p>apov 公众号是一个专注于墨水屏、数字极简和数字生活方式的内容平台。自创办以来，已经吸引了超过 4000 名关注者，粉丝遍布全球 30 多个国家和地区。账号主要发表墨水屏产品资讯和观点，偶尔也会发产品简评。</p>
         <div style="text-align:center; margin-top:18px;">
             <img src="assets/images/qrcode/qrcode-apov-wechat-account.JPG" alt="apov 公众号二维码" style="width:220px; max-width:90%; height:auto; border-radius:10px;">
@@ -432,9 +431,9 @@ ul {
         </div>
     </div>
     <div id="group3-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>apov读者群</h3>
-        <p>apov 读者群是一个聚集了墨水屏爱好者、数码极简主义者和数字生活探索者的线上社群。群成员来自全国各地，甚至有海外朋友，大家在这里自由交流墨水屏设备的使用体验、选购建议、软件技巧、数字阅读等话题。</p>
-        <p>群内氛围友好，欢迎新手提问，也有不少深度用户乐于分享经验。如果你希望结识志同道合的朋友，获取一手的墨水屏资讯和真实用户体验，欢迎加入读者群。扫描下面的二维码加管理员微信即可，请标注“读者群”。</p>
+        <h3>apov 读者群</h3>
+        <p>apov 读者群是公众号读者的微信群，目前总数有近一千名成员（1 群已满，2 群和 rmpp 互助群开放加入中）。群成员居住在世界各地，大家在这里自由交流墨水屏设备的使用体验、选购建议、软件技巧、数字阅读等话题。</p>
+        <p>群内氛围友好，欢迎新手提问，也有不少深度用户乐于分享经验。如果你希望结识志同道合的朋友，获取一手的墨水屏资讯和真实用户体验，欢迎加入读者群。扫描下面的二维码加管理员微信即可，请标注"读者群"。</p>
         <div style="text-align:center; margin-top:18px;">
             <img src="assets/images/qrcode/qrcode-apov-group-manager.png" alt="apov 读者群二维码" style="width:220px; max-width:90%; height:auto; border-radius:10px;">
             <div style="font-size:14px; color:#888; margin-top:6px;">apov 读者群管理员微信</div>
@@ -468,9 +467,6 @@ ul {
     document.getElementById('group3-btn').onclick = function() { showGroupArticle(3); };
     document.getElementById('group4-btn').onclick = function() { showGroupArticle(4); };
     document.getElementById('group5-btn').onclick = function() { showGroupArticle(5); };
-    document.addEventListener('DOMContentLoaded', function() {
-        showGroupArticle(2);
-    });
     </script>
 
 </body>
