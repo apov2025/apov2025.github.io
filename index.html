@@ -12,7 +12,8 @@
         }
 
         body {
-            padding: 40px 20px;
+            background: #F5F4F0;
+            padding: 0 20px 40px 20px;
             max-width: 600px;
             margin: 0 auto;
         }
@@ -21,6 +22,8 @@
             text-align: center;
             margin-bottom: 10px;
             padding-bottom: 0px;
+            margin-top: 0;
+            padding-top: 0;
         }
 
         .header h1 {
@@ -303,31 +306,56 @@ ul {
             margin-bottom: 28px;
         }
         .device-btn {
-            background: none;
-            border: none;
-            border-radius: 0;
+            background: #fff;
+            border: 3px solid #bbb;
+            border-radius: 12px;
             padding: 0;
-            cursor: pointer;
-            transition: transform 0.18s;
-            box-shadow: none;
-        }
-        .device-btn:hover, .device-btn:focus {
-            transform: scale(1.08);
-        }
-        .device-btn img {
             width: 120px;
             height: 120px;
-            object-fit: contain;
-            border-radius: 0;
+            cursor: pointer;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 6px 10px 6px;
+        }
+        .device-btn.active {
+            border: 4px solid #111;
+        }
+        .device-emoji {
+            font-size: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            margin-bottom: 0.25em;
+        }
+        .device-title {
             display: block;
+            font-size: 1.08em;
+            color: #222;
+            text-align: center;
+            font-weight: 500;
+            line-height: 1.2;
+            word-break: keep-all;
         }
         @media (max-width: 600px) {
             .device-group-row {
                 gap: 10px;
             }
-            .device-btn img {
+            .device-btn {
                 width: 70px;
                 height: 70px;
+                padding: 8px 2px 5px 2px;
+            }
+            .device-emoji {
+                font-size: 1.7em;
+            }
+            .device-title {
+                font-size: 0.95em;
             }
         }
 
@@ -357,62 +385,92 @@ ul {
         }
         .device-btn.active img {
             border: 4px solid #111;
-            box-shadow: 0 0 0 2px #1112;
+        }
+
+        .article-container p,
+        .article-container ul,
+        .article-container li {
+            font-weight: 400;
         }
     </style>
     <link rel="stylesheet" href="css/common.css">
 </head>
 <body>
     <div class="header">
-        <img src="assets/images/qrcode/qrcode-apov_wechat-account.JPG" alt="apov wechat" style="max-width: 300px; height: auto; margin-bottom: 10px; border-radius: 8px;">
+        <img src="assets/images/logos/logo-long-center.png" alt="apov logo" style="width: 100%; min-width:180px; max-width:600px; height: auto; margin: 0 auto 10px auto; border-radius: 0; display: block;">
+        <div style="height: 1.2em;"></div>
     </div>
 
-    <div style="text-align: center; margin-bottom: 30px; font-size: 18px; line-height: 1.6;">
-        <p>你好👋，我是 weilaifuture，一位墨水屏用户和爱好者，也是 apov 公众号的作者。这个网站是我最近在做的一个实验性质电商。点击下面的产品类别图标，即可展开相关产品页面。</p>
+    <div style="text-align: left; margin-bottom: 30px; font-size: 18px; line-height: 1.6;">
+        <p>你好👋，我是 weilaifuture，一位墨水屏用户和爱好者，也是 apov 公众号的作者。这是一个实验性质的墨水屏爱好者网站。</p>
     </div>
     <div style="height: 1.2em;"></div>
     <div class="device-group-row">
-        <button class="device-btn" id="group1-btn"><img src="assets/images/devices/Group1.png" alt="Group1"></button>
-        <button class="device-btn" id="group2-btn"><img src="assets/images/devices/Group2.png" alt="Group2"></button>
-        <button class="device-btn" id="group3-btn"><img src="assets/images/devices/Group3.png" alt="Group3"></button>
-        <button class="device-btn" id="group4-btn"><img src="assets/images/devices/Group4.png" alt="Group4"></button>
-    </div>
-    <div id="group1-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>文石 Boox Palma</h3>
-        <p>这里是 Group1 的文章内容占位。你可以在这里放任何富文本内容，包括段落、图片、链接等。</p>
+        <button class="device-btn" id="group2-btn" title="apov公众号">
+            <span class="device-emoji">📢</span>
+            <span class="device-title">apov 公众号</span>
+        </button>
+        <button class="device-btn" id="group3-btn" title="apov读者群">
+            <span class="device-emoji">👥</span>
+            <span class="device-title">apov 读者群</span>
+        </button>
+        <button class="device-btn" id="group4-btn" title="设备推荐">
+            <span class="device-emoji">📱</span>
+            <span class="device-title">设备推荐</span>
+        </button>
+        <button class="device-btn" id="group5-btn" title="app 推荐">
+            <span class="device-emoji">📝</span>
+            <span class="device-title">app 推荐</span>
+        </button>
     </div>
     <div id="group2-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>国文 A8</h3>
-        <p>这里是 Group2 的文章内容占位。</p>
+        <h3>apov公众号</h3>
+        <p>apov 公众号是一个专注于墨水屏、数字极简和数字生活方式的内容平台。自创办以来，已经吸引了超过 4000 名关注者，粉丝遍布全球 30 多个国家和地区。账号主要发表墨水屏产品资讯和观点，偶尔也会发产品简评。</p>
+        <div style="text-align:center; margin-top:18px;">
+            <img src="assets/images/qrcode/qrcode-apov-wechat-account.JPG" alt="apov 公众号二维码" style="width:220px; max-width:90%; height:auto; border-radius:10px;">
+            <div style="font-size:14px; color:#888; margin-top:6px;">apov 公众号二维码</div>
+        </div>
     </div>
     <div id="group3-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>超级笔记 A5X2 Manta</h3>
-        <p>这里是 Group3 的文章内容占位。</p>
+        <h3>apov读者群</h3>
+        <p>apov 读者群是一个聚集了墨水屏爱好者、数码极简主义者和数字生活探索者的线上社群。群成员来自全国各地，甚至有海外朋友，大家在这里自由交流墨水屏设备的使用体验、选购建议、软件技巧、数字阅读等话题。</p>
+        <p>群内氛围友好，欢迎新手提问，也有不少深度用户乐于分享经验。如果你希望结识志同道合的朋友，获取一手的墨水屏资讯和真实用户体验，欢迎加入读者群。扫描下面的二维码加管理员微信即可，请标注“读者群”。</p>
+        <div style="text-align:center; margin-top:18px;">
+            <img src="assets/images/qrcode/qrcode-apov-group-manager.png" alt="apov 读者群二维码" style="width:220px; max-width:90%; height:auto; border-radius:10px;">
+            <div style="font-size:14px; color:#888; margin-top:6px;">apov 读者群管理员微信</div>
+        </div>
     </div>
     <div id="group4-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
-        <h3>文石 Boox Mira</h3>
-        <p>这里是 Group4 的文章内容占位。</p>
+        <h3>设备推荐</h3>
+        <p>（内容准备中）</p>
+    </div>
+    <div id="group5-article" class="article-container" style="display:none; max-width:600px; margin:24px auto 0 auto;">
+        <h3>app 推荐</h3>
+        <p>（内容准备中）</p>
     </div>
     <script>
     function showGroupArticle(groupNum) {
         var articles = document.querySelectorAll('.article-container');
         var btns = document.querySelectorAll('.device-btn');
-        var willShow = articles[groupNum - 1].style.display !== 'block';
+        var willShow = articles[groupNum - 2].style.display !== 'block';
         articles.forEach(function(article, idx) {
-            article.style.display = (idx === groupNum - 1 && willShow) ? 'block' : 'none';
+            article.style.display = (idx === groupNum - 2 && willShow) ? 'block' : 'none';
         });
         btns.forEach(function(btn, idx) {
-            if (idx === groupNum - 1 && willShow) {
+            if (idx === groupNum - 2 && willShow) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
             }
         });
     }
-    document.getElementById('group1-btn').onclick = function() { showGroupArticle(1); };
     document.getElementById('group2-btn').onclick = function() { showGroupArticle(2); };
     document.getElementById('group3-btn').onclick = function() { showGroupArticle(3); };
     document.getElementById('group4-btn').onclick = function() { showGroupArticle(4); };
+    document.getElementById('group5-btn').onclick = function() { showGroupArticle(5); };
+    document.addEventListener('DOMContentLoaded', function() {
+        showGroupArticle(2);
+    });
     </script>
 
 </body>
