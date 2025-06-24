@@ -386,6 +386,13 @@ ul {
             border: 4px solid #111;
         }
 
+        .article-container {
+            font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'DejaVu Sans', 'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: #000;
+            line-height: 1.7;
+        }
         .article-container p,
         .article-container ul,
         .article-container li {
@@ -410,6 +417,16 @@ ul {
             font-size: 1.08em;
             margin-top: 1.1em;
             margin-bottom: 0.7em;
+        }
+        .article-container a {
+            color: #222;
+            text-decoration: none;
+        }
+        .article-container a:visited {
+            color: #222;
+        }
+        .article-container a:hover {
+            text-decoration: underline;
         }
     </style>
     <link rel="stylesheet" href="css/common.css">
@@ -451,10 +468,10 @@ ul {
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
     const articleFiles = {
-        2: 'assets/articles/article-2.md',
-        3: 'assets/articles/article-3.md',
-        4: 'assets/articles/article-4.md',
-        5: 'assets/articles/article-5.md'
+        2: 'assets/articles/apov-wechat.md',
+        3: 'assets/articles/apov-group.md',
+        4: 'assets/articles/devices.md',
+        5: 'assets/articles/resources.md'
     };
     function showGroupArticle(groupNum) {
         var articles = document.querySelectorAll('.article-container');
