@@ -209,7 +209,6 @@
             <a href="index.html" class="back-link">← 返回首页</a>
             <h1 class="main-title">
                 <span>M5 Paper Color</span>
-                <span class="title-accent">3D 模型</span>
             </h1>
         </div>
 
@@ -223,16 +222,15 @@
         </div>
 
         <div class="description">
-            <h2>关于 M5 Paper Color</h2>
             <p>M5 Paper Color 是一款革新性的彩色墨水屏设备，结合了传统墨水屏的护眼特性和彩色显示的丰富表现力。</p>
             <p>该设备采用先进的彩色电子墨水技术，能够显示丰富的色彩，同时保持低功耗和纸质般的阅读体验。</p>
             <p>上方的 3D 模型展示了设备的精确外观和设计细节，您可以通过鼠标拖拽来旋转查看不同角度。</p>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/loaders/STLLoader.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/three@0.155.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.155.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://unpkg.com/three@0.155.0/examples/js/controls/OrbitControls.js"></script>
 
     <script>
         let scene, camera, renderer, controls, model;
@@ -241,101 +239,121 @@
             const container = document.getElementById('model-viewer');
             const loadingMessage = container.querySelector('.loading-message');
             
-            // Create scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf8f9fa);
-            
-            // Create camera
-            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(5, 5, 5);
-            
-            // Create renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            
-            // Add renderer to container
-            container.appendChild(renderer.domElement);
-            
-            // Add lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 10, 5);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            scene.add(directionalLight);
-            
-            // Add controls
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.enableZoom = true;
-            controls.enablePan = false;
-            
-            // Load STL model
-            const loader = new THREE.STLLoader();
-            loader.load('papercolor-00-01.stl', function(geometry) {
-                // Create material
-                const material = new THREE.MeshPhongMaterial({ 
-                    color: 0xd4a574,
-                    shininess: 30,
-                    transparent: true,
-                    opacity: 0.9
+            try {
+                // Create scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xf8f9fa);
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.set(5, 5, 5);
+                
+                // Create renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                
+                // Add renderer to container
+                container.appendChild(renderer.domElement);
+                
+                // Add lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 5);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                scene.add(directionalLight);
+                
+                // Add controls
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.enableZoom = true;
+                controls.enablePan = false;
+                
+                // Load STL model
+                const loader = new THREE.STLLoader();
+                loader.load('papercolor-00-01.stl', 
+                    function(geometry) {
+                        try {
+                            // Create material
+                            const material = new THREE.MeshPhongMaterial({ 
+                                color: 0xd4a574,
+                                shininess: 30,
+                                transparent: true,
+                                opacity: 0.9
+                            });
+                            
+                            // Create mesh
+                            model = new THREE.Mesh(geometry, material);
+                            model.castShadow = true;
+                            model.receiveShadow = true;
+                            
+                            // Center the model
+                            geometry.computeBoundingBox();
+                            const box = geometry.boundingBox;
+                            const center = new THREE.Vector3();
+                            box.getCenter(center);
+                            model.position.sub(center);
+                            
+                            // Scale the model to fit nicely in view
+                            const size = new THREE.Vector3();
+                            box.getSize(size);
+                            const maxDim = Math.max(size.x, size.y, size.z);
+                            const scale = 3 / maxDim;
+                            model.scale.setScalar(scale);
+                            
+                            scene.add(model);
+                            
+                            // Hide loading message
+                            loadingMessage.style.display = 'none';
+                            
+                            // Fit camera to model
+                            controls.reset();
+                            
+                        } catch (error) {
+                            console.error('Error processing STL geometry:', error);
+                            loadingMessage.textContent = '3D 模型处理失败';
+                        }
+                    }, 
+                    function(progress) {
+                        if (progress.lengthComputable) {
+                            const percentComplete = (progress.loaded / progress.total * 100);
+                            loadingMessage.textContent = `正在加载 3D 模型... ${Math.round(percentComplete)}%`;
+                        }
+                    }, 
+                    function(error) {
+                        console.error('Error loading STL:', error);
+                        loadingMessage.textContent = '模型加载失败 - 请确保文件存在且可访问';
+                    }
+                );
+                
+                // Add double-click to reset view
+                renderer.domElement.addEventListener('dblclick', function() {
+                    controls.reset();
+                    if (model) {
+                        camera.position.set(5, 5, 5);
+                        camera.lookAt(model.position);
+                    }
                 });
                 
-                // Create mesh
-                model = new THREE.Mesh(geometry, material);
-                model.castShadow = true;
-                model.receiveShadow = true;
+                // Handle window resize
+                window.addEventListener('resize', onWindowResize);
                 
-                // Center the model
-                geometry.computeBoundingBox();
-                const center = geometry.boundingBox.getCenter(new THREE.Vector3());
-                model.position.sub(center);
+                animate();
                 
-                // Scale the model to fit nicely in view
-                const size = geometry.boundingBox.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 3 / maxDim;
-                model.scale.setScalar(scale);
-                
-                scene.add(model);
-                
-                // Hide loading message
-                loadingMessage.style.display = 'none';
-                
-                // Fit camera to model
-                controls.reset();
-                
-            }, function(progress) {
-                // Progress callback
-                const percentComplete = (progress.loaded / progress.total * 100);
-                loadingMessage.textContent = `正在加载 3D 模型... ${Math.round(percentComplete)}%`;
-            }, function(error) {
-                console.error('Error loading STL:', error);
-                loadingMessage.textContent = '模型加载失败，请检查文件路径';
-            });
-            
-            // Add double-click to reset view
-            renderer.domElement.addEventListener('dblclick', function() {
-                controls.reset();
-                if (model) {
-                    camera.position.set(5, 5, 5);
-                    camera.lookAt(model.position);
-                }
-            });
-            
-            // Handle window resize
-            window.addEventListener('resize', onWindowResize);
-            
-            animate();
+            } catch (error) {
+                console.error('Error initializing 3D viewer:', error);
+                loadingMessage.textContent = '3D 查看器初始化失败';
+            }
         }
         
         function onWindowResize() {
+            if (!camera || !renderer) return;
             const container = document.getElementById('model-viewer');
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
@@ -343,13 +361,17 @@
         }
         
         function animate() {
+            if (!renderer || !scene || !camera) return;
             requestAnimationFrame(animate);
-            controls.update();
+            if (controls) controls.update();
             renderer.render(scene, camera);
         }
         
         // Initialize when page loads
-        window.addEventListener('load', init);
+        window.addEventListener('load', function() {
+            // Add a small delay to ensure all scripts are loaded
+            setTimeout(init, 100);
+        });
     </script>
 </body>
 </html>
