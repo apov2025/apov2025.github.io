@@ -228,16 +228,29 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/three@0.155.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.155.0/examples/js/loaders/STLLoader.js"></script>
-    <script src="https://unpkg.com/three@0.155.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
     <script>
         let scene, camera, renderer, controls, model;
         
+        function checkThreeJS() {
+            return typeof THREE !== 'undefined' && 
+                   typeof THREE.STLLoader !== 'undefined' && 
+                   typeof THREE.OrbitControls !== 'undefined';
+        }
+        
         function init() {
             const container = document.getElementById('model-viewer');
             const loadingMessage = container.querySelector('.loading-message');
+            
+            // Check if Three.js is loaded
+            if (!checkThreeJS()) {
+                loadingMessage.textContent = 'Three.js 库加载失败，请刷新页面重试';
+                console.error('Three.js libraries not loaded');
+                return;
+            }
             
             try {
                 // Create scene
@@ -277,7 +290,7 @@
                 
                 // Load STL model
                 const loader = new THREE.STLLoader();
-                loader.load('papercolor-00-01.stl', 
+                loader.load('./papercolor-00-01.stl', 
                     function(geometry) {
                         try {
                             // Create material
@@ -348,7 +361,7 @@
                 
             } catch (error) {
                 console.error('Error initializing 3D viewer:', error);
-                loadingMessage.textContent = '3D 查看器初始化失败';
+                loadingMessage.textContent = '3D 查看器初始化失败: ' + error.message;
             }
         }
         
@@ -367,10 +380,18 @@
             renderer.render(scene, camera);
         }
         
+        // Wait for all scripts to load
+        function waitForLibraries() {
+            if (checkThreeJS()) {
+                init();
+            } else {
+                setTimeout(waitForLibraries, 200);
+            }
+        }
+        
         // Initialize when page loads
         window.addEventListener('load', function() {
-            // Add a small delay to ensure all scripts are loaded
-            setTimeout(init, 100);
+            waitForLibraries();
         });
     </script>
 </body>
