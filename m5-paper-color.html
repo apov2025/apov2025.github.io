@@ -347,8 +347,8 @@
                     });
                 });
                 
-                screenGeometry.setAttribute('position', new THREE.Float32Array(screenPositions), 3);
-                screenGeometry.setAttribute('normal', new THREE.Float32Array(screenNormals), 3);
+                screenGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(screenPositions), 3));
+                screenGeometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(screenNormals), 3));
                 
                 return screenGeometry;
             }
