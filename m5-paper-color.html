@@ -221,11 +221,6 @@
             </div>
         </div>
 
-        <div class="description">
-            <p>M5 Paper Color 是一款革新性的彩色墨水屏设备，结合了传统墨水屏的护眼特性和彩色显示的丰富表现力。</p>
-            <p>该设备采用先进的彩色电子墨水技术，能够显示丰富的色彩，同时保持低功耗和纸质般的阅读体验。</p>
-            <p>上方的 3D 模型展示了设备的精确外观和设计细节，您可以通过鼠标拖拽来旋转查看不同角度。</p>
-        </div>
     </div>
 
     <script type="importmap">
@@ -243,6 +238,124 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         let scene, camera, renderer, controls, model;
+        
+        function identifyScreenArea(geometry, boundingBox) {
+            const positions = geometry.attributes.position.array;
+            const normals = geometry.attributes.normal.array;
+            
+            // Analyze all faces and group by normal direction and position
+            const faceGroups = {
+                front: [], back: [], left: [], right: [], top: [], bottom: []
+            };
+            
+            // Track face areas and positions to find the screen
+            const faceAnalysis = [];
+            
+            for (let i = 0; i < positions.length; i += 9) {
+                const v1 = { x: positions[i], y: positions[i + 1], z: positions[i + 2] };
+                const v2 = { x: positions[i + 3], y: positions[i + 4], z: positions[i + 5] };
+                const v3 = { x: positions[i + 6], y: positions[i + 7], z: positions[i + 8] };
+                
+                const normal = {
+                    x: normals[i + 2],
+                    y: normals[i + 5], 
+                    z: normals[i + 8]
+                };
+                
+                // Calculate face center and area
+                const center = {
+                    x: (v1.x + v2.x + v3.x) / 3,
+                    y: (v1.y + v2.y + v3.y) / 3,
+                    z: (v1.z + v2.z + v3.z) / 3
+                };
+                
+                // Calculate triangle area
+                const edge1 = { x: v2.x - v1.x, y: v2.y - v1.y, z: v2.z - v1.z };
+                const edge2 = { x: v3.x - v1.x, y: v3.y - v1.y, z: v3.z - v1.z };
+                const cross = {
+                    x: edge1.y * edge2.z - edge1.z * edge2.y,
+                    y: edge1.z * edge2.x - edge1.x * edge2.z,
+                    z: edge1.x * edge2.y - edge1.y * edge2.x
+                };
+                const area = Math.sqrt(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z) / 2;
+                
+                faceAnalysis.push({
+                    vertices: [v1, v2, v3],
+                    normal: normal,
+                    center: center,
+                    area: area,
+                    index: i
+                });
+                
+                // Categorize face by dominant normal direction
+                const absNormal = { x: Math.abs(normal.x), y: Math.abs(normal.y), z: Math.abs(normal.z) };
+                if (absNormal.z > 0.8) {
+                    if (normal.z > 0) faceGroups.front.push(faceAnalysis[faceAnalysis.length - 1]);
+                    else faceGroups.back.push(faceAnalysis[faceAnalysis.length - 1]);
+                } else if (absNormal.x > 0.8) {
+                    if (normal.x > 0) faceGroups.right.push(faceAnalysis[faceAnalysis.length - 1]);
+                    else faceGroups.left.push(faceAnalysis[faceAnalysis.length - 1]);
+                } else if (absNormal.y > 0.8) {
+                    if (normal.y > 0) faceGroups.top.push(faceAnalysis[faceAnalysis.length - 1]);
+                    else faceGroups.bottom.push(faceAnalysis[faceAnalysis.length - 1]);
+                }
+            }
+            
+            // Log analysis results
+            console.log('Face analysis:');
+            console.log('Front faces:', faceGroups.front.length);
+            console.log('Back faces:', faceGroups.back.length);
+            console.log('Left faces:', faceGroups.left.length);
+            console.log('Right faces:', faceGroups.right.length);
+            console.log('Top faces:', faceGroups.top.length);
+            console.log('Bottom faces:', faceGroups.bottom.length);
+            
+            // Find the side with a large, slightly recessed flat area (the screen)
+            // The screen is likely on front or back, and should be a cluster of faces
+            let screenCandidates = [];
+            
+            // Check front and back faces for screen-like areas
+            [faceGroups.front, faceGroups.back].forEach((group, groupIndex) => {
+                if (group.length > 10) { // Screen should have multiple faces
+                    console.log(`Analyzing ${groupIndex === 0 ? 'front' : 'back'} group with ${group.length} faces`);
+                    
+                    // Look for faces that are clustered together (screen area)
+                    const clustered = group.filter(face => {
+                        // Check if this face is part of a recessed area
+                        const avgZ = group.reduce((sum, f) => sum + f.center.z, 0) / group.length;
+                        return Math.abs(face.center.z - avgZ) < 0.1; // Faces at similar depth
+                    });
+                    
+                    if (clustered.length > screenCandidates.length) {
+                        screenCandidates = clustered;
+                        console.log(`Found ${clustered.length} clustered faces for potential screen`);
+                    }
+                }
+            });
+            
+            if (screenCandidates.length > 0) {
+                console.log(`Creating screen geometry from ${screenCandidates.length} faces`);
+                
+                const screenGeometry = new THREE.BufferGeometry();
+                const screenPositions = [];
+                const screenNormals = [];
+                
+                screenCandidates.forEach(face => {
+                    face.vertices.forEach(vertex => {
+                        screenPositions.push(vertex.x, vertex.y, vertex.z);
+                        screenNormals.push(face.normal.x, face.normal.y, face.normal.z);
+                    });
+                });
+                
+                screenGeometry.setAttribute('position', new THREE.Float32Array(screenPositions), 3);
+                screenGeometry.setAttribute('normal', new THREE.Float32Array(screenNormals), 3);
+                
+                return screenGeometry;
+            }
+            
+            console.log('Could not identify screen area');
+            return null;
+        }
         
         function createFallbackModel() {
             // Create a simple cube as fallback if STL doesn't load
@@ -280,26 +393,26 @@
                 // Add renderer to container
                 container.appendChild(renderer.domElement);
                 
-                // Add improved lighting for better detail visibility
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+                // Add bright ambient light for better visibility
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
                 scene.add(ambientLight);
                 
-                // Main directional light
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight.position.set(10, 10, 5);
+                // Main directional light from front
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+                directionalLight.position.set(0, 5, 10);
                 directionalLight.castShadow = true;
                 directionalLight.shadow.mapSize.width = 2048;
                 directionalLight.shadow.mapSize.height = 2048;
                 scene.add(directionalLight);
                 
-                // Add fill lights to reduce harsh shadows and show more detail
-                const fillLight1 = new THREE.DirectionalLight(0xffffff, 0.3);
-                fillLight1.position.set(-5, 5, -5);
-                scene.add(fillLight1);
+                // Add side lights for even illumination
+                const leftLight = new THREE.DirectionalLight(0xffffff, 0.3);
+                leftLight.position.set(-10, 0, 0);
+                scene.add(leftLight);
                 
-                const fillLight2 = new THREE.DirectionalLight(0xffffff, 0.2);
-                fillLight2.position.set(0, -5, 5);
-                scene.add(fillLight2);
+                const rightLight = new THREE.DirectionalLight(0xffffff, 0.3);
+                rightLight.position.set(10, 0, 0);
+                scene.add(rightLight);
                 
                 // Add grid for reference
                 const gridHelper = new THREE.GridHelper(10, 10, 0xcccccc, 0xdddddd);
@@ -362,28 +475,91 @@
                 console.log('Geometry vertices:', geometry.attributes.position.count);
                 console.log('Geometry has normals:', !!geometry.attributes.normal);
                 
+                // Analyze geometry to find potential screen area
+                const positions = geometry.attributes.position.array;
+                const vertices = [];
+                
+                // Extract all vertices for analysis
+                for (let i = 0; i < positions.length; i += 3) {
+                    vertices.push({
+                        x: positions[i],
+                        y: positions[i + 1],
+                        z: positions[i + 2]
+                    });
+                }
+                
+                // Find vertices that might be on the screen (largest flat surface)
+                console.log('Total vertices:', vertices.length);
+                console.log('Sample vertices:', vertices.slice(0, 10));
+                
+                // Calculate bounding box to understand orientation
+                geometry.computeBoundingBox();
+                const box = geometry.boundingBox;
+                console.log('Bounding box:', {
+                    min: { x: box.min.x, y: box.min.y, z: box.min.z },
+                    max: { x: box.max.x, y: box.max.y, z: box.max.z }
+                });
+                
                 // Ensure the geometry has normals for proper lighting
                 if (!geometry.attributes.normal) {
                     geometry.computeVertexNormals();
                 }
                 
-                // Create material for e-ink device (light gray color)
-                const material = new THREE.MeshStandardMaterial({ 
-                    color: 0xcccccc,  // Light gray for e-ink device
-                    roughness: 0.4,   // Less shiny, more matte
-                    metalness: 0.0,   // No metallic look
-                    side: THREE.DoubleSide,
-                    flatShading: false
-                });
+                // Try to identify screen area by analyzing vertex positions
+                const screenGeometry = identifyScreenArea(geometry, box);
                 
-                // Create mesh
-                model = new THREE.Mesh(geometry, material);
-                model.castShadow = true;
-                model.receiveShadow = true;
+                if (screenGeometry) {
+                    // Create device body (original geometry minus screen)
+                    const bodyMaterial = new THREE.MeshStandardMaterial({ 
+                        color: 0x404040,  // Dark gray for device body
+                        roughness: 0.6,
+                        metalness: 0.0,
+                        side: THREE.DoubleSide,
+                        flatShading: false
+                    });
+                    
+                    // Create screen material (light gray for e-ink screen)
+                    const screenMaterial = new THREE.MeshStandardMaterial({ 
+                        color: 0xd0d0d0,  // Light gray for e-ink screen
+                        roughness: 0.3,   // Slightly more reflective like a screen
+                        metalness: 0.0,
+                        side: THREE.DoubleSide,
+                        flatShading: false
+                    });
+                    
+                    // Create meshes
+                    const bodyMesh = new THREE.Mesh(geometry, bodyMaterial);
+                    const screenMesh = new THREE.Mesh(screenGeometry, screenMaterial);
+                    
+                    // Create a group to hold both parts
+                    model = new THREE.Group();
+                    model.add(bodyMesh);
+                    model.add(screenMesh);
+                    
+                    bodyMesh.castShadow = true;
+                    bodyMesh.receiveShadow = true;
+                    screenMesh.castShadow = true;
+                    screenMesh.receiveShadow = true;
+                    
+                    console.log('Created separate screen and body materials');
+                } else {
+                    // Fallback: single material for whole device
+                    const material = new THREE.MeshStandardMaterial({ 
+                        color: 0x404040,  // Dark gray for e-ink device
+                        roughness: 0.4,
+                        metalness: 0.0,
+                        side: THREE.DoubleSide,
+                        flatShading: false
+                    });
+                    
+                    model = new THREE.Mesh(geometry, material);
+                    model.castShadow = true;
+                    model.receiveShadow = true;
+                    
+                    console.log('Using single material for whole device');
+                }
                 
                 // Get model dimensions for proper centering
-                geometry.computeBoundingBox();
-                const box = geometry.boundingBox;
                 const size = new THREE.Vector3();
                 box.getSize(size);
                 
