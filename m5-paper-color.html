@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M5 Paper Color - apov: a point of view</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream: #FBF7F0;
+            --warm-white: #FEFCF8;
+            --charcoal: #2C2C2C;
+            --warm-grey: #8B8680;
+            --accent-gold: #D4A574;
+            --deep-brown: #4A3728;
+            --soft-shadow: rgba(44, 44, 44, 0.08);
+            --border-light: rgba(139, 134, 128, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
+            line-height: 1.6;
+            font-weight: 300;
+            overflow-x: hidden;
+        }
+
+        .grain-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image: 
+                radial-gradient(circle at 20% 80%, transparent 50%, rgba(44, 44, 44, 0.1) 100%),
+                radial-gradient(circle at 80% 20%, transparent 50%, rgba(44, 44, 44, 0.1) 100%),
+                radial-gradient(circle at 40% 40%, transparent 50%, rgba(44, 44, 44, 0.05) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--warm-grey);
+            text-decoration: none;
+            font-size: 1rem;
+            margin-bottom: 40px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--accent-gold);
+        }
+
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .title-accent {
+            color: var(--accent-gold);
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .viewer-container {
+            background: var(--warm-white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px var(--soft-shadow),
+                0 8px 16px rgba(44, 44, 44, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-light);
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .viewer-container::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-gold), transparent, var(--accent-gold));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0.3;
+        }
+
+        .model-viewer {
+            width: 100%;
+            height: 600px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--warm-grey);
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .controls-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: var(--warm-grey);
+            text-align: center;
+        }
+
+        .description {
+            background: var(--warm-white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px var(--soft-shadow),
+                0 8px 16px rgba(44, 44, 44, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-light);
+            position: relative;
+        }
+
+        .description::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-gold), transparent, var(--accent-gold));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0.3;
+        }
+
+        .description h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--charcoal);
+        }
+
+        .description p {
+            margin-bottom: 15px;
+            font-weight: 400;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 15px;
+            }
+            
+            .viewer-container,
+            .description {
+                padding: 30px 20px;
+                border-radius: 20px;
+            }
+            
+            .model-viewer {
+                height: 400px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="grain-overlay"></div>
+    
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link">← 返回首页</a>
+            <h1 class="main-title">
+                <span>M5 Paper Color</span>
+                <span class="title-accent">3D 模型</span>
+            </h1>
+        </div>
+
+        <div class="viewer-container">
+            <div id="model-viewer" class="model-viewer">
+                <div class="loading-message">正在加载 3D 模型...</div>
+            </div>
+            <div class="controls-info">
+                🖱️ 拖拽旋转 | 🔍 滚轮缩放 | 双击重置视角
+            </div>
+        </div>
+
+        <div class="description">
+            <h2>关于 M5 Paper Color</h2>
+            <p>M5 Paper Color 是一款革新性的彩色墨水屏设备，结合了传统墨水屏的护眼特性和彩色显示的丰富表现力。</p>
+            <p>该设备采用先进的彩色电子墨水技术，能够显示丰富的色彩，同时保持低功耗和纸质般的阅读体验。</p>
+            <p>上方的 3D 模型展示了设备的精确外观和设计细节，您可以通过鼠标拖拽来旋转查看不同角度。</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/loaders/STLLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
+
+    <script>
+        let scene, camera, renderer, controls, model;
+        
+        function init() {
+            const container = document.getElementById('model-viewer');
+            const loadingMessage = container.querySelector('.loading-message');
+            
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf8f9fa);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Add renderer to container
+            container.appendChild(renderer.domElement);
+            
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            // Add controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enableZoom = true;
+            controls.enablePan = false;
+            
+            // Load STL model
+            const loader = new THREE.STLLoader();
+            loader.load('papercolor-00-01.stl', function(geometry) {
+                // Create material
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: 0xd4a574,
+                    shininess: 30,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                // Create mesh
+                model = new THREE.Mesh(geometry, material);
+                model.castShadow = true;
+                model.receiveShadow = true;
+                
+                // Center the model
+                geometry.computeBoundingBox();
+                const center = geometry.boundingBox.getCenter(new THREE.Vector3());
+                model.position.sub(center);
+                
+                // Scale the model to fit nicely in view
+                const size = geometry.boundingBox.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 3 / maxDim;
+                model.scale.setScalar(scale);
+                
+                scene.add(model);
+                
+                // Hide loading message
+                loadingMessage.style.display = 'none';
+                
+                // Fit camera to model
+                controls.reset();
+                
+            }, function(progress) {
+                // Progress callback
+                const percentComplete = (progress.loaded / progress.total * 100);
+                loadingMessage.textContent = `正在加载 3D 模型... ${Math.round(percentComplete)}%`;
+            }, function(error) {
+                console.error('Error loading STL:', error);
+                loadingMessage.textContent = '模型加载失败，请检查文件路径';
+            });
+            
+            // Add double-click to reset view
+            renderer.domElement.addEventListener('dblclick', function() {
+                controls.reset();
+                if (model) {
+                    camera.position.set(5, 5, 5);
+                    camera.lookAt(model.position);
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+            animate();
+        }
+        
+        function onWindowResize() {
+            const container = document.getElementById('model-viewer');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

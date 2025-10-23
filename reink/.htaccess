@@ -1,0 +1,33 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Set base directory for subpage
+RewriteBase /reink/
+
+# Allow CORS for API requests
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type"
+
+# Set proper MIME types for images
+AddType image/svg+xml .svg
+AddType image/webp .webp
+
+# Enable compression for better performance
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# Cache images for better performance
+<IfModule mod_expires.c>
+    ExpiresActive on
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+</IfModule>
