@@ -214,7 +214,7 @@
 
         <div class="viewer-container">
             <div id="model-viewer" class="model-viewer">
-                <div class="loading-message">正在加载 3D 模型...</div>
+                <div class="loading-message">正在加载</div>
             </div>
             <div class="controls-info">
                 🖱️ 拖拽旋转 | 🔍 滚轮缩放 | 双击重置视角
@@ -331,7 +331,7 @@
                     function(progress) {
                         if (progress.lengthComputable) {
                             const percentComplete = (progress.loaded / progress.total * 100);
-                            loadingMessage.textContent = `正在加载 3D 模型... ${Math.round(percentComplete)}%`;
+                            loadingMessage.textContent = `正在加载`;
                         }
                     },
                     function(error) {
@@ -437,7 +437,7 @@
                 console.log('Model rotation:', model.rotation);
                 
                 // Hide loading message
-                loadingMessage.textContent = 'E-ink 设备模型加载成功！拖拽旋转，滚轮缩放';
+                loadingMessage.textContent = '加载成功';
                 setTimeout(() => {
                     loadingMessage.style.display = 'none';
                 }, 2000);
