@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备对比 - apov: a point of view</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream: #FBF7F0;
+            --warm-white: #FEFCF8;
+            --charcoal: #2C2C2C;
+            --warm-grey: #8B8680;
+            --accent-gold: #D4A574;
+            --deep-brown: #4A3728;
+            --soft-shadow: rgba(44, 44, 44, 0.08);
+            --border-light: rgba(139, 134, 128, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
+            line-height: 1.6;
+            font-weight: 300;
+            overflow-x: hidden;
+        }
+
+        .grain-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image: 
+                radial-gradient(circle at 20% 80%, transparent 50%, rgba(44, 44, 44, 0.1) 100%),
+                radial-gradient(circle at 80% 20%, transparent 50%, rgba(44, 44, 44, 0.1) 100%),
+                radial-gradient(circle at 40% 40%, transparent 50%, rgba(44, 44, 44, 0.05) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--warm-grey);
+            text-decoration: none;
+            font-size: 1rem;
+            margin-bottom: 40px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--accent-gold);
+        }
+
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .title-accent {
+            color: var(--accent-gold);
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .section {
+            margin-bottom: 80px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            color: var(--charcoal);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .device-card {
+            background: var(--warm-white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px var(--soft-shadow),
+                0 8px 16px rgba(44, 44, 44, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-light);
+            position: relative;
+        }
+
+        .device-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-gold), transparent, var(--accent-gold));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0.3;
+        }
+
+        .device-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 500;
+            margin-bottom: 30px;
+            color: var(--charcoal);
+            text-align: center;
+        }
+
+        .device-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .device-image::before {
+            content: '3D 模型占位';
+            color: var(--warm-grey);
+            font-size: 1rem;
+        }
+
+        .dimensions {
+            margin-top: 20px;
+        }
+
+        .dimension-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .dimension-label {
+            color: var(--charcoal);
+            font-weight: 500;
+        }
+
+        .dimension-value {
+            color: var(--warm-grey);
+        }
+
+        .function-demo {
+            background: var(--warm-white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px var(--soft-shadow),
+                0 8px 16px rgba(44, 44, 44, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-light);
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .function-demo::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-gold), transparent, var(--accent-gold));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0.3;
+        }
+
+        .function-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .function-tab {
+            padding: 10px 20px;
+            background: rgba(212, 165, 116, 0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--charcoal);
+            font-weight: 500;
+        }
+
+        .function-tab.active {
+            background: var(--accent-gold);
+            color: white;
+        }
+
+        .function-tab:hover {
+            border-color: var(--accent-gold);
+        }
+
+        .function-content {
+            display: none;
+            text-align: center;
+        }
+
+        .function-content.active {
+            display: block;
+        }
+
+        .function-mockup {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: var(--warm-grey);
+            font-size: 1.1rem;
+        }
+
+        .spec-list {
+            list-style: none;
+        }
+
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .spec-item:last-child {
+            border-bottom: none;
+        }
+
+        .spec-label {
+            font-weight: 500;
+            color: var(--charcoal);
+            min-width: 100px;
+        }
+
+        .spec-value {
+            color: var(--warm-grey);
+            text-align: right;
+            flex: 1;
+        }
+
+        .highlight {
+            color: var(--accent-gold);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 15px;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .device-card,
+            .function-demo {
+                padding: 30px 20px;
+                border-radius: 20px;
+            }
+
+            .function-tabs {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .function-tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+
+            .device-image {
+                height: 200px;
+            }
+
+            .function-mockup {
+                height: 300px;
+                font-size: 1rem;
+            }
+
+            .spec-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .spec-value {
+                text-align: left;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="grain-overlay"></div>
+    
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link">← 返回首页</a>
+            <h1 class="main-title">
+                <span>设备对比</span>
+            </h1>
+        </div>
+
+        <!-- Section 1: 外观物理尺寸 -->
+        <div class="section">
+            <h2 class="section-title">外观物理尺寸</h2>
+            <div class="comparison-grid">
+                <div class="device-card">
+                    <h3 class="device-name">阅星曈 X4</h3>
+                    <div class="device-image"></div>
+                    <div class="dimensions">
+                        <div class="dimension-item">
+                            <span class="dimension-label">尺寸</span>
+                            <span class="dimension-value">114 × 69 × 5.9 mm</span>
+                        </div>
+                        <div class="dimension-item">
+                            <span class="dimension-label">重量</span>
+                            <span class="dimension-value">74g</span>
+                        </div>
+                        <div class="dimension-item">
+                            <span class="dimension-label">边框</span>
+                            <span class="dimension-value">磁吸设计、物理按键</span>
+                        </div>
+                        <div class="dimension-item">
+                            <span class="dimension-label">材质</span>
+                            <span class="dimension-value">塑料边框、金属背板</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="device-card">
+                    <h3 class="device-name">国文 OBOOK5</h3>
+                    <div class="device-image"></div>
+                    <div class="dimensions">
+                        <div class="dimension-item">
+                            <span class="dimension-label">尺寸</span>
+                            <span class="dimension-value">约 110 × 70 × 6 mm</span>
+                        </div>
+                        <div class="dimension-item">
+                            <span class="dimension-label">重量</span>
+                            <span class="dimension-value">约 80g</span>
+                        </div>
+                        <div class="dimension-item">
+                            <span class="dimension-label">边框</span>
+                            <span class="dimension-value">简洁设计、物理按键</span>
+                        </div>
+                        <div class="dimension-item">
+                            <span class="dimension-label">材质</span>
+                            <span class="dimension-value">轻量化材质</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: 常用功能交互展示 -->
+        <div class="section">
+            <h2 class="section-title">常用功能交互展示</h2>
+            <div class="function-demo">
+                <div class="function-tabs">
+                    <div class="function-tab active" data-function="transfer">传书</div>
+                    <div class="function-tab" data-function="library">选书</div>
+                    <div class="function-tab" data-function="reading">翻页</div>
+                </div>
+                
+                <div class="function-content active" id="transfer">
+                    <div class="function-mockup">
+                        📁 WiFi 传书界面<br>
+                        📱 扫码连接 → 📤 上传书籍 → ✅ 传输完成
+                    </div>
+                    <p><strong>阅星曈 X4:</strong> 支持 WiFi 传书，需使用 microSD 卡<br>
+                       <strong>国文 OBOOK5:</strong> 支持 WiFi 传书，32GB 内置存储</p>
+                </div>
+                
+                <div class="function-content" id="library">
+                    <div class="function-mockup">
+                        📚 我的书库<br>
+                        ▪️ 《三体》<br>
+                        ▪️ 《流浪地球》<br>
+                        ▪️ 《小王子》
+                    </div>
+                    <p><strong>阅星曈 X4:</strong> 支持 EPUB、TXT 格式<br>
+                       <strong>国文 OBOOK5:</strong> 支持多种格式 + 音乐播放</p>
+                </div>
+                
+                <div class="function-content" id="reading">
+                    <div class="function-mockup">
+                        📖 阅读界面<br>
+                        ← 上一页 | 下一页 →<br>
+                        ⚙️ 字体调节 | 进度显示
+                    </div>
+                    <p><strong>阅星曈 X4:</strong> 物理按键翻页，无触控<br>
+                       <strong>国文 OBOOK5:</strong> 支持背光调节，护眼阅读</p>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Section 3: 客观参数对比 -->
+        <div class="section">
+            <h2 class="section-title">客观参数对比</h2>
+            <div class="comparison-grid">
+                <div class="device-card">
+                    <h3 class="device-name">阅星曈 X4</h3>
+                    <ul class="spec-list">
+                        <li class="spec-item">
+                            <span class="spec-label">屏幕尺寸</span>
+                            <span class="spec-value">4.3英寸</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">分辨率</span>
+                            <span class="spec-value">212 PPI</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">屏幕类型</span>
+                            <span class="spec-value">水墨屏（无触控、无背光）</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">处理器</span>
+                            <span class="spec-value">ESP32</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">内存</span>
+                            <span class="spec-value">128MB</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">存储</span>
+                            <span class="spec-value">32GB microSD</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">电池</span>
+                            <span class="spec-value">650mAh</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">系统</span>
+                            <span class="spec-value">封闭系统</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">连接</span>
+                            <span class="spec-value">WiFi 2.4GHz, USB-C, 蓝牙</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">价格</span>
+                            <span class="spec-value highlight">¥259</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="device-card">
+                    <h3 class="device-name">国文 OBOOK5</h3>
+                    <ul class="spec-list">
+                        <li class="spec-item">
+                            <span class="spec-label">屏幕尺寸</span>
+                            <span class="spec-value">4.26英寸</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">分辨率</span>
+                            <span class="spec-value">212-300 PPI</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">屏幕类型</span>
+                            <span class="spec-value">水墨屏（内置背光）</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">处理器</span>
+                            <span class="spec-value">双核处理器</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">内存</span>
+                            <span class="spec-value">512MB</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">存储</span>
+                            <span class="spec-value">32GB 内置</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">背光</span>
+                            <span class="spec-value">内置护眼阅读灯</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">电池</span>
+                            <span class="spec-value">数周续航</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">系统</span>
+                            <span class="spec-value">专用阅读系统</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">连接</span>
+                            <span class="spec-value">WiFi, USB-C</span>
+                        </li>
+                        <li class="spec-item">
+                            <span class="spec-label">价格</span>
+                            <span class="spec-value highlight">价格未明</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function tabs functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.function-tab');
+            const contents = document.querySelectorAll('.function-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetFunction = this.getAttribute('data-function');
+                    
+                    // Remove active class from all tabs and contents
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const targetContent = document.getElementById(targetFunction);
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
