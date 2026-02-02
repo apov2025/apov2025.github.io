@@ -1,0 +1,12 @@
+﻿id,brand,brand_cn,model,year,size_inch,resolution,ppi,panel_type,color,interfaces,touch,frontlight,refresh_hz,price_usd,status,status_cn,tagline_cn,pick,pick_label
+1,Dasung,大上,Paperlike 253,2024,25.3,3200x1800,145,E-Ink Carta 1250,否,"HDMI, DP, USB-C",否,选配,33,"$2,250 ",available,在售,25.3 英寸旗舰黑白墨水屏显示器，33Hz 刷新，支持 VESA 壁挂。,,
+2,Dasung,大上,"Paperlike Color 25.3""",2024,25.3,3200x1800,145,Kaleido 3,是,"HDMI, DP, USB-C",否,有,33,"$1,899 ",available,在售,25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，4096 色。,,
+3,Dasung,大上,Paperlike 13K,2025,13.3,3200x2400,300,E-Ink Carta,否,"mini-HDMI, USB-C",否,有,37,$679 ,available,在售,13.3 英寸便携墨水屏，300 PPI 高清，37Hz 刷新率，色温前光。,yes,高清快刷低延迟
+4,Dasung,大上,Paperlike 13K Color,2025,13.3,3200x2400,300,Kaleido 3,是,"mini-HDMI, USB-C",有,有,37,$749 ,available,在售,13.3 英寸彩色便携墨水屏，电容触摸，37Hz 刷新，Kaleido 3 面板。,,
+5,Dasung,大上,Paperlike 103,2025,10.3,1872x1404,227,E-Ink Carta,否,USB-C,有,有,60,$349 ,available,在售,10.3 英寸紧凑副屏，60Hz 刷新率，电容触摸，双色温前光。,,
+6,Boox,文石,"Mira Pro 25.3""",2022,25.3,3200x1800,145,E-Ink Carta,否,"HDMI, mini-HDMI, DP, USB-C",否,有,BSR 4模式,"$1,599 ",available,在售,25.3 英寸桌面墨水屏，BSR 刷新算法，色温前光，双扬声器。,yes,大屏高颜值
+7,Boox,文石,"Mira Pro Color 25.3""",2025,25.3,3200x1800,145,Kaleido 3,是,"HDMI, mini-HDMI, DP, USB-C",否,有,BSR 4模式,"$1,899 ",available,在售,25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，BSR 刷新。,,
+8,Boox,文石,"Mira 13.3"" (初代)",2021,13.3,2200x1650,207,E-Ink Mobius,否,"mini-HDMI, USB-C",有,有,4模式,$799 ,discontinued,已停产,初代 13.3 英寸 Mira，开启了便携墨水屏显示器时代。里程碑产品。,,
+9,Bigme,大我,B251,2024,25.3,3200x1800,145,Kaleido 3,是,"HDMI, mini-HDMI, DP, USB-C",否,有,—,"$1,999 ",available,在售,25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，支持 Miracast/AirPlay 投屏。,,
+10,Bigme,大我,B13,2025,13.3,3200x2400,300,Kaleido 3,是,"mini-HDMI, USB-C",否,有,30,$729 ,available,在售,13.3 英寸便携彩色墨水屏显示器，300 PPI，支持 DLNA/AirPlay 无线投屏。,,
+11,Modos,Modos,Paper Monitor,2026,13.3,1600x1200,150,E-Ink Carta,否,"micro-HDMI, USB-C, DP",否,否,60-75,$599 ,upcoming,敬请期待,13.3 英寸开源墨水屏显示器，FPGA 控制器，软硬件全开源。目前众筹阶段。,yes,开源快刷低延迟
