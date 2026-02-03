@@ -77,81 +77,110 @@ nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); b
 .section-wrap { padding: 2rem; max-width: 1400px; margin: 0 auto; }
 .section-label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-family: 'Noto Serif SC', serif; }
 
-/* ---- Picks: device mockups ---- */
-.picks-row {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 3rem;
-  padding: 2rem 0 3rem;
-}
-
-.pick-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* ---- Picks: visual + cards ---- */
+.picks-visual {
+  margin: 2rem 0;
   text-align: center;
-  cursor: pointer;
-  transition: transform 0.3s;
 }
-.pick-item:hover { transform: translateY(-6px); }
 
-.pick-label-tag {
-  font-size: 0.6rem;
+.picks-hero-img {
+  max-width: 450px;
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.picks-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pick-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.pick-card:hover {
+  background: var(--surface2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.pick-card-label {
+  font-size: 0.55rem;
   font-family: 'Noto Serif SC', serif;
   color: var(--surface);
   background: var(--accent);
-  padding: 0.15rem 0.6rem;
+  padding: 0.15rem 0.5rem;
   letter-spacing: 0.12em;
-  margin-bottom: 1rem;
+  display: inline-block;
+  margin-bottom: 0.7rem;
 }
 
-/* Device mockup — proportional to real screen size */
-.device-mockup {
-  background: #1a1a1a;
-  border-radius: 6px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12), inset 0 0 0 2px #333;
-  transition: box-shadow 0.3s;
-}
-.pick-item:hover .device-mockup {
-  box-shadow: 0 8px 30px rgba(0,0,0,0.18), inset 0 0 0 2px #444;
-}
-
-.device-screen {
-  background: #e8e4dc;
-  border-radius: 2px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-dim);
-  font-size: 0.65rem;
-  font-family: 'IBM Plex Mono', monospace;
-  gap: 0.3rem;
-  position: relative;
-}
-.device-screen .screen-size { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; color: #bbb5a8; letter-spacing: 0.1em; }
-.device-screen .screen-hint { font-size: 0.55rem; color: #c5bfb3; }
-
-/* Chin / brand strip under screen */
-.device-chin {
-  text-align: center;
-  font-size: 0.45rem;
-  color: #666;
-  letter-spacing: 0.2em;
-  font-family: 'Space Grotesk', sans-serif;
+.pick-card-brand {
+  font-size: 0.6rem;
+  color: var(--accent);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding-top: 4px;
+  margin-bottom: 0.2rem;
+  font-family: 'IBM Plex Mono', monospace;
 }
 
-.pick-info { margin-top: 1rem; }
-.pick-info .pick-brand { font-size: 0.6rem; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.2rem; }
-.pick-info .pick-model { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
-.pick-info .pick-tagline { font-size: 0.7rem; color: var(--text-dim); font-family: 'Noto Serif SC', serif; max-width: 220px; line-height: 1.5; }
+.pick-card-model {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  color: var(--text);
+}
+
+.pick-card-tagline {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+}
+
+.pick-card-award {
+  font-size: 0.6rem;
+  color: var(--amber);
+  font-family: 'Noto Serif SC', serif;
+  margin-bottom: 0.8rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(184, 134, 11, 0.08);
+  border-left: 2px solid var(--amber);
+  line-height: 1.5;
+}
+
+.pick-card-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.pick-card-spec {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 0.2rem 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  letter-spacing: 0.03em;
+}
 
 /* ---- Overview article ---- */
 .article-content {
@@ -384,7 +413,7 @@ footer { border-top: 1px solid var(--border); padding: 2rem; display: flex; just
 footer .sys-info { display: flex; gap: 2rem; }
 
 @media (max-width:900px) {
-  .picks-row { flex-direction: column; align-items: center; gap: 2.5rem; }
+  .picks-cards { grid-template-columns: 1fr; }
   .timeline::before { left: 20px; }
   .year-marker { position: relative; left: 0; width: auto; text-align: left; padding-left: 45px; padding-right: 0; margin-bottom: 1rem; }
   .timeline-year::after { left: 14px; }
@@ -421,10 +450,12 @@ footer .sys-info { display: flex; gap: 2rem; }
 <!-- Picks -->
 <section class="section-wrap" id="picks">
   <div class="section-label">
-    <span>// 编辑推荐</span>
-    <span>三个视角，三台设备</span>
+    <span>// 编辑推荐（2026 年 1 月）</span>
   </div>
-  <div class="picks-row" id="picksRow"></div>
+  <div class="picks-visual">
+    <img src="epaper_monitor_editor_pick.png" alt="编辑推荐" class="picks-hero-img">
+  </div>
+  <div class="picks-cards" id="picksCards"></div>
 </section>
 
 <!-- Timeline -->
@@ -500,7 +531,7 @@ const products = [
   {id:1, brand:"Dasung", brand_cn:"大上", model:"Paperlike 253", year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"E-Ink Carta 1250", color:"否", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"选配", refresh_hz:"33", price_usd:"$2,250", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸旗舰黑白墨水屏显示器，33Hz 刷新，支持 VESA 壁挂。", url:"https://www.dasung.com/"},
   {id:2, brand:"Dasung", brand_cn:"大上", model:'Paperlike Color 25.3"', year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"33", price_usd:"$1,899", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，4096 色。", url:"https://www.dasung.com/"},
   {id:3, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"E-Ink Carta", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"37", price_usd:"$679", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携墨水屏，300 PPI 高清，37Hz 刷新率，色温前光。", url:"https://www.dasung.com/"},
-  {id:4, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K Color", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"37", price_usd:"$749", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸彩色便携墨水屏，电容触摸，37Hz 刷新，Kaleido 3 面板。", url:"https://www.dasung.com/"},
+  {id:4, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K Color", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"37", price_usd:"$749", status:"available", status_cn:"在售", tagline_cn:"鼠标跟手，低延迟设计，可能是「可用性」最高的墨水屏显示器。", award:"MyDeepGuide 2025 年度产品", url:"https://www.dasung.com/"},
   {id:5, brand:"Dasung", brand_cn:"大上", model:"Paperlike 103", year:2025, size_inch:10.3, resolution:"1872x1404", ppi:227, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"有", frontlight:"有", refresh_hz:"60", price_usd:"$349", status:"available", status_cn:"在售", tagline_cn:"10.3 英寸紧凑副屏，60Hz 刷新率，电容触摸，双色温前光。", url:"https://www.dasung.com/"},
   {id:6, brand:"Boox", brand_cn:"文石", model:'Mira Pro 25.3"', year:2021, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"E-Ink Carta", color:"否", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"BSR 4模式", price_usd:"$1,599", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸桌面墨水屏，BSR 刷新算法，色温前光，双扬声器。", url:"https://shop.boox.com/"},
   {id:7, brand:"Boox", brand_cn:"文石", model:'Mira Pro Color 25.3"', year:2025, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"BSR 4模式", price_usd:"$1,899", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，BSR 刷新。", url:"https://shop.boox.com/"},
@@ -524,9 +555,8 @@ const products = [
 
 // ---- Editor picks config ----
 const picksConfig = [
-  { id: 3,  label: "综合之选" },
-  { id: 7,  label: "颜值之选" },
-  { id: 11, label: "创新之选" }
+  { id: 4,  label: "综合最佳" },
+  { id: 7,  label: "高颜值大屏" }
 ];
 
 // ---- Helpers ----
@@ -556,47 +586,39 @@ function openDetail(p) {
   document.getElementById('modalOverlay').classList.add('active');
 }
 
-// ---- Render picks with device mockups ----
-// Proportional sizing: 25.3" -> 220px wide, 13.3" -> 116px, 10.3" -> 90px (scaled ~8.7px per inch)
-function mockupSize(sizeInch) {
-  const scale = 8.7;
-  const w = Math.round(sizeInch * scale);
-  // Approximate aspect ratios
-  const h = Math.round(w * 0.75);
-  return { w, h };
-}
-
+// ---- Render picks as cards ----
 (function() {
     // ---- PICKS ----
-    const picksRow = document.getElementById('picksRow');
+    const picksCards = document.getElementById('picksCards');
     picksConfig.forEach(cfg => {
       const p = products.find(x => x.id === cfg.id);
       if (!p) return;
-      const sz = mockupSize(p.size_inch);
-      const bezelH = 12;
-      const bezelW = 10;
-      const chinH = 16;
-      const totalW = sz.w + bezelW * 2;
-      const totalH = sz.h + bezelH * 2 + chinH;
+
+      // For Kaleido color screens, show both B&W and color PPI
+      let ppiText = `${p.ppi} PPI`;
+      if (p.panel_type.includes('Kaleido') && p.color === '是') {
+        const colorPpi = Math.round(p.ppi / 2);
+        ppiText = `${p.ppi} PPI (黑白) / ${colorPpi} PPI (彩色)`;
+      }
+
+      // Award badge if exists
+      const awardHTML = p.award ? `<div class="pick-card-award">🏆 ${p.award}</div>` : '';
 
       const el = document.createElement('div');
-      el.className = 'pick-item';
+      el.className = 'pick-card';
       el.onclick = () => openDetail(p);
       el.innerHTML = `
-        <div class="pick-label-tag">${cfg.label}</div>
-        <div class="device-mockup" style="width:${totalW}px; height:${totalH}px; flex-direction:column; padding:${bezelH}px ${bezelW}px 0;">
-          <div class="device-screen" style="width:${sz.w}px; height:${sz.h}px;">
-            <span class="screen-size">${p.size_inch}"</span>
-            <span class="screen-hint">${p.resolution}</span>
-          </div>
-          <div class="device-chin">${p.brand}</div>
-        </div>
-        <div class="pick-info">
-          <div class="pick-brand">${p.brand} ${p.brand_cn !== p.brand ? p.brand_cn : ''}</div>
-          <div class="pick-model">${p.model}</div>
-          <div class="pick-tagline">${p.tagline_cn}</div>
+        <div class="pick-card-label">${cfg.label}</div>
+        <div class="pick-card-brand">${p.brand} ${p.brand_cn !== p.brand ? p.brand_cn : ''}</div>
+        <div class="pick-card-model">${p.model}</div>
+        <div class="pick-card-tagline">${p.tagline_cn}</div>
+        ${awardHTML}
+        <div class="pick-card-specs">
+          <span class="pick-card-spec">${p.size_inch}"</span>
+          <span class="pick-card-spec">${ppiText}</span>
+          <span class="pick-card-spec">${getTechLabel(p)}</span>
         </div>`;
-      picksRow.appendChild(el);
+      picksCards.appendChild(el);
     });
 
     // ---- TIMELINE ----
