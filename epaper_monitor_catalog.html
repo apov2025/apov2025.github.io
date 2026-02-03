@@ -183,6 +183,33 @@ nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); b
   font-family: 'IBM Plex Mono', monospace;
 }
 
+/* ---- Filter buttons ---- */
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.7rem;
+  font-family: 'Noto Serif SC', serif;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.filter-btn.active {
+  color: var(--surface);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 /* ---- Timeline ---- */
 .timeline { position: relative; padding: 0 0 2rem 0; }
 .timeline::before { content: ''; position: absolute; left: 140px; top: 0; bottom: 0; width: 1px; background: var(--border); }
@@ -407,6 +434,13 @@ footer .sys-info { display: flex; gap: 2rem; }
     <span>// 产品时间轴</span>
     <span id="tlCount">全部产品 · 按年份排列</span>
   </div>
+  <div class="filter-buttons">
+    <button class="filter-btn active" data-filter="all">全部产品</button>
+    <button class="filter-btn" data-filter="available">在售产品</button>
+    <button class="filter-btn" data-filter="eink">墨水屏</button>
+    <button class="filter-btn" data-filter="color">彩色墨水屏</button>
+    <button class="filter-btn" data-filter="rlcd">RLCD</button>
+  </div>
   <div class="timeline" id="timelineContainer"></div>
 </section>
 
@@ -414,9 +448,9 @@ footer .sys-info { display: flex; gap: 2rem; }
 <section class="section-wrap" id="overview">
   <div class="section-label">
     <span>// 门类综述</span>
-    <span>社群编辑 · 每季度更新</span>
+    <span>社群编辑 · 时常更新</span>
   </div>
-  <div class="article-meta">最近更新: 2025-Q4 // 编辑: apov 社群编辑</div>
+  <div class="article-meta">最近更新：2026 年 1 月，编辑：apov 社群</div>
   <div class="article-content">
     <h3>电子纸显示器现状</h3>
     <p>电子纸显示器市场目前以墨水屏（E-Ink 电泳显示）技术为主导。从大上科技 2014 年发布初代 Paperlike 至今，这个品类已经走过十年。墨水屏凭借其双稳态特性、超低功耗和接近纸张的视觉体验，成为目前唯一成熟、可量产的电子纸显示器方案。从最初的"能用就好"到如今 300 PPI、37Hz 乃至 60Hz 的刷新率，墨水屏显示器正在逐步缩小与传统 LCD 之间的体验差距——至少在文字工作场景下。</p>
@@ -475,7 +509,7 @@ const products = [
   {id:10, brand:"Bigme", brand_cn:"大我", model:"B13", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"30", price_usd:"$729", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携彩色墨水屏显示器，300 PPI，支持 DLNA/AirPlay 无线投屏。", url:"https://bigme.vip/"},
   {id:11, brand:"Modos", brand_cn:"Modos", model:"Glider 13", year:2026, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Carta", color:"否", interfaces:"micro-HDMI, USB-C, DP", touch:"否", frontlight:"否", refresh_hz:"60-75", price_usd:"$599", status:"upcoming", status_cn:"敬请期待", tagline_cn:"13.3 英寸开源墨水屏显示器，FPGA 控制器。目前众筹阶段。", url:"https://www.modos.tech/"},
   // Discontinued Dasung legacy
-  {id:12, brand:"Dasung", brand_cn:"大上", model:"Paperlike (初代)", year:2014, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Fina", color:"否", interfaces:"USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$850", status:"discontinued", status_cn:"已停产", tagline_cn:"世界首款墨水屏电脑显示器，USB 供电连接，银色外壳，开启全新品类。"},
+  {id:12, brand:"Dasung", brand_cn:"大上", model:"Paperlike (初代)", year:2014, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Fina", color:"否", interfaces:"USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$850", status:"discontinued", status_cn:"已停产", tagline_cn:"世界首款墨水屏电脑显示器，开启全新品类。"},
   {id:13, brand:"Dasung", brand_cn:"大上", model:"Paperlike Pro", year:2017, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Carta", color:"否", interfaces:"HDMI, USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$1,099", status:"discontinued", status_cn:"已停产", tagline_cn:"首次支持 HDMI 输入的墨水屏显示器，Carta 面板提升对比度。"},
   {id:14, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD", year:2018, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"40", price_usd:"$683", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列基础版，2K 分辨率，Mobius 柔性面板，40Hz Turbo 刷新。"},
   {id:15, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD-FT", year:2019, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"40", price_usd:"$1,049", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列旗舰版，前光+触摸，2K 分辨率，40Hz 刷新，大上三代经典。"},
@@ -566,44 +600,82 @@ function mockupSize(sizeInch) {
     });
 
     // ---- TIMELINE ----
-    const years = [...new Set(products.map(p => p.year))].sort((a,b) => b - a);
-    const tlContainer = document.getElementById('timelineContainer');
-    document.getElementById('tlCount').textContent = `${products.length} 款产品 · 按年份排列`;
+    function filterProducts(filterType) {
+      switch(filterType) {
+        case 'all':
+          return products;
+        case 'available':
+          return products.filter(p => p.status === 'available');
+        case 'eink':
+          return products.filter(p => p.panel_type.includes('E-Ink') && p.color === '否');
+        case 'color':
+          return products.filter(p => (p.panel_type.includes('Kaleido') || p.color === '是') && p.panel_type !== 'RLCD');
+        case 'rlcd':
+          return products.filter(p => p.panel_type === 'RLCD');
+        default:
+          return products;
+      }
+    }
 
-    years.forEach(year => {
-      const yp = products.filter(p => p.year === year);
-      const countLabel = yp.length + ' 款';
+    function renderTimeline(filteredProducts) {
+      const years = [...new Set(filteredProducts.map(p => p.year))].sort((a,b) => b - a);
+      const tlContainer = document.getElementById('timelineContainer');
+      tlContainer.innerHTML = '';
 
-      let cardsHTML = '';
-      yp.forEach(p => {
-        const disc = p.status === 'discontinued' ? ' discontinued' : '';
-        cardsHTML += `
-          <div class="tl-card${disc}" data-id="${p.id}">
-            <div class="tl-card-thumb">IMG</div>
-            <div class="tl-card-info">
-              <div class="tl-brand-model"><span class="tl-brand">${p.brand_cn}</span>${p.model}</div>
-              <div class="tl-summary">${p.tagline_cn}</div>
-              <div class="tl-tech-label">${getTechLabel(p)}</div>
+      document.getElementById('tlCount').textContent = `${filteredProducts.length} 款产品 · 按年份排列`;
+
+      years.forEach(year => {
+        const yp = filteredProducts.filter(p => p.year === year);
+        const countLabel = yp.length + ' 款';
+
+        let cardsHTML = '';
+        yp.forEach(p => {
+          const disc = p.status === 'discontinued' ? ' discontinued' : '';
+          cardsHTML += `
+            <div class="tl-card${disc}" data-id="${p.id}">
+              <div class="tl-card-thumb">IMG</div>
+              <div class="tl-card-info">
+                <div class="tl-brand-model"><span class="tl-brand">${p.brand_cn}</span>${p.model}</div>
+                <div class="tl-summary">${p.tagline_cn}</div>
+                <div class="tl-tech-label">${getTechLabel(p)}</div>
+              </div>
+              <div class="tl-card-status ${statusClass(p.status)}">${p.status_cn}</div>
+            </div>`;
+        });
+
+        tlContainer.innerHTML += `
+          <div class="timeline-year">
+            <div class="year-marker">
+              <div class="year-num">${year}</div>
+              <div class="year-count">${countLabel}</div>
             </div>
-            <div class="tl-card-status ${statusClass(p.status)}">${p.status_cn}</div>
+            <div class="timeline-cards">${cardsHTML}</div>
           </div>`;
       });
 
-      tlContainer.innerHTML += `
-        <div class="timeline-year">
-          <div class="year-marker">
-            <div class="year-num">${year}</div>
-            <div class="year-count">${countLabel}</div>
-          </div>
-          <div class="timeline-cards">${cardsHTML}</div>
-        </div>`;
-    });
+      // Attach click handlers to timeline cards
+      document.querySelectorAll('.tl-card').forEach(el => {
+        el.addEventListener('click', () => {
+          const p = products.find(x => x.id === parseInt(el.dataset.id));
+          if (p) openDetail(p);
+        });
+      });
+    }
 
-    // Attach click handlers to timeline cards
-    document.querySelectorAll('.tl-card').forEach(el => {
-      el.addEventListener('click', () => {
-        const p = products.find(x => x.id === parseInt(el.dataset.id));
-        if (p) openDetail(p);
+    // Initial render
+    renderTimeline(products);
+
+    // Filter button handlers
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Update active button
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Filter and re-render
+        const filterType = e.target.dataset.filter;
+        const filtered = filterProducts(filterType);
+        renderTimeline(filtered);
       });
     });
 
