@@ -434,9 +434,9 @@ footer .sys-info { display: flex; gap: 2rem; }
 <header>
   <div class="logo">平静科技<span>//</span>目录</div>
   <nav>
-    <a href="#picks" class="active">推荐</a>
-    <a href="#timeline">时间轴</a>
-    <a href="#overview">综述</a>
+    <a href="#picks" data-section="picks">推荐</a>
+    <a href="#timeline" data-section="timeline">时间轴</a>
+    <a href="#overview" data-section="overview">综述</a>
   </nav>
 </header>
 
@@ -508,7 +508,7 @@ footer .sys-info { display: flex; gap: 2rem; }
 
 <footer>
   <span>价格与参数仅供参考</span>
-  <span>by apov</span>
+  <span>a project by <a href="https://apov.sg" target="_blank" rel="noopener noreferrer">apov.sg</a></span>
 </footer>
 
 <!-- Detail modal -->
@@ -708,6 +708,36 @@ function openDetail(p) {
     document.getElementById('modalOverlay').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
     });
+})();
+
+// ---- Navigation active state management ----
+(function() {
+  const sections = ['picks', 'timeline', 'overview'];
+  const navLinks = document.querySelectorAll('nav a[data-section]');
+
+  function updateActiveNav() {
+    let currentSection = 'picks';
+    const scrollPos = window.scrollY + 100;
+
+    sections.forEach(sectionId => {
+      const section = document.getElementById(sectionId);
+      if (section && section.offsetTop <= scrollPos) {
+        currentSection = sectionId;
+      }
+    });
+
+    navLinks.forEach(link => {
+      if (link.dataset.section === currentSection) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveNav);
+  window.addEventListener('load', updateActiveNav);
+  updateActiveNav();
 })();
 </script>
 
