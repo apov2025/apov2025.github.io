@@ -6,10 +6,10 @@
 <title>电子纸显示器//目录 by apov</title>
 
 <!-- Favicons -->
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="manifest" href="site.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="manifest" href="../site.webmanifest">
 
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -271,9 +271,9 @@ nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); b
 .tl-card:hover { background: var(--surface2); }
 
 .tl-card-thumb {
-  width: 48px;
-  height: 48px;
-  background: var(--bg);
+  width: 80px;
+  height: 80px;
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 4px;
   flex-shrink: 0;
@@ -283,6 +283,15 @@ nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); b
   font-size: 0.5rem;
   color: var(--border);
   font-family: 'IBM Plex Mono', monospace;
+  overflow: hidden;
+}
+
+.tl-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .tl-card-info { min-width: 0; }
@@ -386,6 +395,21 @@ nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); b
 .modal-model { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
 .modal-tagline { font-size: 0.8rem; color: var(--text-dim); font-family: 'Noto Serif SC', serif; line-height: 1.7; margin-bottom: 1.5rem; }
 
+.modal-image {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.modal-image img {
+  max-width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+}
+
 .modal-placeholder {
   background: var(--bg);
   border: 1px dashed var(--border);
@@ -461,7 +485,7 @@ footer .sys-info { display: flex; gap: 2rem; }
     <span>// 编辑推荐（2026 年 1 月）</span>
   </div>
   <div class="picks-visual">
-    <img src="epaper_monitor_editor_pick.png" alt="编辑推荐" class="picks-hero-img">
+    <img src="../epaper_monitor_editor_pick.png" alt="编辑推荐" class="picks-hero-img">
   </div>
   <div class="picks-cards" id="picksCards"></div>
 </section>
@@ -494,19 +518,19 @@ footer .sys-info { display: flex; gap: 2rem; }
     <p>电子纸显示器市场目前以墨水屏（E-Ink 电泳显示）技术为主导。从大上科技 2014 年发布初代 Paperlike 至今，这个品类已经走过十年。墨水屏凭借其双稳态特性、超低功耗和接近纸张的视觉体验，成为目前唯一成熟、可量产的电子纸显示器方案。从最初的"能用就好"到如今 300 PPI、37Hz 乃至 60Hz 的刷新率，墨水屏显示器正在逐步缩小与传统 LCD 之间的体验差距——至少在文字工作场景下。</p>
 
     <h3>墨水屏尺寸格局</h3>
-    <p>目前市场上的墨水屏显示器主要分为三个尺寸段：25.3 英寸桌面级（大上 Paperlike 253、文石 Mira Pro、大我 B251），13.3 英寸便携级（大上 Paperlike 13K、大我 B13、Modos Glider），以及10.3 英寸紧凑副屏（大上 Paperlike 103）。25.3 英寸机型适合作为主力办公屏，13.3 英寸则在便携性和可用性之间取得平衡，是目前竞争最激烈的区间。</p>
+    <p>目前市场上的墨水屏显示器主要分为三个尺寸段：25.3 英寸桌面级（大上 Paperlike 253、文石 Mira Pro、大我 B251），13.3 英寸便携级（大上 Paperlike 13K、大我 B13、Modos Enchanter），以及10.3 英寸紧凑副屏（大上 Paperlike 103）。25.3 英寸机型适合作为主力办公屏，13.3 英寸则在便携性和可用性之间取得平衡，是目前竞争最激烈的区间。</p>
 
     <h3>彩色墨水屏</h3>
     <p>Kaleido 3 是目前唯一被量产墨水屏显示器采用的彩色电子纸技术。它在黑白 E-Ink 面板上叠加彩色滤光片，可显示 4096 色。代价是彩色模式下有效分辨率减半，且色彩饱和度远不及 LCD/OLED。目前大上、文石、大我均已推出 Kaleido 3 彩色型号。Gallery 技术尚未被任何墨水屏显示器采用。</p>
 
     <h3>刷新率与残影</h3>
-    <p>刷新率是墨水屏显示器的核心痛点。E-Ink 面板的物理刷新机制决定了它无法匹敌 LCD 的流畅度。新一代产品通过算法优化（如文石 BSR）和硬件加速（如 Modos 的 FPGA 控制器）在持续改善这一体验。大上 Paperlike 13K 达到 37Hz，Paperlike 103 达到 60Hz，Modos Glider 目标 60-75Hz。但"残影"仍然是所有墨水屏显示器无法完全消除的特性。</p>
+    <p>刷新率是墨水屏显示器的核心痛点。E-Ink 面板的物理刷新机制决定了它无法匹敌 LCD 的流畅度。新一代产品通过算法优化（如文石 BSR）和硬件加速（如 Modos 的 FPGA 控制器）在持续改善这一体验。大上 Paperlike 13K 达到 37Hz，Paperlike 103 达到 60Hz，Modos Enchanter 目标 60-75Hz。但"残影"仍然是所有墨水屏显示器无法完全消除的特性。</p>
 
     <h3>低延迟</h3>
     <p>从大上革命者系列和 Modos 显示器开始，墨水屏显示器进入了低延迟阶段。主要用户体验提升体现在鼠标操作上——鼠标指针终于开始跟手，在墨水屏上实现了"指哪打哪"的体验。这一突破大大提升了墨水屏显示器在需要频繁鼠标操作场景下的可用性，让墨水屏从"纯文字阅读屏"向"可交互工作屏"迈进了一大步。</p>
 
     <h3>开源与新势力</h3>
-    <p>Modos 是目前唯一采用全开源路线的墨水屏显示器品牌。其 Glider 13 的 FPGA 控制器原理图、固件源码和驱动代码全部公开。这种方式为社区自定义刷新算法、延迟优化和系统集成打开了可能性。产品预计 2026 年通过众筹发货。此外，DIY 社区也出现了一些墨水屏显示器项目，如三喵、小布等开源方案，微雪等开发板厂商也推出了面向开发者的墨水屏模块和套件，为动手能力强的用户提供了更灵活的选择。</p>
+    <p>Modos 是目前唯一采用全开源路线的墨水屏显示器品牌。其 Enchanter 的 FPGA 控制器原理图、固件源码和驱动代码全部公开。这种方式为社区自定义刷新算法、延迟优化和系统集成打开了可能性。产品预计 2026 年通过众筹发货。此外，DIY 社区也出现了一些墨水屏显示器项目，如三喵、小布等开源方案，微雪等开发板厂商也推出了面向开发者的墨水屏模块和套件，为动手能力强的用户提供了更灵活的选择。</p>
 
     <h3>其他技术路线</h3>
     <p>除墨水屏之外，市场上还存在少量以"护眼"为卖点的显示技术。RLCD（反射式 LCD）利用环境光反射成像，刷新率可达 60Hz，无残影，代表产品包括 EazeEye Monitor 和 SVD rE 系列。此外还有一些采用柔光处理的普通 LCD 显示器，通过类纸膜、低蓝光等技术减少眼睛疲劳。但总体而言，这些替代路线产品稀少、价格高昂，墨水屏仍然是电子纸显示器的主流方案。</p>
@@ -524,7 +548,7 @@ footer .sys-info { display: flex; gap: 2rem; }
   <div class="article-content" style="text-align: center;">
     <h3>加入微信社群</h3>
     <p>我们建立了电子纸显示器交流社群，欢迎加入讨论。</p>
-    <img src="apov_admin_wechat_QR.png" alt="管理员微信二维码" style="max-width: 300px; margin: 2rem auto; display: block;">
+    <img src="../apov_admin_wechat_QR.png" alt="管理员微信二维码" style="max-width: 300px; margin: 2rem auto; display: block;">
     <p>扫描二维码添加管理员微信，并附言<strong>「显示器群」</strong>即可入群交流。</p>
   </div>
 </section>
@@ -541,9 +565,7 @@ footer .sys-info { display: flex; gap: 2rem; }
     <div class="modal-brand" id="modalBrand"></div>
     <div class="modal-model" id="modalModel"></div>
     <div class="modal-tagline" id="modalTagline"></div>
-    <div class="modal-placeholder">
-      详情页面正在建设中。<br>后续将包含详细规格、实拍图片和使用体验。
-    </div>
+    <div class="modal-image" id="modalImage" style="display:none;"></div>
     <a class="modal-website-btn" id="modalWebsiteBtn" target="_blank" rel="noopener noreferrer" style="display:none;">访问官网 →</a>
   </div>
 </div>
@@ -551,29 +573,29 @@ footer .sys-info { display: flex; gap: 2rem; }
 <script>
 // ---- Product data ----
 const products = [
-  {id:1, brand:"Dasung", brand_cn:"大上", model:"Paperlike 253", year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"E-Ink Carta 1250", color:"否", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"选配", refresh_hz:"33", price_usd:"$2,250", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸旗舰黑白墨水屏显示器，33Hz 刷新，支持 VESA 壁挂。", url:"https://www.dasung.com/"},
-  {id:2, brand:"Dasung", brand_cn:"大上", model:'Paperlike Color 25.3"', year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"33", price_usd:"$1,899", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，4096 色。", url:"https://www.dasung.com/"},
-  {id:3, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"E-Ink Carta", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"37", price_usd:"$679", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携墨水屏，300 PPI 高清，37Hz 刷新率，色温前光。", url:"https://www.dasung.com/"},
-  {id:4, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K Color", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"37", price_usd:"$749", status:"available", status_cn:"在售", tagline_cn:"鼠标跟手，低延迟设计，可能是「可用性」最高的墨水屏显示器。", award:"MyDeepGuide 2025 年度产品", url:"https://www.dasung.com/"},
-  {id:5, brand:"Dasung", brand_cn:"大上", model:"Paperlike 103", year:2025, size_inch:10.3, resolution:"1872x1404", ppi:227, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"有", frontlight:"有", refresh_hz:"60", price_usd:"$349", status:"available", status_cn:"在售", tagline_cn:"10.3 英寸紧凑副屏，60Hz 刷新率，电容触摸，双色温前光。", url:"https://www.dasung.com/"},
-  {id:6, brand:"Boox", brand_cn:"文石", model:'Mira Pro 25.3"', year:2021, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"E-Ink Carta", color:"否", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"BSR 4模式", price_usd:"$1,599", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸桌面墨水屏，BSR 刷新算法，色温前光，双扬声器。", url:"https://shop.boox.com/"},
-  {id:7, brand:"Boox", brand_cn:"文石", model:'Mira Pro Color 25.3"', year:2025, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"BSR 4模式", price_usd:"$1,899", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，BSR 刷新。", url:"https://shop.boox.com/"},
-  {id:8, brand:"Boox", brand_cn:"文石", model:'Mira 13.3" (初代)', year:2021, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"4模式", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"初代 13.3 英寸 Mira，开启了便携墨水屏显示器时代。里程碑产品。", url:"https://shop.boox.com/"},
-  {id:9, brand:"Bigme", brand_cn:"大我", model:"B251", year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"—", price_usd:"$1,999", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，支持 Miracast/AirPlay 投屏。", url:"https://bigme.vip/"},
-  {id:10, brand:"Bigme", brand_cn:"大我", model:"B13", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"30", price_usd:"$729", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携彩色墨水屏显示器，300 PPI，支持 DLNA/AirPlay 无线投屏。", url:"https://bigme.vip/"},
-  {id:11, brand:"Modos", brand_cn:"Modos", model:"Glider 13", year:2026, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Carta", color:"否", interfaces:"micro-HDMI, USB-C, DP", touch:"否", frontlight:"否", refresh_hz:"60-75", price_usd:"$599", status:"upcoming", status_cn:"敬请期待", tagline_cn:"13.3 英寸开源墨水屏显示器，FPGA 控制器。目前众筹阶段。", url:"https://www.modos.tech/"},
+  {id:1, brand:"Dasung", brand_cn:"大上", model:"Paperlike 253", year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"E-Ink Carta 1250", color:"否", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"选配", refresh_hz:"33", price_usd:"$2,250", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸旗舰黑白墨水屏显示器，33Hz 刷新，支持 VESA 壁挂。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_253.jpg"},
+  {id:2, brand:"Dasung", brand_cn:"大上", model:'Paperlike Color 25.3"', year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"33", price_usd:"$1,899", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，4096 色。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_253_color.jpg"},
+  {id:3, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"E-Ink Carta", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"37", price_usd:"$679", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携墨水屏，300 PPI 高清，37Hz 刷新率，色温前光。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_13k.jpg"},
+  {id:4, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K Color", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"37", price_usd:"$749", status:"available", status_cn:"在售", tagline_cn:"鼠标跟手，低延迟设计，可能是「可用性」最高的墨水屏显示器。", award:"MyDeepGuide 2025 年度产品", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_13k_color.jpg"},
+  {id:5, brand:"Dasung", brand_cn:"大上", model:"Paperlike 103", year:2025, size_inch:10.3, resolution:"1872x1404", ppi:227, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"有", frontlight:"有", refresh_hz:"60", price_usd:"$349", status:"available", status_cn:"在售", tagline_cn:"10.3 英寸紧凑副屏，60Hz 刷新率，电容触摸，双色温前光。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_103.jpg"},
+  {id:6, brand:"Boox", brand_cn:"文石", model:'Mira Pro 25.3"', year:2021, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"E-Ink Carta", color:"否", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"BSR 4模式", price_usd:"$1,599", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸桌面墨水屏，BSR 刷新算法，色温前光，双扬声器。", url:"https://shop.boox.com/", image:"../assets/images/epaper_monitor/thumbs/boox_mira_pro_253_bw.jpg"},
+  {id:7, brand:"Boox", brand_cn:"文石", model:'Mira Pro Color 25.3"', year:2025, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"BSR 4模式", price_usd:"$1,899", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，BSR 刷新。", url:"https://shop.boox.com/", image:"../assets/images/epaper_monitor/thumbs/boox_mira_pro_color.jpg"},
+  {id:8, brand:"Boox", brand_cn:"文石", model:'Mira 13.3" (初代)', year:2021, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"4模式", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"初代 13.3 英寸 Mira，开启了便携墨水屏显示器时代。里程碑产品。", url:"https://shop.boox.com/", image:"../assets/images/epaper_monitor/thumbs/boox_mira_13.jpg"},
+  {id:9, brand:"Bigme", brand_cn:"大我", model:"B251", year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"—", price_usd:"$1,999", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，支持 Miracast/AirPlay 投屏。", url:"https://bigme.vip/", image:"../assets/images/epaper_monitor/thumbs/bigme_b251.jpg"},
+  {id:10, brand:"Bigme", brand_cn:"大我", model:"B13", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"30", price_usd:"$729", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携彩色墨水屏显示器，300 PPI，支持 DLNA/AirPlay 无线投屏。", url:"https://bigme.vip/", image:"../assets/images/epaper_monitor/thumbs/bigme_b13.jpg"},
+  {id:11, brand:"Modos", brand_cn:"Modos", model:"Enchanter", year:2026, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Carta", color:"否", interfaces:"micro-HDMI, USB-C, DP", touch:"否", frontlight:"否", refresh_hz:"60-75", price_usd:"$599", status:"upcoming", status_cn:"敬请期待", tagline_cn:"13.3 英寸开源墨水屏显示器，FPGA 控制器。目前众筹阶段。", url:"https://www.modos.tech/", image:"../assets/images/epaper_monitor/thumbs/modos_enchanter.jpg"},
   // Discontinued Dasung legacy
-  {id:12, brand:"Dasung", brand_cn:"大上", model:"Paperlike (初代)", year:2014, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Fina", color:"否", interfaces:"USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$850", status:"discontinued", status_cn:"已停产", tagline_cn:"世界首款墨水屏电脑显示器，开启全新品类。"},
-  {id:13, brand:"Dasung", brand_cn:"大上", model:"Paperlike Pro", year:2017, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Carta", color:"否", interfaces:"HDMI, USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$1,099", status:"discontinued", status_cn:"已停产", tagline_cn:"首次支持 HDMI 输入的墨水屏显示器，Carta 面板提升对比度。"},
-  {id:14, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD", year:2018, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"40", price_usd:"$683", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列基础版，2K 分辨率，Mobius 柔性面板，40Hz Turbo 刷新。"},
-  {id:15, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD-FT", year:2019, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"40", price_usd:"$1,049", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列旗舰版，前光+触摸，2K 分辨率，40Hz 刷新，大上三代经典。"},
-  {id:16, brand:"Dasung", brand_cn:"大上", model:"Paperlike U", year:2022, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Carta", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"—", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"U 系列便携墨水屏显示器，2K 分辨率，前光+触摸。"},
-  {id:21, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD（铝合金版）", year:2022, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"40", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列铝合金外壳版本，2K 分辨率，40Hz 刷新，金属机身。"},
-  {id:22, brand:"Dasung", brand_cn:"大上", model:"Link", year:2022, size_inch:5.84, resolution:"1440x720", ppi:280, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$299", status:"discontinued", status_cn:"已停产", tagline_cn:"手机墨水屏显示器，5.84 英寸便携副屏，USB-C 连接手机/电脑。"},
-  {id:17, brand:"Dasung", brand_cn:"大上", model:'Paperlike Color 12"', year:2024, size_inch:12, resolution:"—", ppi:"—", panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"—", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"12 英寸彩色墨水屏显示器，Kaleido 3 面板，便携设计。", url:"https://www.dasung.com/"},
-  {id:18, brand:"Eazeye", brand_cn:"Eazeye", model:"Monitor 2", year:2025, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器，60Hz 刷新，无残影，彩色显示。", url:"https://www.eazeye.com/"},
-  {id:19, brand:"SVD", brand_cn:"SVD", model:"rE Monitor", year:2024, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$549", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器，60Hz 刷新，环境光反射成像。", url:"https://sunvisiondisplay.com/"},
-  {id:20, brand:"SVD", brand_cn:"SVD", model:"rE 2 Monitor", year:2025, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器第二代，60Hz 刷新，改进前光系统。", url:"https://sunvisiondisplay.com/"}
+  {id:12, brand:"Dasung", brand_cn:"大上", model:"Paperlike (初代)", year:2014, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Fina", color:"否", interfaces:"USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$850", status:"discontinued", status_cn:"已停产", tagline_cn:"世界首款墨水屏电脑显示器，开启全新品类。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_original.jpg"},
+  {id:13, brand:"Dasung", brand_cn:"大上", model:"Paperlike Pro", year:2017, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Carta", color:"否", interfaces:"HDMI, USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$1,099", status:"discontinued", status_cn:"已停产", tagline_cn:"首次支持 HDMI 输入的墨水屏显示器，Carta 面板提升对比度。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_pro.jpg"},
+  {id:14, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD", year:2018, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"40", price_usd:"$683", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列基础版，2K 分辨率，Mobius 柔性面板，40Hz Turbo 刷新。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_hd.jpg"},
+  {id:15, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD-FT", year:2019, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"40", price_usd:"$1,049", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列旗舰版，前光+触摸，2K 分辨率，40Hz 刷新，大上三代经典。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_hd_ft.jpg"},
+  {id:16, brand:"Dasung", brand_cn:"大上", model:"Paperlike U", year:2022, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Carta", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"—", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"U 系列便携墨水屏显示器，2K 分辨率，前光+触摸。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_253_u.jpg"},
+  {id:21, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD（铝合金版）", year:2022, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"40", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列铝合金外壳版本，2K 分辨率，40Hz 刷新，金属机身。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_hd_铝合金.jpg"},
+  {id:17, brand:"Dasung", brand_cn:"大上", model:'Paperlike Color 12"', year:2024, size_inch:12, resolution:"—", ppi:"—", panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"—", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"12 英寸彩色墨水屏显示器，Kaleido 3 面板，便携设计。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_paperlike_color_12.jpg"},
+  {id:18, brand:"Eazeye", brand_cn:"Eazeye", model:"Monitor 2", year:2025, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器，60Hz 刷新，无残影，彩色显示。", url:"https://www.eazeye.com/", image:"../assets/images/epaper_monitor/thumbs/eazeye_monitor_2.jpg"},
+  {id:19, brand:"SVD", brand_cn:"SVD", model:"rE Monitor", year:2024, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$549", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器，60Hz 刷新，环境光反射成像。", url:"https://sunvisiondisplay.com/", image:"../assets/images/epaper_monitor/thumbs/svd_re_monitor.jpg"},
+  {id:20, brand:"SVD", brand_cn:"SVD", model:"rE 2 Monitor", year:2025, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器第二代，60Hz 刷新，改进前光系统。", url:"https://sunvisiondisplay.com/", image:"../assets/images/epaper_monitor/thumbs/svd_re_monitor_2.jpg"},
+  {id:22, brand:"Dasung", brand_cn:"大上", model:"Link", year:2022, size_inch:5.84, resolution:"1440x720", ppi:280, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$299", status:"discontinued", status_cn:"已停产", tagline_cn:"手机墨水屏显示器，5.84 英寸便携副屏，USB-C 连接手机/电脑。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_link.jpg"}
 ];
 
 // ---- Editor picks config ----
@@ -593,18 +615,54 @@ function getTechLabel(p) {
   return '黑白墨水屏';
 }
 
+// 映射缩略图到原始图片
+const imageMap = {
+  'dasung_paperlike_253.jpg': 'dasung_paperlike_253.webp',
+  'dasung_paperlike_253_color.jpg': 'dasung_paperlike_253_color.jpeg',
+  'dasung_paperlike_13k.jpg': 'dasung_paperlike_13K.webp',
+  'dasung_paperlike_13k_color.jpg': 'dasung_paperlike_13k_color.jpg',
+  'dasung_paperlike_103.jpg': 'dasung_paperlike_103.jpg',
+  'dasung_paperlike_color_12.jpg': 'dasung_paperlike_color_12.png',
+  'dasung_paperlike_253_u.jpg': 'dasung_paperlike_253_u.webp',
+  'dasung_paperlike_pro.jpg': 'dasung_paperlike_pro.jpg',
+  'dasung_paperlike_hd.jpg': 'dasung_paperlike_hd.jpg',
+  'dasung_paperlike_hd_ft.jpg': 'dasung_paperlike_HD_FT.jpg',
+  'dasung_paperlike_hd_铝合金.jpg': 'dasung_paperlike_HD_铝合金.webp',
+  'dasung_paperlike_original.jpg': 'dasung_paperlike_original.png',
+  'dasung_link.jpg': 'dasung_link.webp',
+  'boox_mira_13.jpg': 'boox_mira_13.jpg',
+  'boox_mira_pro_253_bw.jpg': 'boox_mira_pro_253_bw.webp',
+  'boox_mira_pro_color.jpg': 'Boox_Mira_Pro_Color.jpg',
+  'bigme_b13.jpg': 'bigme_B13.webp',
+  'bigme_b251.jpg': 'bigme_B251.webp',
+  'modos_enchanter.jpg': 'modos_enchanter.png',
+  'eazeye_monitor_2.jpg': 'eazeye_monitor_2.webp',
+  'svd_re_monitor.jpg': 'SVD_rE_monitor.webp',
+  'svd_re_monitor_2.jpg': 'SVD_rE_monitor_2.jpg'
+};
+
 function openDetail(p) {
   document.getElementById('modalBrand').textContent = p.brand + (p.brand_cn !== p.brand ? ' ' + p.brand_cn : '');
   document.getElementById('modalModel').textContent = p.model;
   document.getElementById('modalTagline').textContent = p.tagline_cn;
 
-  const websiteBtn = document.getElementById('modalWebsiteBtn');
-  if (p.url) {
-    websiteBtn.href = p.url;
-    websiteBtn.style.display = 'inline-block';
+  const modalImage = document.getElementById('modalImage');
+  if (p.image) {
+    // 获取缩略图文件名
+    const thumbFilename = p.image.split('/').pop();
+    // 查找对应的原始图片文件名
+    const originalFilename = imageMap[thumbFilename] || thumbFilename;
+    // 构建原始图片路径
+    const fullImagePath = p.image.replace('/thumbs/' + thumbFilename, '/' + originalFilename);
+    modalImage.innerHTML = `<img src="${fullImagePath}" alt="${p.model}">`;
+    modalImage.style.display = 'block';
   } else {
-    websiteBtn.style.display = 'none';
+    modalImage.style.display = 'none';
   }
+
+  const websiteBtn = document.getElementById('modalWebsiteBtn');
+  websiteBtn.href = p.url;
+  websiteBtn.style.display = 'inline-block';
 
   document.getElementById('modalOverlay').classList.add('active');
 }
@@ -676,9 +734,12 @@ function openDetail(p) {
         let cardsHTML = '';
         yp.forEach(p => {
           const disc = p.status === 'discontinued' ? ' discontinued' : '';
+          const thumbContent = p.image
+            ? `<img src="${p.image}" alt="${p.model}">`
+            : 'IMG';
           cardsHTML += `
             <div class="tl-card${disc}" data-id="${p.id}">
-              <div class="tl-card-thumb">IMG</div>
+              <div class="tl-card-thumb">${thumbContent}</div>
               <div class="tl-card-info">
                 <div class="tl-brand-model"><span class="tl-brand">${p.brand_cn}</span>${p.model}</div>
                 <div class="tl-summary">${p.tagline_cn}</div>
