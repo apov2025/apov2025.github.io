@@ -81,7 +81,7 @@ nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); b
 
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-.section-wrap { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.section-wrap { padding: 2rem; max-width: 1100px; margin: 0 auto; }
 .section-label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-family: 'Noto Serif SC', serif; }
 
 /* ---- Picks: visual + cards ---- */
@@ -255,7 +255,7 @@ nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); b
 .year-marker .year-num { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--accent); line-height: 1; }
 .year-marker .year-count { font-size: 0.65rem; color: var(--text-dim); font-family: 'Noto Serif SC', serif; margin-top: 0.3rem; }
 .timeline-year::after { content: ''; position: absolute; left: 134px; top: 8px; width: 13px; height: 13px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); z-index: 1; }
-.timeline-cards { margin-left: 175px; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap: 0.5rem; }
+.timeline-cards { margin-left: 175px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 0.5rem; }
 
 /* Simplified timeline card */
 .tl-card {
@@ -441,9 +441,10 @@ footer .sys-info { display: flex; gap: 2rem; }
 <header>
   <div class="logo">平静科技<span>//</span>目录</div>
   <nav>
-    <a href="#picks" data-section="picks">推荐</a>
+    <a href="#picks" data-section="picks">编辑推荐</a>
     <a href="#timeline" data-section="timeline">时间轴</a>
-    <a href="#overview" data-section="overview">综述</a>
+    <a href="#overview" data-section="overview">门类综述</a>
+    <a href="#community" data-section="community">社群</a>
   </nav>
 </header>
 
@@ -486,7 +487,6 @@ footer .sys-info { display: flex; gap: 2rem; }
 <section class="section-wrap" id="overview">
   <div class="section-label">
     <span>// 门类综述</span>
-    <span>社群编辑 · 时常更新</span>
   </div>
   <div class="article-meta">最近更新：2026 年 1 月，编辑：apov 社群</div>
   <div class="article-content">
@@ -502,14 +502,30 @@ footer .sys-info { display: flex; gap: 2rem; }
     <h3>刷新率与残影</h3>
     <p>刷新率是墨水屏显示器的核心痛点。E-Ink 面板的物理刷新机制决定了它无法匹敌 LCD 的流畅度。新一代产品通过算法优化（如文石 BSR）和硬件加速（如 Modos 的 FPGA 控制器）在持续改善这一体验。大上 Paperlike 13K 达到 37Hz，Paperlike 103 达到 60Hz，Modos Glider 目标 60-75Hz。但"残影"仍然是所有墨水屏显示器无法完全消除的特性。</p>
 
+    <h3>低延迟</h3>
+    <p>从大上革命者系列和 Modos 显示器开始，墨水屏显示器进入了低延迟阶段。主要用户体验提升体现在鼠标操作上——鼠标指针终于开始跟手，在墨水屏上实现了"指哪打哪"的体验。这一突破大大提升了墨水屏显示器在需要频繁鼠标操作场景下的可用性，让墨水屏从"纯文字阅读屏"向"可交互工作屏"迈进了一大步。</p>
+
     <h3>开源与新势力</h3>
-    <p>Modos 是目前唯一采用全开源路线的墨水屏显示器品牌。其 Glider 13 的 FPGA 控制器原理图、固件源码和驱动代码全部公开。这种方式为社区自定义刷新算法、延迟优化和系统集成打开了可能性。产品预计 2026 年通过众筹发货。</p>
+    <p>Modos 是目前唯一采用全开源路线的墨水屏显示器品牌。其 Glider 13 的 FPGA 控制器原理图、固件源码和驱动代码全部公开。这种方式为社区自定义刷新算法、延迟优化和系统集成打开了可能性。产品预计 2026 年通过众筹发货。此外，DIY 社区也出现了一些墨水屏显示器项目，如三喵、小布等开源方案，微雪等开发板厂商也推出了面向开发者的墨水屏模块和套件，为动手能力强的用户提供了更灵活的选择。</p>
 
     <h3>其他技术路线</h3>
     <p>除墨水屏之外，市场上还存在少量以"护眼"为卖点的显示技术。RLCD（反射式 LCD）利用环境光反射成像，刷新率可达 60Hz，无残影，代表产品包括 EazeEye Monitor 和 SVD rE 系列。此外还有一些采用柔光处理的普通 LCD 显示器，通过类纸膜、低蓝光等技术减少眼睛疲劳。但总体而言，这些替代路线产品稀少、价格高昂，墨水屏仍然是电子纸显示器的主流方案。</p>
 
     <h3>选购建议</h3>
     <p>如果你是长时间文字工作者（作家、程序员、研究人员），一块墨水屏显示器可以显著降低用眼疲劳。选择时优先考虑：使用场景（桌面 vs 便携）、是否需要彩色、预算。13.3 英寸黑白机型是最具性价比的入门选择。不建议将墨水屏作为唯一显示器——它更适合作为专注模式的副屏。</p>
+  </div>
+</section>
+
+<!-- Community -->
+<section class="section-wrap" id="community">
+  <div class="section-label">
+    <span>// 社群</span>
+  </div>
+  <div class="article-content" style="text-align: center;">
+    <h3>加入微信社群</h3>
+    <p>我们建立了电子纸显示器交流社群，欢迎加入讨论。</p>
+    <img src="apov_admin_wechat_QR.png" alt="管理员微信二维码" style="max-width: 300px; margin: 2rem auto; display: block;">
+    <p>扫描二维码添加管理员微信，并附言<strong>「显示器群」</strong>即可入群交流。</p>
   </div>
 </section>
 
@@ -719,7 +735,7 @@ function openDetail(p) {
 
 // ---- Navigation active state management ----
 (function() {
-  const sections = ['picks', 'timeline', 'overview'];
+  const sections = ['picks', 'timeline', 'overview', 'community'];
   const navLinks = document.querySelectorAll('nav a[data-section]');
 
   function updateActiveNav() {
