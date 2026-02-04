@@ -81,7 +81,7 @@ nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); b
 
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-.section-wrap { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+.section-wrap { padding: 2rem; max-width: 1100px; margin: 0 auto; scroll-margin-top: 80px; }
 .section-label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-family: 'Noto Serif SC', serif; }
 
 /* ---- Picks: visual + cards ---- */
@@ -492,7 +492,7 @@ footer .sys-info { display: flex; gap: 2rem; }
 
 <!-- Timeline -->
 <section class="section-wrap" id="timeline">
-  <div class="terminal-prompt">catalog --list --type=eink --sort=year_desc<span class="cursor"></span></div>
+  <div class="terminal-prompt">catalog --list --sort=year_desc<span class="cursor"></span></div>
   <div class="section-label">
     <span>// 产品时间轴</span>
     <span id="tlCount">全部产品 · 按年份排列</span>
@@ -500,7 +500,7 @@ footer .sys-info { display: flex; gap: 2rem; }
   <div class="filter-buttons">
     <button class="filter-btn active" data-filter="all">全部产品</button>
     <button class="filter-btn" data-filter="available">在售产品</button>
-    <button class="filter-btn" data-filter="eink">墨水屏</button>
+    <button class="filter-btn" data-filter="eink">黑白墨水屏</button>
     <button class="filter-btn" data-filter="color">彩色墨水屏</button>
     <button class="filter-btn" data-filter="rlcd">RLCD</button>
   </div>
@@ -541,7 +541,7 @@ footer .sys-info { display: flex; gap: 2rem; }
 </section>
 
 <!-- Community -->
-<section class="section-wrap" id="community">
+<section class="section-wrap" id="community" style="padding-bottom: 4rem;">
   <div class="section-label">
     <span>// 社群</span>
   </div>
@@ -595,7 +595,10 @@ const products = [
   {id:18, brand:"Eazeye", brand_cn:"Eazeye", model:"Monitor 2", year:2025, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器，60Hz 刷新，无残影，彩色显示。", url:"https://www.eazeye.com/", image:"../assets/images/epaper_monitor/thumbs/eazeye_monitor_2.jpg"},
   {id:19, brand:"SVD", brand_cn:"SVD", model:"rE Monitor", year:2024, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$549", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器，60Hz 刷新，环境光反射成像。", url:"https://sunvisiondisplay.com/", image:"../assets/images/epaper_monitor/thumbs/svd_re_monitor.jpg"},
   {id:20, brand:"SVD", brand_cn:"SVD", model:"rE 2 Monitor", year:2025, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器第二代，60Hz 刷新，改进前光系统。", url:"https://sunvisiondisplay.com/", image:"../assets/images/epaper_monitor/thumbs/svd_re_monitor_2.jpg"},
-  {id:22, brand:"Dasung", brand_cn:"大上", model:"Link", year:2022, size_inch:5.84, resolution:"1440x720", ppi:280, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$299", status:"discontinued", status_cn:"已停产", tagline_cn:"手机墨水屏显示器，5.84 英寸便携副屏，USB-C 连接手机/电脑。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_link.jpg"}
+  {id:22, brand:"Dasung", brand_cn:"大上", model:"Link", year:2022, size_inch:5.84, resolution:"1440x720", ppi:280, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$299", status:"discontinued", status_cn:"已停产", tagline_cn:"手机墨水屏显示器，5.84 英寸便携副屏，USB-C 连接手机/电脑。", url:"https://www.dasung.com/", image:"../assets/images/epaper_monitor/thumbs/dasung_link.jpg"},
+  {id:23, brand:"Hanvon", brand_cn:"汉王", model:"PM1301", year:2022, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Carta 1250", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"自研高刷", price_usd:"$550", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携墨水屏，自研高刷技术，支持文字、图片、视频三种模式，仅重 0.71kg。", url:"https://www.hanvon.com/", image:"../assets/images/epaper_monitor/thumbs/hanwang_pm1301.jpg"},
+  {id:24, brand:"Philips", brand_cn:"飞利浦", model:"13B1K3300", year:2023, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink", color:"否", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$799", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸商务墨水屏显示器，无背光、防眩光、无蓝光设计，支持 SmartRemote 控制。", url:"https://www.philips.com/", image:"../assets/images/epaper_monitor/thumbs/philips_13b1k3300_93.jpg"},
+  {id:25, brand:"Philips", brand_cn:"飞利浦", model:"24B1D5600", year:2022, size_inch:24, resolution:"2560x1440 + 1600x1200", ppi:"多面板", panel_type:"IPS LCD + E-Ink", color:"LCD彩色+墨水屏", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"LCD背光", refresh_hz:"75Hz (LCD)", price_usd:"$1,499", status:"available", status_cn:"在售", tagline_cn:"创新双屏设计：23.8 英寸 LCD (75Hz) + 13.3 英寸墨水屏，获 CES 创新奖、红点奖和 iF 金奖。", url:"https://www.philips.com/", image:"../assets/images/epaper_monitor/thumbs/philips_24b1d5600_93.jpg"}
 ];
 
 // ---- Editor picks config ----
@@ -638,7 +641,10 @@ const imageMap = {
   'modos_enchanter.jpg': 'modos_enchanter.png',
   'eazeye_monitor_2.jpg': 'eazeye_monitor_2.webp',
   'svd_re_monitor.jpg': 'SVD_rE_monitor.webp',
-  'svd_re_monitor_2.jpg': 'SVD_rE_monitor_2.jpg'
+  'svd_re_monitor_2.jpg': 'SVD_rE_monitor_2.jpg',
+  'hanwang_pm1301.jpg': 'hanwang_PM1301.png',
+  'philips_13b1k3300_93.jpg': 'philips_13B1K3300_93.webp',
+  'philips_24b1d5600_93.jpg': 'philips_24B1D5600_93.webp'
 };
 
 function openDetail(p) {
@@ -801,14 +807,17 @@ function openDetail(p) {
 
   function updateActiveNav() {
     let currentSection = 'picks';
-    const scrollPos = window.scrollY + 100;
+    const scrollPos = window.scrollY + 120; // Header height + small offset
 
-    sections.forEach(sectionId => {
+    // Find which section we're currently in
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const sectionId = sections[i];
       const section = document.getElementById(sectionId);
       if (section && section.offsetTop <= scrollPos) {
         currentSection = sectionId;
+        break;
       }
-    });
+    }
 
     navLinks.forEach(link => {
       if (link.dataset.section === currentSection) {
