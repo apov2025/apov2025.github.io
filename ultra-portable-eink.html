@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>超便携墨水屏//目录 by apov</title>
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1eb;
+  --surface: #faf8f4;
+  --surface2: #eeeae3;
+  --border: #d5cfc5;
+  --accent: #7a5a5a;
+  --accent-dim: #6a4a4a;
+  --accent2: #8a6a7a;
+  --text: #2c2c2c;
+  --text-dim: #8a8578;
+  --amber: #b8860b;
+  --red: #b54a4a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', 'Noto Serif SC', monospace;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* CRT 扫描线效果 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.03),
+    rgba(0, 0, 0, 0.03) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(10px); }
+}
+
+/* 纸张纹理和渐变 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 65%, rgba(200,190,175,0.3) 100%),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><filter id="noise"><feTurbulence baseFrequency="0.9" numOctaves="4" /></filter><rect width="300" height="300" filter="url(%23noise)" opacity="0.05"/></svg>');
+  pointer-events: none;
+  z-index: 9998;
+}
+
+::selection { background: var(--accent); color: #fff; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: rgba(244,241,235,0.92);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.15em; }
+.logo span { color: var(--accent); }
+
+nav { display: flex; gap: 0.25rem; }
+nav a { padding: 0.4rem 0.9rem; font-size: 0.75rem; color: var(--text-dim); border: 1px solid transparent; transition: all 0.2s; font-family: 'Noto Serif SC', serif; }
+nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); background: var(--surface); text-decoration: none; }
+
+/* Warning banner */
+.warning-banner {
+  background: rgba(181, 74, 74, 0.08);
+  border-bottom: 1px solid rgba(181, 74, 74, 0.3);
+  padding: 0.75rem 2rem;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--red);
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.6;
+}
+
+.warning-banner::before {
+  content: '⚠️ ';
+  margin-right: 0.5rem;
+}
+
+.hero { padding: 4rem 2rem; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+.hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; opacity: 0.25; }
+.hero h1 {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(1.8rem,5vw,3rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  position: relative;
+  margin-bottom: 1rem;
+  text-shadow: 3px 3px 0 rgba(122, 90, 90, 0.08);
+}
+
+.hero h1 .highlight {
+  color: var(--accent);
+  position: relative;
+  display: inline-block;
+}
+
+.hero h1 .highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.3;
+}
+.hero p { color: var(--text-dim); font-size: 0.85rem; max-width: 600px; margin: 0 auto; position: relative; font-family: 'Noto Serif SC', serif; }
+.terminal-prompt { margin-top: 2rem; position: relative; display: inline-block; font-size: 0.8rem; color: var(--accent); }
+.terminal-prompt::before { content: '> '; color: var(--text-dim); }
+.terminal-prompt .cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent); vertical-align: text-bottom; animation: blink 1s step-end infinite; margin-left: 2px; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* Device lineup visualization */
+.device-lineup {
+  margin: 3rem auto 1rem;
+  padding: 2.5rem 1rem;
+  max-width: 900px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: nowrap;
+  min-height: 320px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 1rem;
+}
+
+/* Scrollbar styling */
+.device-lineup::-webkit-scrollbar {
+  height: 6px;
+}
+
+.device-lineup::-webkit-scrollbar-track {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.device-lineup::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+.device-lineup::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dim);
+}
+
+.device-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.device-svg-wrapper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  height: 170px;
+}
+
+.device-item > svg {
+  margin-bottom: 0.5rem;
+}
+
+.device-item:not(.reference-item):hover {
+  transform: translateY(-8px);
+}
+
+.device-item:not(.reference-item):hover .device-outline {
+  stroke: var(--accent);
+  fill: rgba(122, 90, 90, 0.08);
+}
+
+.reference-item {
+  cursor: default;
+}
+
+.device-outline {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 1.5;
+  transition: all 0.3s ease;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+}
+
+.reference-item .device-outline {
+  fill: rgba(244, 241, 235, 0.5);
+  stroke: var(--text-dim);
+  stroke-width: 1;
+  stroke-dasharray: 4, 4;
+  opacity: 0.6;
+}
+
+.reference-item .device-label {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.reference-item .device-label .size {
+  color: var(--text-dim);
+}
+
+.reference-item:hover .device-outline {
+  stroke: var(--text-dim);
+  fill: rgba(244, 241, 235, 0.7);
+  opacity: 0.8;
+}
+
+.device-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  text-align: center;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  max-width: 120px;
+}
+
+.device-label .size {
+  display: block;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.7rem;
+  margin-bottom: 0.2rem;
+}
+
+.device-label .brand {
+  display: inline;
+  font-size: 0.5rem;
+  opacity: 0.6;
+  margin-right: 0.2rem;
+}
+
+.device-label .model {
+  display: inline;
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 400;
+}
+
+.device-label .model-inline {
+  display: block;
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 400;
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 768px) {
+  .device-lineup {
+    gap: 0.8rem;
+    padding: 2rem 0.5rem 3rem;
+    min-height: 200px;
+    justify-content: flex-start;
+  }
+
+  .device-item {
+    flex-shrink: 0;
+  }
+
+  .device-item svg {
+    transform: scale(0.7);
+  }
+
+  .device-label {
+    font-size: 0.5rem;
+    max-width: 100px;
+  }
+
+  .device-label .size {
+    font-size: 0.6rem;
+  }
+
+  .device-label .brand {
+    font-size: 0.45rem;
+  }
+
+  .device-label .model {
+    font-size: 0.5rem;
+  }
+}
+
+.section-wrap { padding: 2rem; max-width: 1100px; margin: 0 auto; scroll-margin-top: 80px; }
+.section-label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-family: 'Noto Serif SC', serif; }
+
+/* ---- Overview article ---- */
+.article-content {
+  max-width: 760px;
+  margin: 0 auto;
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 2;
+  font-family: 'Noto Serif SC', serif;
+}
+.article-content h3 {
+  font-family: 'Space Grotesk', 'Noto Serif SC', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 2rem 0 0.8rem;
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+.article-content h3:first-child { margin-top: 0; }
+.article-content p { margin-bottom: 1rem; color: var(--text-dim); }
+.article-content strong { color: var(--text); }
+.article-meta {
+  max-width: 760px;
+  margin: 0 auto 2rem;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ---- Timeline ---- */
+.timeline { position: relative; padding: 0 0 2rem 0; }
+.timeline::before { content: ''; position: absolute; left: 140px; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.timeline-year { position: relative; margin-bottom: 2.5rem; }
+.timeline-year:last-child { margin-bottom: 0; }
+.year-marker { position: absolute; left: 0; top: 0; width: 120px; text-align: right; padding-right: 1.5rem; }
+.year-marker .year-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+  text-shadow: 2px 2px 0 rgba(122, 90, 90, 0.1);
+  letter-spacing: -0.02em;
+}
+.year-marker .year-count {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-family: 'Noto Serif SC', serif;
+  margin-top: 0.3rem;
+  opacity: 0.7;
+}
+.timeline-year::after { content: ''; position: absolute; left: 134px; top: 8px; width: 13px; height: 13px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); z-index: 1; }
+.timeline-cards { margin-left: 175px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 0.5rem; }
+
+/* Simplified timeline card */
+.tl-card {
+  background: var(--surface);
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.tl-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(122, 90, 90, 0.1), transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.tl-card:hover {
+  background: var(--surface2);
+  transform: translateX(4px);
+  box-shadow: -4px 4px 0 rgba(122, 90, 90, 0.15);
+}
+
+.tl-card:hover::before {
+  opacity: 1;
+}
+
+.tl-card-thumb {
+  width: 80px;
+  height: 80px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  color: var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+  overflow: hidden;
+  position: relative;
+}
+
+.tl-card-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.3) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.tl-card:hover .tl-card-thumb::after {
+  transform: translateX(100%);
+}
+
+.tl-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: contrast(1.05) brightness(0.98);
+  transition: filter 0.3s ease;
+}
+
+.tl-card:hover .tl-card-thumb img {
+  filter: contrast(1.1) brightness(1.02);
+}
+
+.tl-card-info { min-width: 0; }
+.tl-card-info .tl-brand-model {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tl-card-info .tl-brand-model .tl-brand {
+  font-size: 0.6rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 400;
+  margin-right: 0.4rem;
+}
+.tl-card-info .tl-summary {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.5;
+  margin-top: 0.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tl-card-info .tl-tech-label {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border);
+  display: inline-block;
+  letter-spacing: 0.05em;
+  background: var(--bg);
+}
+.tl-card-status {
+  font-size: 0.5rem;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid;
+  letter-spacing: 0.06em;
+  font-family: 'Noto Serif SC', serif;
+  margin-left: auto;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.status-available { color: var(--accent); border-color: var(--accent); background: rgba(122, 90, 90, 0.05); }
+.status-upcoming { color: var(--accent2); border-color: var(--accent2); background: rgba(138, 106, 122, 0.05); }
+.status-discontinued {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(181, 74, 74, 0.05);
+  opacity: 0.6;
+}
+
+.tl-card.discontinued {
+  opacity: 0.75;
+  filter: grayscale(0.2);
+}
+
+.tl-card.discontinued:hover {
+  opacity: 0.85;
+  filter: grayscale(0.1);
+}
+
+/* ---- Detail modal ---- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.modal-overlay.active {
+  display: flex;
+  background: rgba(0,0,0,0.3);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 2.5rem;
+  position: relative;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.modal-close:hover { color: var(--text); border-color: var(--text); }
+
+.modal-brand { font-size: 0.6rem; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.3rem; }
+.modal-model { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+.modal-tagline { font-size: 0.8rem; color: var(--text-dim); font-family: 'Noto Serif SC', serif; line-height: 1.7; margin-bottom: 1.5rem; }
+
+.modal-specs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+}
+
+.modal-spec-label {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text-dim);
+  font-size: 0.65rem;
+}
+
+.modal-spec-value {
+  font-family: 'Noto Serif SC', serif;
+  color: var(--text);
+}
+
+.modal-image {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.modal-image img {
+  max-width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.modal-placeholder {
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1.8;
+  position: relative;
+}
+
+.modal-placeholder::before {
+  content: '[ ]';
+  display: block;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+  animation: blink 2s step-end infinite;
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+footer .sys-info { display: flex; gap: 2rem; }
+
+footer .sys-info::before {
+  content: '//';
+  opacity: 0.5;
+  margin-right: 0.5rem;
+}
+
+@media (max-width:900px) {
+  .timeline::before { left: 20px; }
+  .year-marker { position: relative; left: 0; width: auto; text-align: left; padding-left: 45px; padding-right: 0; margin-bottom: 1rem; }
+  .timeline-year::after { left: 14px; }
+  .timeline-cards { margin-left: 45px; grid-template-columns: 1fr; }
+}
+
+@media (max-width:768px) {
+  header { flex-direction: column; gap: 1rem; }
+  .hero { padding: 2.5rem 1.5rem; }
+  .hero h1 { font-size: clamp(1.5rem, 8vw, 2.5rem); }
+  .section-wrap { padding: 1.5rem 1rem; }
+  footer { flex-direction: column; gap: 1rem; text-align: center; }
+  footer .sys-info { flex-direction: column; gap: 0.5rem; }
+
+  /* 移动端优化：减少扫描线效果 */
+  body::before { opacity: 0.5; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">超便携墨水屏<span>//</span>目录</div>
+  <nav>
+    <a href="#timeline" data-section="timeline">时间轴</a>
+  </nav>
+</header>
+
+<div class="warning-banner">
+  网站建设中，部分内容为 AI 生成，不保证内容准确
+</div>
+
+<section class="hero">
+  <div class="hero-grid"></div>
+  <h1>超便携 <span class="highlight">墨水屏</span></h1>
+  <p>口袋里的阅读终端。便携墨水屏产品完全目录</p>
+
+  <!-- Device size comparison -->
+  <div class="device-lineup" id="deviceLineup"></div>
+
+  <div class="terminal-prompt">catalog list --category=ultra_portable<span class="cursor"></span></div>
+</section>
+
+<!-- Timeline -->
+<section class="section-wrap" id="timeline">
+  <div class="section-label">
+    <span>// 产品时间轴</span>
+    <span id="tlCount">全部设备 · 按年份排列</span>
+  </div>
+  <div class="timeline" id="timelineContainer"></div>
+</section>
+
+<!-- Overview section hidden -->
+<!--
+<section class="section-wrap" id="overview" style="display: none;">
+  <div class="section-label">
+    <span>// 门类综述</span>
+  </div>
+  <div class="article-meta">最近更新：2026 年 2 月，编辑：apov 社群</div>
+  <div class="article-content">
+    <h3>便携墨水屏现状</h3>
+    <p>便携墨水屏是指尺寸在 6 英寸以下、专为极致便携性设计的电子纸设备。不同于常规的 6-7 英寸电子书阅读器，这些设备往往追求更小的体积、更轻的重量，可以轻松放进口袋、挂在钥匙扣上，或作为最轻量级的随身阅读终端。从早期腾讯口袋阅开拓市场，到墨案迷你阅、墨菲阅读器等新品迭代，便携墨水屏已经从实验性产品逐渐走向成熟。</p>
+
+    <h3>使用场景</h3>
+    <p>在电子书阅读器普遍采用 6-7 英寸屏幕的今天，便携墨水屏开拓了一个全新的使用场景：<strong>无负担的随身携带</strong>。它们不是为了取代主力阅读器，而是为了在通勤、排队、碎片时间等场景下，提供一个比手机更护眼、比常规阅读器更便携的选择。对于追求极简主义、轻量化生活方式的用户，便携墨水屏是完美的碎片化阅读工具。</p>
+
+    <h3>技术特点</h3>
+    <p>便携墨水屏普遍采用 3.7-5.5 英寸的 E-Ink 面板，分辨率从 800x480 到 1440x720 不等。为了追求便携性，这些设备通常会在续航、存储、功能上做出取舍。一些产品（如阅星曈系列）通过精简操作系统和磁吸设计保持良好体验，其中 X3（3.7 英寸）代表了超小屏的极致，而 X4（4.3 英寸）则在便携性和可读性之间取得平衡。另一些产品（如 M5Stack Paper 系列）走开源路线，提供可编程的 DIY 空间。</p>
+
+    <h3>市场格局</h3>
+    <p>目前便携墨水屏市场仍属小众，但已经出现了一些极具创意的产品。从墨案迷你阅的 5.2 英寸手机形态，到墨菲阅读器的极简设计，再到国文 S2/Obook5 的超薄机身（仅 4.8mm），各家厂商都在探索不同的便携化路径。M5Stack Paper 系列通过开源社区的 edcbook 固件，将这个品类带入了 DIY 和开发者领域。</p>
+
+    <h3>选购建议</h3>
+    <p>如果你需要一个可以随时揣进口袋的阅读设备，便携墨水屏是值得考虑的选择。选购时需要明确自己的需求：是追求极致小巧（如墨菲阅读器 3.7 英寸）、还是需要更大的可读面积（如墨案迷你阅 5.2 英寸）？是喜欢开箱即用的体验、还是愿意折腾 DIY 固件？便携墨水屏不是主力设备，但它可以成为你口袋里最轻的那本"书"。</p>
+  </div>
+</section>
+-->
+
+<footer>
+  <div class="sys-info">
+    <span>ultra-portable-eink v1.0</span>
+    <span id="deviceCount">6 devices indexed</span>
+  </div>
+  <span>a project by <a href="https://apov.sg" target="_blank" rel="noopener noreferrer">apov.sg</a></span>
+</footer>
+
+<!-- Detail modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">×</button>
+    <div class="modal-brand" id="modalBrand"></div>
+    <div class="modal-model" id="modalModel"></div>
+    <div class="modal-tagline" id="modalTagline"></div>
+    <div class="modal-specs" id="modalSpecs"></div>
+    <div class="modal-image" id="modalImage" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+// ---- Product data ----
+const products = [
+  {
+    id: 1,
+    brand: "Tencent",
+    brand_cn: "腾讯",
+    model: "口袋阅",
+    year: 2019,
+    size_inch: 5.2,
+    resolution: "1280x720",
+    ppi: 284,
+    panel_type: "E-Ink Carta 2",
+    tagline_cn: "5.2 英寸墨水屏手机，开创便携墨水屏先河，支持 4G 通话。",
+    specs: {
+      "屏幕尺寸": "5.2 英寸",
+      "分辨率": "1280x720",
+      "PPI": "284",
+      "面板类型": "E-Ink Carta 2",
+      "重量": "130g",
+      "厚度": "8.5mm",
+      "电池": "2000mAh",
+      "系统": "Android",
+      "存储": "16GB (二代)",
+      "特点": "支持 4G 通话、36级阅读灯"
+    },
+    status: "discontinued",
+    status_cn: "已停产",
+    image: "",
+    hidden: true
+  },
+  {
+    id: 6,
+    brand: "M5Stack",
+    brand_cn: "M5",
+    model: "Paper S3",
+    year: 2025,
+    size_inch: 4.7,
+    resolution: "960x540",
+    ppi: 235,
+    panel_type: "E-Ink",
+    tagline_cn: "4.7 英寸开源 ESP32-S3 开发板，支持 edcbook 等开源固件。",
+    specs: {
+      "屏幕尺寸": "4.7 英寸",
+      "分辨率": "960x540",
+      "PPI": "235",
+      "面板类型": "E-Ink",
+      "重量": "约 120g",
+      "续航": "取决于使用",
+      "系统": "ESP32-S3 (开源)",
+      "存储": "16MB Flash",
+      "特点": "可编程、开源、支持 edcbook"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "assets/images/ultra_portable/m5_paper_s3.webp",
+    showInMockup: true
+  },
+  {
+    id: 8,
+    brand: "XTEINK",
+    brand_cn: "阅星曈",
+    model: "X4",
+    year: 2025,
+    size_inch: 4.3,
+    resolution: "800x600",
+    ppi: 220,
+    panel_type: "E-Ink",
+    tagline_cn: "4.3 英寸超便携磁吸式阅读器，重量仅 75.8g，可吸附在手机背面。",
+    specs: {
+      "屏幕尺寸": "4.3 英寸",
+      "分辨率": "800x600",
+      "PPI": "220",
+      "面板类型": "E-Ink",
+      "重量": "75.8g",
+      "厚度": "5.9mm",
+      "电池": "650mAh",
+      "系统": "封闭系统",
+      "存储": "32GB",
+      "特点": "磁吸设计、物理按键"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "assets/images/ultra_portable/xteink-x4.webp",
+    showInMockup: true
+  },
+  {
+    id: 9,
+    brand: "XTEINK",
+    brand_cn: "阅星曈",
+    model: "X3",
+    year: 2026,
+    size_inch: 3.7,
+    resolution: "800x480",
+    ppi: 252,
+    panel_type: "E-Ink",
+    tagline_cn: "阅星曈 2026 新品，3.7 英寸超小屏，极致便携设计。",
+    specs: {
+      "屏幕尺寸": "3.7 英寸",
+      "分辨率": "800x480",
+      "PPI": "252",
+      "面板类型": "E-Ink",
+      "重量": "约 60g",
+      "续航": "数周",
+      "系统": "封闭系统",
+      "存储": "32GB",
+      "特点": "超小屏、极致便携"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "assets/images/ultra_portable/xteink_x3.webp",
+    showInMockup: true
+  },
+  {
+    id: 3,
+    brand: "OBOOK",
+    brand_cn: "国文",
+    model: "S1/S1 Pro",
+    year: 2023,
+    size_inch: 4.26,
+    resolution: "800x600",
+    ppi: 219,
+    panel_type: "E-Ink",
+    tagline_cn: "4.26 英寸迷你电子书阅读器，Pro 版配备 20 级阅读灯和物理翻页键。",
+    specs: {
+      "屏幕尺寸": "4.26 英寸",
+      "分辨率": "800x600",
+      "PPI": "219",
+      "面板类型": "E-Ink",
+      "重量": "90g (S1) / 94g (Pro)",
+      "电池": "1200mAh",
+      "系统": "定制系统",
+      "存储": "32GB",
+      "特点": "AG 工艺防眩光 / Pro 版含 20 级阅读灯、物理翻页键"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "assets/images/ultra_portable/guowen_s1.jpeg"
+  },
+  {
+    id: 5,
+    brand: "OBOOK",
+    brand_cn: "国文",
+    model: "S2",
+    year: 2024,
+    size_inch: 4.26,
+    resolution: "800x600",
+    ppi: 219,
+    panel_type: "E-Ink",
+    tagline_cn: "4.26 英寸超薄便携阅读器，机身仅 4.8mm，重量约 90g。",
+    specs: {
+      "屏幕尺寸": "4.26 英寸",
+      "分辨率": "800x600",
+      "PPI": "219",
+      "面板类型": "E-Ink",
+      "重量": "约 90g",
+      "厚度": "4.8mm",
+      "电池": "1200mAh",
+      "系统": "定制系统",
+      "存储": "32GB",
+      "特点": "超薄机身、20级白光"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "assets/images/ultra_portable/guowen_s2.webp"
+  },
+  {
+    id: 7,
+    brand: "OBOOK",
+    brand_cn: "国文",
+    model: "Obook5",
+    year: 2025,
+    size_inch: 4.26,
+    resolution: "800x600",
+    ppi: 219,
+    panel_type: "E-Ink",
+    tagline_cn: "国文 S2 的 2025 重新发布版，4.26 英寸超薄便携阅读器。",
+    specs: {
+      "屏幕尺寸": "4.26 英寸",
+      "分辨率": "800x600",
+      "PPI": "219",
+      "面板类型": "E-Ink",
+      "重量": "约 90g",
+      "厚度": "4.8mm",
+      "电池": "1200mAh",
+      "系统": "定制系统",
+      "存储": "32GB",
+      "特点": "S2 重新发布版、快速翻页"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "assets/images/ultra_portable/guowen_OBOOK5.jpg",
+    showInMockup: true
+  },
+  {
+    id: 11,
+    brand: "国文",
+    brand_cn: "国文",
+    model: "小方糕",
+    year: 2026,
+    size_inch: 5.5,
+    resolution: "1440x720",
+    ppi: 300,
+    panel_type: "E-Ink",
+    tagline_cn: "国文 2026 新品，5.5 英寸方形屏幕，独特设计。",
+    specs: {
+      "屏幕尺寸": "5.5 英寸",
+      "分辨率": "1440x720",
+      "PPI": "300",
+      "面板类型": "E-Ink",
+      "重量": "约 120g",
+      "续航": "数周",
+      "系统": "定制系统",
+      "存储": "32GB",
+      "特点": "方形屏幕、独特设计"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "",
+    hidden: true
+  },
+  {
+    id: 2,
+    brand: "Moaan",
+    brand_cn: "墨案",
+    model: "迷你阅",
+    year: 2022,
+    size_inch: 5.2,
+    resolution: "1280x720",
+    ppi: 284,
+    panel_type: "E-Ink",
+    tagline_cn: "5.2 英寸手机形态阅读器，口袋级便携，支持 24 级冷暖双色前光。",
+    specs: {
+      "屏幕尺寸": "5.2 英寸",
+      "分辨率": "1280x720",
+      "PPI": "284",
+      "面板类型": "E-Ink",
+      "重量": "115g",
+      "厚度": "6.9mm",
+      "系统": "Android 8.1",
+      "存储": "32GB",
+      "特点": "24级冷暖双色阅读灯、全贴合纯平玻璃"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "",
+    hidden: true
+  },
+  {
+    id: 12,
+    brand: "YiBen",
+    brand_cn: "一本",
+    model: "P47L",
+    year: 2022,
+    size_inch: 4.7,
+    resolution: "960x540",
+    ppi: 235,
+    panel_type: "E-Ink",
+    tagline_cn: "4.7 英寸便携阅读器，一本 2022 年推出的经典小屏设备。",
+    specs: {
+      "屏幕尺寸": "4.7 英寸",
+      "分辨率": "960x540",
+      "PPI": "235",
+      "面板类型": "E-Ink",
+      "重量": "约 100g",
+      "电池": "1500mAh",
+      "系统": "定制系统",
+      "存储": "16GB",
+      "特点": "便携设计、长续航"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "assets/images/ultra_portable/yben_p47l.webp",
+    showInMockup: true
+  },
+  {
+    id: 13,
+    brand: "Moaan",
+    brand_cn: "墨案",
+    model: "迷你阅 Plus",
+    year: 2024,
+    size_inch: 5.84,
+    resolution: "1648x824",
+    ppi: 300,
+    panel_type: "E-Ink Carta",
+    tagline_cn: "5.84 英寸升级版手机形态阅读器，更大屏幕，支持冷暖双色前光。",
+    specs: {
+      "屏幕尺寸": "5.84 英寸",
+      "分辨率": "1648x824",
+      "PPI": "300",
+      "面板类型": "E-Ink Carta",
+      "重量": "约 130g",
+      "厚度": "7mm",
+      "系统": "Android",
+      "存储": "32GB",
+      "特点": "冷暖双色阅读灯、更大屏幕"
+    },
+    status: "available",
+    status_cn: "在售",
+    image: "",
+    hidden: true
+  },
+  {
+    id: 10,
+    brand: "M5Stack",
+    brand_cn: "",
+    model: "Paper Mono",
+    year: 2026,
+    size_inch: 3.97,
+    resolution: "960x540",
+    ppi: 278,
+    panel_type: "E-Ink",
+    tagline_cn: "M5Stack 2026 新品，3.97 英寸开源开发板，升级版 Paper 系列。",
+    specs: {
+      "屏幕尺寸": "3.97 英寸",
+      "分辨率": "960x540",
+      "PPI": "278",
+      "面板类型": "E-Ink",
+      "重量": "约 120g",
+      "续航": "取决于使用",
+      "系统": "ESP32 (可编程)",
+      "存储": "16MB Flash",
+      "特点": "开源、可编程、DIY"
+    },
+    status: "upcoming",
+    status_cn: "敬请期待",
+    image: ""
+  }
+];
+
+// ---- Helpers ----
+function statusClass(s) {
+  return { available:'status-available', discontinued:'status-discontinued', upcoming:'status-upcoming' }[s] || 'status-available';
+}
+
+function getTechLabel(p) {
+  if (p.size_inch < 4) return '超小屏';
+  if (p.size_inch < 5) return '口袋屏';
+  return '便携屏';
+}
+
+function openDetail(p) {
+  document.getElementById('modalBrand').textContent = p.brand + (p.brand_cn !== p.brand ? ' ' + p.brand_cn : '');
+  document.getElementById('modalModel').textContent = p.model;
+  document.getElementById('modalTagline').textContent = p.tagline_cn;
+
+  // Render specs
+  const modalSpecs = document.getElementById('modalSpecs');
+  let specsHTML = '';
+  for (const [label, value] of Object.entries(p.specs)) {
+    specsHTML += `
+      <div class="modal-spec-label">${label}:</div>
+      <div class="modal-spec-value">${value}</div>
+    `;
+  }
+  modalSpecs.innerHTML = specsHTML;
+
+  const modalImage = document.getElementById('modalImage');
+  if (p.image) {
+    modalImage.innerHTML = `<img src="${p.image}" alt="${p.model}" onerror="this.parentElement.innerHTML='<div class=\\'modal-placeholder\\'>IMAGE_NOT_FOUND<br><span style=\\'font-family:Noto Serif SC,serif;font-size:0.65rem;\\'>图片加载失败</span></div>'">`;
+    modalImage.style.display = 'block';
+  } else {
+    modalImage.innerHTML = '<div class="modal-placeholder">IMAGE_PENDING<br><span style="font-family:\'Noto Serif SC\',serif;font-size:0.65rem;">图片即将上传</span></div>';
+    modalImage.style.display = 'block';
+  }
+
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+// ---- SVG Creation Functions ----
+// Helper function to create M5 Paper S3 mockup - 16:9 screen, squarish design, no buttons
+function createM5PaperS3SVG(width, height) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', width + 10);
+    svg.setAttribute('height', height + 10);
+    svg.setAttribute('viewBox', `0 0 ${width + 10} ${height + 10}`);
+
+    // Main device body with minimal rounded corners (squarish)
+    const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    body.setAttribute('x', 5);
+    body.setAttribute('y', 5);
+    body.setAttribute('width', width);
+    body.setAttribute('height', height);
+    body.setAttribute('rx', 2);  // very small radius for squarish look
+    body.setAttribute('ry', 2);
+    body.classList.add('device-outline');
+    svg.appendChild(body);
+
+    // Screen area - thin bezels on top and sides, slightly thicker bottom bezel
+    const screen = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    screen.setAttribute('x', 5 + width * 0.06);  // thin side bezels
+    screen.setAttribute('y', 5 + height * 0.05); // thin top bezel
+    screen.setAttribute('width', width * 0.88);
+    screen.setAttribute('height', height * 0.78); // slightly thicker bottom bezel
+    screen.setAttribute('rx', 1);
+    screen.setAttribute('ry', 1);
+    screen.setAttribute('fill', 'none');
+    screen.setAttribute('stroke', 'var(--border)');
+    screen.setAttribute('stroke-width', '1');
+    screen.setAttribute('opacity', '0.6');
+    svg.appendChild(screen);
+
+    return svg;
+  }
+
+// Helper function to create YiBen P47L mockup - with side page turning buttons and multiple bottom buttons
+function createYiBenP47LSVG(width, height) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', width + 10);
+    svg.setAttribute('height', height + 10);
+    svg.setAttribute('viewBox', `0 0 ${width + 10} ${height + 10}`);
+
+    // Main device body with rounded corners
+    const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    body.setAttribute('x', 5);
+    body.setAttribute('y', 5);
+    body.setAttribute('width', width);
+    body.setAttribute('height', height);
+    body.setAttribute('rx', 6);
+    body.setAttribute('ry', 6);
+    body.classList.add('device-outline');
+    svg.appendChild(body);
+
+    // Screen area - similar to Paper S3
+    const screen = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    screen.setAttribute('x', 5 + width * 0.06);
+    screen.setAttribute('y', 5 + height * 0.05);
+    screen.setAttribute('width', width * 0.88);
+    screen.setAttribute('height', height * 0.72); // more space for buttons
+    screen.setAttribute('rx', 2);
+    screen.setAttribute('ry', 2);
+    screen.setAttribute('fill', 'none');
+    screen.setAttribute('stroke', 'var(--border)');
+    screen.setAttribute('stroke-width', '1');
+    screen.setAttribute('opacity', '0.6');
+    svg.appendChild(screen);
+
+    // Left side page turning button
+    const leftPageButton = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    leftPageButton.setAttribute('x', 5 + 2);
+    leftPageButton.setAttribute('y', 5 + height * 0.35);
+    leftPageButton.setAttribute('width', 3);
+    leftPageButton.setAttribute('height', height * 0.15);
+    leftPageButton.setAttribute('rx', 1.5);
+    leftPageButton.setAttribute('fill', 'var(--text-dim)');
+    leftPageButton.setAttribute('opacity', '0.4');
+    svg.appendChild(leftPageButton);
+
+    // Right side page turning button
+    const rightPageButton = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rightPageButton.setAttribute('x', 5 + width - 5);
+    rightPageButton.setAttribute('y', 5 + height * 0.35);
+    rightPageButton.setAttribute('width', 3);
+    rightPageButton.setAttribute('height', height * 0.15);
+    rightPageButton.setAttribute('rx', 1.5);
+    rightPageButton.setAttribute('fill', 'var(--text-dim)');
+    rightPageButton.setAttribute('opacity', '0.4');
+    svg.appendChild(rightPageButton);
+
+    // Bottom buttons - multiple small buttons
+    const buttonWidth = width * 0.15;
+    const buttonY = 5 + height * 0.84;
+    const buttonHeight = height * 0.06;
+    const spacing = width * 0.06;
+
+    for (let i = 0; i < 4; i++) {
+      const button = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      button.setAttribute('x', 5 + spacing + i * (buttonWidth + spacing * 0.5));
+      button.setAttribute('y', buttonY);
+      button.setAttribute('width', buttonWidth);
+      button.setAttribute('height', buttonHeight);
+      button.setAttribute('rx', 2);
+      button.setAttribute('fill', 'none');
+      button.setAttribute('stroke', 'var(--border)');
+      button.setAttribute('stroke-width', '1');
+      button.setAttribute('opacity', '0.5');
+      svg.appendChild(button);
+    }
+
+    return svg;
+  }
+
+// Helper function to create XTEINK X3/X4 mockup - 16:10 screen with larger chin
+function createXTEINKSVG(width, height) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', width + 10);
+    svg.setAttribute('height', height + 10);
+    svg.setAttribute('viewBox', `0 0 ${width + 10} ${height + 10}`);
+
+    // Main device body with rounded corners
+    const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    body.setAttribute('x', 5);
+    body.setAttribute('y', 5);
+    body.setAttribute('width', width);
+    body.setAttribute('height', height);
+    body.setAttribute('rx', 5);
+    body.setAttribute('ry', 5);
+    body.classList.add('device-outline');
+    svg.appendChild(body);
+
+    // Screen area - 16:10 aspect ratio with moderate top bezel and larger chin
+    const screen = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    screen.setAttribute('x', 5 + width * 0.1);
+    screen.setAttribute('y', 5 + height * 0.08); // moderate top bezel
+    screen.setAttribute('width', width * 0.8);
+    screen.setAttribute('height', height * 0.72); // larger bottom bezel/chin
+    screen.setAttribute('rx', 2);
+    screen.setAttribute('ry', 2);
+    screen.setAttribute('fill', 'none');
+    screen.setAttribute('stroke', 'var(--border)');
+    screen.setAttribute('stroke-width', '1');
+    screen.setAttribute('opacity', '0.6');
+    svg.appendChild(screen);
+
+    // Left thin button close to bottom edge
+    const leftButton = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    leftButton.setAttribute('x', 5 + width * 0.15);
+    leftButton.setAttribute('y', 5 + height * 0.92); // very close to bottom
+    leftButton.setAttribute('width', width * 0.25);
+    leftButton.setAttribute('height', height * 0.025); // thin button
+    leftButton.setAttribute('rx', 1);
+    leftButton.setAttribute('fill', 'none');
+    leftButton.setAttribute('stroke', 'var(--border)');
+    leftButton.setAttribute('stroke-width', '0.8');
+    leftButton.setAttribute('opacity', '0.5');
+    svg.appendChild(leftButton);
+
+    // Right thin button close to bottom edge
+    const rightButton = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rightButton.setAttribute('x', 5 + width * 0.6);
+    rightButton.setAttribute('y', 5 + height * 0.92); // very close to bottom
+    rightButton.setAttribute('width', width * 0.25);
+    rightButton.setAttribute('height', height * 0.025); // thin button
+    rightButton.setAttribute('rx', 1);
+    rightButton.setAttribute('fill', 'none');
+    rightButton.setAttribute('stroke', 'var(--border)');
+    rightButton.setAttribute('stroke-width', '0.8');
+    rightButton.setAttribute('opacity', '0.5');
+    svg.appendChild(rightButton);
+
+    return svg;
+  }
+
+// Helper function to create Obook5 mockup - 16:10 screen with equal thick top and bottom bezels
+function createObook5SVG(width, height) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', width + 10);
+    svg.setAttribute('height', height + 10);
+    svg.setAttribute('viewBox', `0 0 ${width + 10} ${height + 10}`);
+
+    // Main device body with rounded corners
+    const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    body.setAttribute('x', 5);
+    body.setAttribute('y', 5);
+    body.setAttribute('width', width);
+    body.setAttribute('height', height);
+    body.setAttribute('rx', 4);
+    body.setAttribute('ry', 4);
+    body.classList.add('device-outline');
+    svg.appendChild(body);
+
+    // Screen area - 16:10 aspect ratio with equal thick top and bottom bezels
+    const bezelSize = 0.125; // 12.5% top and bottom each
+    const screen = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    screen.setAttribute('x', 5 + width * 0.08);
+    screen.setAttribute('y', 5 + height * bezelSize); // equal top bezel
+    screen.setAttribute('width', width * 0.84);
+    screen.setAttribute('height', height * (1 - 2 * bezelSize)); // equal bottom bezel
+    screen.setAttribute('rx', 2);
+    screen.setAttribute('ry', 2);
+    screen.setAttribute('fill', 'none');
+    screen.setAttribute('stroke', 'var(--border)');
+    screen.setAttribute('stroke-width', '1');
+    screen.setAttribute('opacity', '0.6');
+    svg.appendChild(screen);
+
+    return svg;
+  }
+
+// Helper function to create device SVG
+function createDeviceSVG(width, height, cornerRadius, isReference = false) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', width + 10);
+    svg.setAttribute('height', height + 10);
+    svg.setAttribute('viewBox', `0 0 ${width + 10} ${height + 10}`);
+
+    // Device outline
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', 5);
+    rect.setAttribute('y', 5);
+    rect.setAttribute('width', width);
+    rect.setAttribute('height', height);
+    rect.setAttribute('rx', cornerRadius);
+    rect.setAttribute('ry', cornerRadius);
+    rect.classList.add('device-outline');
+
+    svg.appendChild(rect);
+
+    if (!isReference) {
+      // Screen outline (slightly inset) - only for e-ink devices
+      const screen = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      screen.setAttribute('x', 5 + width * 0.08);
+      screen.setAttribute('y', 5 + height * 0.08);
+      screen.setAttribute('width', width * 0.84);
+      screen.setAttribute('height', height * 0.84);
+      screen.setAttribute('rx', 2);
+      screen.setAttribute('ry', 2);
+      screen.setAttribute('fill', 'none');
+      screen.setAttribute('stroke', 'var(--border)');
+      screen.setAttribute('stroke-width', '0.5');
+      screen.setAttribute('opacity', '0.5');
+      svg.appendChild(screen);
+    }
+
+    return svg;
+  }
+
+// ---- Render device lineup ----
+(function() {
+  const lineup = document.getElementById('deviceLineup');
+  const scale = 24; // pixels per inch for display
+
+  // Collect all items with their sizes for sorting
+  const allItems = [];
+
+  // Credit card reference
+  allItems.push({
+    type: 'reference',
+    size: 3.37,
+    name: '信用卡',
+    create: () => {
+      const div = document.createElement('div');
+      div.className = 'device-item reference-item';
+      const width = 2.13 * scale;
+      const height = 3.37 * scale;
+
+      const svgWrapper = document.createElement('div');
+      svgWrapper.className = 'device-svg-wrapper';
+      const svg = createDeviceSVG(width, height, 3, true);
+      svgWrapper.appendChild(svg);
+
+      const label = document.createElement('div');
+      label.className = 'device-label';
+      label.innerHTML = `<span class="size">2.1×3.4"</span><span class="model-inline">信用卡</span>`;
+
+      div.appendChild(svgWrapper);
+      div.appendChild(label);
+      return div;
+    }
+  });
+
+  // E-ink devices - show only selected devices in mockup, sorted by size
+  products.filter(p => p.showInMockup).sort((a, b) => a.size_inch - b.size_inch).forEach(product => {
+    allItems.push({
+      type: 'device',
+      size: product.size_inch,
+      name: product.model,
+      create: () => {
+        const div = document.createElement('div');
+        div.className = 'device-item';
+        div.onclick = () => openDetail(product);
+
+        const diagonalPx = product.size_inch * scale;
+        let width, height, svg;
+
+        // Determine aspect ratio and device-specific design
+        if (product.model === 'Paper S3' || product.model === 'P47L') {
+          // 16:9 aspect ratio (portrait mode: 9:16)
+          width = diagonalPx * 0.49;
+          height = diagonalPx * 0.87;
+        } else if (product.model === 'X3' || product.model === 'X4' || product.model === 'Obook5') {
+          // 16:10 aspect ratio (portrait mode: 10:16)
+          width = diagonalPx * 0.53;
+          height = diagonalPx * 0.85;
+        } else {
+          // Default aspect ratio for other devices
+          width = diagonalPx * 0.6;
+          height = diagonalPx * 0.8;
+        }
+
+        const svgWrapper = document.createElement('div');
+        svgWrapper.className = 'device-svg-wrapper';
+
+        // Use device-specific SVG generators
+        if (product.model === 'X3' || product.model === 'X4') {
+          svg = createXTEINKSVG(width, height);
+        } else if (product.model === 'Obook5') {
+          svg = createObook5SVG(width, height);
+        } else if (product.model === 'Paper S3') {
+          svg = createM5PaperS3SVG(width, height);
+        } else if (product.model === 'P47L') {
+          svg = createYiBenP47LSVG(width, height);
+        } else {
+          svg = createDeviceSVG(width, height, 6, false);
+        }
+
+        svgWrapper.appendChild(svg);
+
+        const label = document.createElement('div');
+        label.className = 'device-label';
+        label.innerHTML = `<span class="size">${product.size_inch}"</span><span class="brand">${product.brand_cn}</span><span class="model">${product.model}</span>`;
+
+        div.appendChild(svgWrapper);
+        div.appendChild(label);
+        return div;
+      }
+    });
+  });
+
+  // iPhone reference
+  allItems.push({
+    type: 'reference',
+    size: 6.9,
+    name: 'iPhone 17 PM',
+    create: () => {
+      const div = document.createElement('div');
+      div.className = 'device-item reference-item';
+      const width = 3.06 * scale;
+      const height = 6.33 * scale;
+
+      const svgWrapper = document.createElement('div');
+      svgWrapper.className = 'device-svg-wrapper';
+      const svg = createDeviceSVG(width, height, 8, true);
+
+      const notch = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      notch.setAttribute('x', 5 + width * 0.35);
+      notch.setAttribute('y', 5);
+      notch.setAttribute('width', width * 0.3);
+      notch.setAttribute('height', 8);
+      notch.setAttribute('rx', 4);
+      notch.setAttribute('fill', 'var(--text-dim)');
+      notch.setAttribute('opacity', '0.3');
+      svg.appendChild(notch);
+      svgWrapper.appendChild(svg);
+
+      const label = document.createElement('div');
+      label.className = 'device-label';
+      label.innerHTML = `<span class="size">6.9"</span><span class="model-inline">iPhone 17 PM</span>`;
+
+      div.appendChild(svgWrapper);
+      div.appendChild(label);
+      return div;
+    }
+  });
+
+  // Sort by size and append to lineup
+  allItems.sort((a, b) => a.size - b.size);
+  allItems.forEach(item => {
+    lineup.appendChild(item.create());
+  });
+})();
+
+// ---- Render timeline ----
+(function() {
+  const visibleProducts = products.filter(p => !p.hidden);
+  const years = [...new Set(visibleProducts.map(p => p.year))].sort((a,b) => b - a);
+  const tlContainer = document.getElementById('timelineContainer');
+  tlContainer.innerHTML = '';
+
+  document.getElementById('tlCount').textContent = `${visibleProducts.length} 款设备 · 按年份排列`;
+  document.getElementById('deviceCount').textContent = `${visibleProducts.length} devices indexed`;
+
+  years.forEach(year => {
+    const yp = visibleProducts.filter(p => p.year === year);
+    const countLabel = yp.length + ' 款';
+
+    let cardsHTML = '';
+    yp.forEach(p => {
+      const discClass = p.status === 'discontinued' ? ' discontinued' : '';
+      const thumbContent = p.image
+        ? `<img src="${p.image}" alt="${p.model}" onerror="this.parentElement.innerHTML='<span style=\\'opacity:0.3\\'>[IMG]</span>'">`
+        : '<span style="opacity:0.3">[IMG]</span>';
+      cardsHTML += `
+        <div class="tl-card${discClass}" data-id="${p.id}">
+          <div class="tl-card-thumb">${thumbContent}</div>
+          <div class="tl-card-info">
+            <div class="tl-brand-model"><span class="tl-brand">${p.brand_cn}</span>${p.model}</div>
+            <div class="tl-summary">${p.tagline_cn}</div>
+            <div class="tl-tech-label">${getTechLabel(p)}</div>
+          </div>
+          <div class="tl-card-status ${statusClass(p.status)}">${p.status_cn}</div>
+        </div>`;
+    });
+
+    tlContainer.innerHTML += `
+      <div class="timeline-year">
+        <div class="year-marker">
+          <div class="year-num">${year}</div>
+          <div class="year-count">${countLabel}</div>
+        </div>
+        <div class="timeline-cards">${cardsHTML}</div>
+      </div>`;
+  });
+
+  // Attach click handlers to timeline cards
+  document.querySelectorAll('.tl-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const p = products.find(x => x.id === parseInt(el.dataset.id));
+      if (p) openDetail(p);
+    });
+  });
+
+  // ---- MODAL ----
+  document.getElementById('modalClose').addEventListener('click', () => {
+    document.getElementById('modalOverlay').classList.remove('active');
+  });
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
+  });
+})();
+
+// ---- Navigation active state management ----
+(function() {
+  const sections = ['timeline', 'overview'];
+  const navLinks = document.querySelectorAll('nav a[data-section]');
+
+  function updateActiveNav() {
+    let currentSection = 'timeline';
+    const scrollPos = window.scrollY + 120;
+
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const sectionId = sections[i];
+      const section = document.getElementById(sectionId);
+      if (section && section.offsetTop <= scrollPos) {
+        currentSection = sectionId;
+        break;
+      }
+    }
+
+    navLinks.forEach(link => {
+      if (link.dataset.section === currentSection) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveNav);
+  window.addEventListener('load', updateActiveNav);
+  updateActiveNav();
+})();
+</script>
+
+</body>
+</html>
