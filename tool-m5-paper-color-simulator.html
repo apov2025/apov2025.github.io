@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M5 Paper Color - apov: a point of view</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream: #FBF7F0;
+            --warm-white: #FEFCF8;
+            --charcoal: #2C2C2C;
+            --warm-grey: #8B8680;
+            --accent-gold: #D4A574;
+            --deep-brown: #4A3728;
+            --soft-shadow: rgba(44, 44, 44, 0.08);
+            --border-light: rgba(139, 134, 128, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
+            line-height: 1.6;
+            font-weight: 300;
+            overflow-x: hidden;
+        }
+
+        .grain-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image: 
+                radial-gradient(circle at 20% 80%, transparent 50%, rgba(44, 44, 44, 0.1) 100%),
+                radial-gradient(circle at 80% 20%, transparent 50%, rgba(44, 44, 44, 0.1) 100%),
+                radial-gradient(circle at 40% 40%, transparent 50%, rgba(44, 44, 44, 0.05) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--warm-grey);
+            text-decoration: none;
+            font-size: 1rem;
+            margin-bottom: 40px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--accent-gold);
+        }
+
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .title-accent {
+            color: var(--accent-gold);
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .viewer-container {
+            background: var(--warm-white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px var(--soft-shadow),
+                0 8px 16px rgba(44, 44, 44, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-light);
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .viewer-container::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-gold), transparent, var(--accent-gold));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0.3;
+        }
+
+        .model-viewer {
+            width: 100%;
+            height: 600px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--warm-grey);
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .controls-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: var(--warm-grey);
+            text-align: center;
+        }
+
+        .description {
+            background: var(--warm-white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px var(--soft-shadow),
+                0 8px 16px rgba(44, 44, 44, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-light);
+            position: relative;
+        }
+
+        .description::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-gold), transparent, var(--accent-gold));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0.3;
+        }
+
+        .description h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--charcoal);
+        }
+
+        .description p {
+            margin-bottom: 15px;
+            font-weight: 400;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 15px;
+            }
+            
+            .viewer-container,
+            .description {
+                padding: 30px 20px;
+                border-radius: 20px;
+            }
+            
+            .model-viewer {
+                height: 400px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <div class="grain-overlay"></div>
+    
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link">← 返回首页</a>
+            <h1 class="main-title">
+                <span>M5 Paper Color</span>
+            </h1>
+        </div>
+
+        <div class="viewer-container">
+            <div id="model-viewer" class="model-viewer">
+                <div class="loading-message">正在加载</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.168.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.168.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, model;
+        
+        
+        function createFallbackModel() {
+            // Create a simple cube as fallback if STL doesn't load
+            const geometry = new THREE.BoxGeometry(2, 1, 0.3);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0xcccccc,  // Light gray color to match STL model
+                roughness: 0.4,
+                metalness: 0.0
+            });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.castShadow = true;
+            cube.receiveShadow = true;
+            return cube;
+        }
+        
+        function init() {
+            const container = document.getElementById('model-viewer');
+            const loadingMessage = container.querySelector('.loading-message');
+            
+            try {
+                // Create scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xf8f9fa);
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.set(5, 5, 5);
+                
+                // Create renderer with better settings
+                renderer = new THREE.WebGLRenderer({ 
+                    antialias: true,
+                    alpha: true,
+                    powerPreference: "high-performance"
+                });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Better antialiasing
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                
+                // Improve depth precision to reduce z-fighting
+                renderer.logarithmicDepthBuffer = true;
+                
+                // Add renderer to container
+                container.appendChild(renderer.domElement);
+                
+                // Add bright ambient light for better visibility
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+                scene.add(ambientLight);
+                
+                // Main directional light from front
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+                directionalLight.position.set(0, 5, 10);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                scene.add(directionalLight);
+                
+                // Add side lights for even illumination
+                const leftLight = new THREE.DirectionalLight(0xffffff, 0.3);
+                leftLight.position.set(-10, 0, 0);
+                scene.add(leftLight);
+                
+                const rightLight = new THREE.DirectionalLight(0xffffff, 0.3);
+                rightLight.position.set(10, 0, 0);
+                scene.add(rightLight);
+                
+                // Add grid for reference
+                const gridHelper = new THREE.GridHelper(10, 10, 0xcccccc, 0xdddddd);
+                gridHelper.position.y = -2;
+                scene.add(gridHelper);
+                
+                // Add controls
+                controls = new OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.enableZoom = true;
+                controls.enablePan = false;
+                controls.minDistance = 2;
+                controls.maxDistance = 20;
+                
+                // Try to load STL model, fallback to cube if fails
+                const loader = new STLLoader();
+                
+                // First try with the current filename
+                loader.load(
+                    'assets/models/papercolor-00-01.stl',
+                    function(geometry) {
+                        loadSTLModel(geometry, loadingMessage);
+                    },
+                    function(progress) {
+                        if (progress.lengthComputable) {
+                            const percentComplete = (progress.loaded / progress.total * 100);
+                            loadingMessage.textContent = `正在加载`;
+                        }
+                    },
+                    function(error) {
+                        console.log('First STL load attempt failed, trying fallback cube...');
+                        loadFallbackModel(loadingMessage);
+                    }
+                );
+                
+                // Add double-click to reset view
+                renderer.domElement.addEventListener('dblclick', function() {
+                    controls.reset();
+                    camera.position.set(5, 5, 5);
+                    if (model) {
+                        camera.lookAt(model.position);
+                    }
+                });
+                
+                // Handle window resize
+                window.addEventListener('resize', onWindowResize);
+                
+                animate();
+                
+            } catch (error) {
+                console.error('Error initializing 3D viewer:', error);
+                loadingMessage.textContent = '3D 查看器初始化失败';
+            }
+        }
+        
+        function loadSTLModel(geometry, loadingMessage) {
+            try {
+                // Log geometry info for debugging
+                console.log('Geometry vertices:', geometry.attributes.position.count);
+                console.log('Geometry has normals:', !!geometry.attributes.normal);
+                
+                // Clean up geometry to reduce moiré patterns
+                geometry.deleteAttribute('uv'); // Remove UV coordinates if they exist
+                geometry.deleteAttribute('color'); // Remove vertex colors if they exist
+                
+                // Ensure the geometry has proper normals
+                if (!geometry.attributes.normal) {
+                    geometry.computeVertexNormals();
+                } else {
+                    // Recompute normals to ensure consistency
+                    geometry.computeVertexNormals();
+                }
+                
+                // Merge duplicate vertices to reduce mesh issues
+                geometry = geometry.toNonIndexed(); // Convert to non-indexed to avoid issues
+                geometry.computeVertexNormals(); // Recompute after conversion
+                
+                // Create simple white material for the whole device
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: 0xf5f5f5,  // Slightly off-white to reduce glare
+                    roughness: 0.6,   // More matte to reduce reflections
+                    metalness: 0.0,
+                    side: THREE.FrontSide, // Only render front faces
+                    flatShading: false,
+                    transparent: false,
+                    opacity: 1.0
+                });
+                
+                model = new THREE.Mesh(geometry, material);
+                model.castShadow = true;
+                model.receiveShadow = true;
+                
+                // Get model dimensions for proper centering
+                geometry.computeBoundingBox();
+                const box = geometry.boundingBox;
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                
+                // Scale the model to fit nicely in view
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 3 / maxDim;
+                model.scale.setScalar(scale);
+                
+                // Center the device itself at (0, 0, 0)
+                // Calculate the center point of the bounding box
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+                
+                // Position the model so its center is at world origin (0, 0, 0)
+                model.position.x = -center.x * scale;
+                model.position.y = -center.y * scale;
+                model.position.z = -center.z * scale;
+                
+                // Rotate model to show screen front-facing
+                // Assuming the screen should face the camera initially
+                model.rotation.x = 0;  // No tilt
+                model.rotation.y = 0;  // Face forward
+                model.rotation.z = 0;  // No roll
+                
+                // If the model is oriented incorrectly, try these rotations:
+                // model.rotation.x = -Math.PI / 2;  // Rotate 90 degrees around X-axis
+                // model.rotation.y = Math.PI;       // Rotate 180 degrees around Y-axis
+                
+                scene.add(model);
+                
+                // Log final model info
+                console.log('Model bounding box size:', size);
+                console.log('Model scale applied:', scale);
+                console.log('Model final position:', model.position);
+                console.log('Model rotation:', model.rotation);
+                
+                // Hide loading message
+                loadingMessage.textContent = '加载成功';
+                setTimeout(() => {
+                    loadingMessage.style.display = 'none';
+                }, 2000);
+                
+                // Position camera to view the screen front-on initially
+                camera.position.set(0, 2, 5);  // Straight in front, slightly above
+                camera.lookAt(0, 0, 0);  // Look at center of grid
+                controls.target.set(0, 0, 0);  // Set orbit center to grid center
+                controls.update();
+                
+            } catch (error) {
+                console.error('Error processing STL geometry:', error);
+                loadFallbackModel(loadingMessage);
+            }
+        }
+        
+        function loadFallbackModel(loadingMessage) {
+            // Create a simple device-like shape as fallback
+            model = createFallbackModel();
+            scene.add(model);
+            
+            loadingMessage.textContent = '显示预览模型 - 拖拽旋转，滚轮缩放';
+            setTimeout(() => {
+                loadingMessage.style.display = 'none';
+            }, 2000);
+            
+            console.log('Fallback model loaded');
+        }
+        
+        function onWindowResize() {
+            if (!camera || !renderer) return;
+            const container = document.getElementById('model-viewer');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function animate() {
+            if (!renderer || !scene || !camera) return;
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

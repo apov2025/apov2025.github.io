@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>apov.sg/store</title>
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" sizes="32x32" href="assets/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/images/icons/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1eb;
+  --surface: #faf8f4;
+  --surface2: #eeeae3;
+  --border: #d5cfc5;
+  --accent: #6a7a5a;
+  --accent-dim: #5a6a4a;
+  --accent-gold: #D4A574;
+  --text: #2c2c2c;
+  --text-dim: #8a8578;
+  --amber: #b8860b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', 'Noto Serif SC', monospace;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 65%, rgba(200,190,175,0.3) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+::selection { background: var(--accent); color: #fff; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: rgba(244,241,235,0.95);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.logo a {
+  color: var(--text);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.logo a:hover {
+  color: var(--accent-gold);
+  text-decoration: none;
+}
+
+.logo .store-part {
+  color: var(--accent-gold);
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.logo .store-part:hover {
+  opacity: 0.7;
+  text-decoration: none;
+}
+
+nav { display: flex; gap: 0.25rem; }
+nav a {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  font-family: 'Noto Serif SC', serif;
+}
+nav a:hover, nav a.active {
+  color: var(--accent);
+  border-color: var(--border);
+  background: var(--surface);
+  text-decoration: none;
+}
+
+/* Product sections */
+.products-section {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.product-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  border-color: var(--accent);
+}
+
+.product-image {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border);
+  padding: 0.8rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+.product-badge {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  background: transparent;
+  color: var(--accent);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.6rem;
+  font-family: 'Noto Serif SC', serif;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.9);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.product-info {
+  padding: 0.4rem;
+}
+
+.product-name-line {
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.product-brand {
+  color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-right: 0.3rem;
+}
+
+.product-model {
+  color: var(--text);
+}
+
+.product-category {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  font-family: 'Noto Serif SC', serif;
+  margin-bottom: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: inline-block;
+}
+
+.product-price {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  display: flex;
+  align-items: baseline;
+  gap: 0.15rem;
+}
+
+.price-currency {
+  font-size: 0.55rem;
+}
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  max-width: 1200px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.modal-image-section {
+  background: #ffffff;
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border);
+}
+
+.modal-image-section img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.modal-content-section {
+  padding: 3rem 2.5rem;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-family: 'IBM Plex Mono', monospace;
+  z-index: 10;
+}
+
+.modal-close:hover {
+  color: var(--text);
+  border-color: var(--text);
+  background: var(--bg);
+}
+
+.modal-brand {
+  font-size: 0.65rem;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.modal-model {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.modal-category {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-family: 'Noto Serif SC', serif;
+  margin-bottom: 1.5rem;
+}
+
+.modal-price {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-description {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.85rem;
+  line-height: 1.9;
+  color: var(--text);
+  margin-bottom: 2rem;
+}
+
+.modal-description h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.8rem;
+  color: var(--text);
+}
+
+.modal-description h4:first-child {
+  margin-top: 0;
+}
+
+.modal-description p {
+  margin-bottom: 1rem;
+  color: var(--text-dim);
+}
+
+.modal-description strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.modal-specs {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.modal-specs-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.8rem;
+  text-transform: uppercase;
+}
+
+.modal-specs-list {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.spec-item {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 1rem;
+}
+
+.spec-label {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
+.spec-value {
+  color: var(--text);
+}
+
+.modal-cta {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  width: 100%;
+  text-align: center;
+}
+
+.modal-cta:hover {
+  background: var(--accent-dim);
+  text-decoration: none;
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-top: 3rem;
+}
+
+footer .sys-info { display: flex; gap: 2rem; }
+
+@media (max-width: 1024px) {
+  .modal {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-image-section {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  header { flex-direction: column; gap: 1rem; }
+  .hero { padding: 2rem 1.5rem 1.5rem; }
+  .filter-section { padding: 1rem; top: 100px; }
+  .filter-row { flex-direction: column; align-items: flex-start; }
+  .products-section { padding: 1.5rem 1rem; }
+  .products-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.5rem; }
+  .modal-content-section { padding: 2rem 1.5rem; }
+  footer { flex-direction: column; gap: 1rem; text-align: center; }
+  footer .sys-info { flex-direction: column; gap: 0.5rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><a href="index.html">apov.sg</a><a href="store.html" class="store-part">/store</a></div>
+</header>
+
+<section class="products-section">
+  <div class="section-title">超便携阅读器</div>
+  <div class="products-grid" id="portableGrid"></div>
+</section>
+
+<section class="products-section">
+  <div class="section-title">手机</div>
+  <div class="products-grid" id="phonesGrid"></div>
+</section>
+
+<section class="products-section">
+  <div class="section-title">手写笔记</div>
+  <div class="products-grid" id="notebooksGrid"></div>
+</section>
+
+<section class="products-section">
+  <div class="section-title">显示器</div>
+  <div class="products-grid" id="monitorsGrid"></div>
+</section>
+
+<footer>
+  <span>价格仅供参考，以官方为准</span>
+  <span>a project by <a href="https://apov.sg" target="_blank" rel="noopener noreferrer">apov.sg</a></span>
+</footer>
+
+<!-- Product detail modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-image-section" id="modalImageSection"></div>
+    <div class="modal-content-section">
+      <button class="modal-close" id="modalClose">×</button>
+      <div class="modal-brand" id="modalBrand"></div>
+      <div class="modal-model" id="modalModel"></div>
+      <div class="modal-category" id="modalCategory"></div>
+      <div class="modal-price" id="modalPrice"></div>
+      <div class="modal-description" id="modalDescription"></div>
+      <div class="modal-specs" id="modalSpecs" style="display:none;">
+        <div class="modal-specs-title">核心参数</div>
+        <div class="modal-specs-list" id="modalSpecsList"></div>
+      </div>
+      <a href="#" class="modal-cta" id="modalCTA" target="_blank" rel="noopener noreferrer">了解更多 →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Product data with consumer-focused descriptions
+const products = [
+  // Monitor category - Editor's picks
+  {
+    id: 4,
+    brand: "Dasung",
+    brand_cn: "大上",
+    model: "Paperlike 13K Color",
+    category: "monitor",
+    category_cn: "墨水屏显示器",
+    price_cny: "5299",
+    price_usd: "$749",
+    image: "assets/images/catalog_monitor/dasung_paperlike_13k_color.jpg",
+    badge: null,
+    url: "https://www.dasung.com/",
+    specs: {
+      "屏幕尺寸": "13.3 英寸",
+      "分辨率": "3200×2400",
+      "面板类型": "Kaleido 3 彩色墨水屏",
+      "刷新率": "37Hz",
+      "接口": "mini-HDMI / USB-C"
+    },
+    description: `
+      <h4>为什么推荐这款？</h4>
+      <p>如果你只能买一台墨水屏显示器，就选它。大上 Paperlike 13K Color 是目前市场上<strong>「可用性」最高的墨水屏显示器</strong>——不是性能最强，也不是屏幕最大，而是真正能让你每天用、用得顺手的那一款。</p>
+
+      <h4>真正的低延迟体验</h4>
+      <p>这是第一台让鼠标「跟手」的墨水屏显示器。你可以在上面处理邮件、浏览网页、编辑文档，而不会有那种「鼠标飘在半空中」的割裂感。对于需要频繁点击操作的场景，这是质的飞跃。</p>
+
+      <h4>彩色，但不鸡肋</h4>
+      <p>Kaleido 3 彩色面板的色彩饱和度确实不如 LCD，但它有自己的用途：代码高亮、PDF 批注、思维导图，这些场景下的色彩标记能显著提升效率。而且得益于墨水屏的特性，<strong>即使是彩色模式也几乎不伤眼</strong>。</p>
+
+      <h4>13.3 英寸的便携性</h4>
+      <p>大到可以作为主力副屏，小到可以装进背包随身带。如果你是数字游民、或者需要在咖啡厅/图书馆办公，这个尺寸是完美的平衡点。</p>
+
+      <h4>适合什么人？</h4>
+      <p>程序员（代码高亮真的有用）、作家、研究人员、需要长时间盯屏的知识工作者。不适合：视频剪辑、平面设计、游戏玩家。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>彩色分辨率打折</strong>：Kaleido 3 面板在彩色模式下有效分辨率减半，彩色内容看起来会有明显的颗粒感。如果你主要用彩色功能，色彩饱和度远不如 LCD。</p>
+      <p><strong>13.3 英寸的屏幕限制</strong>：对于需要同时查看多个窗口或大量文本的用户（如学术研究、代码审查），屏幕还是偏小。如果预算充足且有桌面空间，<strong>Boox Mira Pro Color 25.3"</strong> 的大屏体验会更好。</p>
+      <p><strong>价格不算便宜</strong>：5299 元的价格已经接近入门级 LCD 显示器的两倍。如果只是想尝试墨水屏，超便携设备（如 <strong>XTEINK X4</strong> 仅需 199 元）是更低风险的选择。</p>
+    `
+  },
+  {
+    id: 7,
+    brand: "Boox",
+    brand_cn: "文石",
+    model: "Mira Pro Color 25.3\"",
+    category: "monitor",
+    category_cn: "墨水屏显示器",
+    price_cny: "13499",
+    price_usd: "$1,899",
+    image: "assets/images/catalog_monitor/Boox_Mira_Pro_Color.jpg",
+    badge: null,
+    url: "https://shop.boox.com/",
+    specs: {
+      "屏幕尺寸": "25.3 英寸",
+      "分辨率": "3200×1800",
+      "面板类型": "Kaleido 3 彩色墨水屏",
+      "刷新率": "BSR 4种模式",
+      "接口": "HDMI / DP / USB-C"
+    },
+    description: `
+      <h4>大屏墨水屏的终极选择</h4>
+      <p>如果你想要一台<strong>桌面级墨水屏显示器</strong>，能够取代你的 LCD 主屏，那么 Mira Pro Color 25.3" 是目前市场上最成熟的选择。这不是一台「玩具」，而是一台真正可以作为生产力工具的显示器。</p>
+
+      <h4>25.3 英寸意味着什么？</h4>
+      <p>足够大，可以并排显示两个 A4 文档；可以一边写代码一边看文档；可以舒服地阅读长篇论文而不需要频繁缩放。这是墨水屏显示器中的「办公桌主角」，而不是配角。</p>
+
+      <h4>文石的 BSR 刷新技术</h4>
+      <p>文石的 BSR（Boox Super Refresh）算法提供 4 种刷新模式，你可以根据使用场景切换：阅读模式几乎无残影，快速模式可以看视频（虽然体验一般），平衡模式适合日常办公。这种灵活性是大上没有的。</p>
+
+      <h4>彩色版的意义</h4>
+      <p>在 25.3 英寸的大屏上，彩色的价值被放大了。你可以用它来<strong>审阅设计稿、查看数据图表、阅读带插图的技术文档</strong>——这些场景下，即使是不够鲜艳的 Kaleido 3 色彩，也比黑白要实用得多。</p>
+
+      <h4>谁应该买它？</h4>
+      <p>预算充足、需要大屏墨水屏作为主力办公屏的用户。特别适合：学术研究、技术写作、大量阅读文献的工作。不适合：预算有限、桌面空间小、需要高刷新率的用户。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>价格高昂</strong>：13499 元的售价是这个品类中的顶级定价，对于大多数人来说是一笔不小的投资。如果预算有限，<strong>Dasung Paperlike 13K Color</strong>（5299 元）能提供 60% 的价格实现 80% 的功能。</p>
+      <p><strong>体积和重量</strong>：25.3 英寸意味着这是一台完全不便携的桌面显示器，需要固定工作空间。如果你需要便携性，13.3 英寸的 <strong>Paperlike 13K Color</strong> 可以装进背包。</p>
+      <p><strong>彩色依然有限</strong>：即使在 25.3 英寸的大屏上，Kaleido 3 的色彩表现依然无法与 LCD 媲美。如果你的工作涉及大量彩色内容（如设计审阅、照片编辑），这不是合适的选择。</p>
+      <p><strong>刷新率瓶颈</strong>：BSR 虽然已经是墨水屏中的优秀水平，但对于习惯了 60Hz+ LCD 的用户，还是会感觉到明显的迟滞。这是墨水屏技术本身的物理限制，短期内难以突破。</p>
+    `
+  },
+
+  // Portable category - Devices with mockup
+  {
+    id: 106,
+    brand: "M5Stack",
+    brand_cn: "M5Stack",
+    model: "Paper S3",
+    category: "portable",
+    category_cn: "超便携墨水屏",
+    price_cny: "399",
+    price_usd: "$55",
+    image: "assets/images/catalog_ultra_portable/m5_paper_s3.webp",
+    badge: null,
+    url: "https://shop.m5stack.com/pages/search-results-page?q=paper+s3",
+    specs: {
+      "屏幕尺寸": "4.7 英寸",
+      "分辨率": "960×540",
+      "处理器": "ESP32-S3",
+      "系统": "开源固件",
+      "特色": "可编程"
+    },
+    description: `
+      <h4>这不是一台「成品」，而是一个「可能性」</h4>
+      <p>M5Stack Paper S3 不是传统意义上的电子书阅读器，它是一块<strong>搭载墨水屏的开发板</strong>。如果你懂一点编程，它可以变成任何你想要的东西：电子书阅读器、待办清单、股票显示器、天气预报屏、甚至是智能家居控制面板。</p>
+
+      <h4>edcbook 固件：开箱即用的阅读体验</h4>
+      <p>不想折腾？社区开发的 <strong>edcbook 固件</strong>可以让它秒变一台功能完整的电子书阅读器。支持 EPUB、PDF、TXT，还有书签、进度同步等功能。而且因为是开源项目，社区一直在持续更新。</p>
+
+      <h4>4.7 英寸：口袋里的极客玩具</h4>
+      <p>这个尺寸刚好可以放进外套口袋。虽然不如 6 英寸阅读器舒服，但作为「随身携带的第二屏」，它足够了。而且<strong>重量只有 120g</strong>，挂在包上完全无感。</p>
+
+      <h4>为什么价格这么便宜？</h4>
+      <p>因为它本质上是一块开发板，没有精致的外壳、没有复杂的操作系统、没有品牌溢价。但如果你愿意动手，它的可玩性远超那些「封闭式」的商业产品。</p>
+
+      <h4>适合谁？</h4>
+      <p>动手能力强的极客、喜欢折腾开源硬件的 DIY 爱好者、想要一个可编程墨水屏终端的开发者。不适合：只想要开箱即用、不想折腾的普通用户。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>需要动手配置</strong>：虽然有 edcbook 固件，但刷固件、配置系统对于非技术用户来说还是有门槛的。如果你只想要「买来就能用」的体验，<strong>XTEINK X4</strong> 或 <strong>Obook5</strong> 是更好的选择。</p>
+      <p><strong>4.7 英寸屏幕偏小</strong>：对于长时间阅读书籍，这个尺寸还是有点吃力。如果你需要更舒适的阅读体验且不介意略大一点，6 英寸的主流阅读器（如 Kindle Paperwhite）会更合适。</p>
+      <p><strong>社区支持有限</strong>：相比 Kindle、Kobo 等成熟生态，edcbook 社区的资源和教程还相对较少。遇到问题可能需要自己摸索或在小众论坛求助。</p>
+      <p><strong>硬件做工一般</strong>：作为开发板，Paper S3 的外壳和做工比不上商业阅读器。如果你在意手感和质感，这不是最佳选择。</p>
+    `
+  },
+  {
+    id: 108,
+    brand: "XTEINK",
+    brand_cn: "阅星曈",
+    model: "X4",
+    category: "portable",
+    category_cn: "超便携墨水屏",
+    price_cny: "260",
+    price_usd: "$37",
+    image: "assets/images/catalog_ultra_portable/xteink-x4.webp",
+    badge: null,
+    url: "https://mall.jd.com/index-19747042.html",
+    specs: {
+      "屏幕尺寸": "4.3 英寸",
+      "分辨率": "800×600",
+      "重量": "75.8g",
+      "厚度": "5.9mm",
+      "特色": "磁吸设计"
+    },
+    description: `
+      <h4>199 元的「阅读自由」</h4>
+      <p>这可能是市场上<strong>性价比最高的墨水屏阅读器</strong>。不到 200 元的价格，买到的不仅是一块墨水屏，更是一种「随时随地阅读」的可能性。扔包里、放口袋、吸在手机背面，完全不用心疼。</p>
+
+      <h4>磁吸设计：最被低估的创新</h4>
+      <p>X4 的磁吸设计看起来像个噱头，但实际用起来会发现它的妙处：<strong>吸在手机壳背面</strong>，通勤路上单手阅读；吸在冰箱上，变成厨房菜谱；吸在床头，睡前阅读不用找地方放。这种灵活性是传统阅读器做不到的。</p>
+
+      <h4>4.3 英寸：刚好够用</h4>
+      <p>这个尺寸对于小说、轻量阅读来说完全够用。虽然看 PDF 会有点吃力，但作为「碎片时间阅读终端」，它的便携性优势远大于屏幕尺寸的劣势。而且<strong>重量只有 75.8g</strong>，比一部手机还轻。</p>
+
+      <h4>封闭系统的优缺点</h4>
+      <p>X4 采用封闭式系统，不能安装第三方 App，只能通过文件传输导入书籍。这对于喜欢折腾的用户是缺点，但对于「只想安静看书」的用户来说，反而是优点——<strong>没有诱惑，没有干扰，只有阅读</strong>。</p>
+
+      <h4>适合谁？</h4>
+      <p>预算有限的学生、想要第二台备用阅读器的轻度用户、追求极致便携性的通勤族。不适合：需要大屏看 PDF 的学术用户、想要丰富功能的重度阅读爱好者。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>4.3 英寸屏幕的阅读局限</strong>：虽然便携，但长时间阅读小说还是会觉得屏幕太小、翻页频繁。如果预算允许多加 100 元，<strong>Obook5</strong> 的 4.26 英寸屏幕虽然看起来差不多，但实际阅读体验会更好。</p>
+      <p><strong>封闭系统限制</strong>：无法安装第三方 App（如微信读书、Kindle），只能通过传输本地文件。如果你的书库主要在这些平台上，使用会很不方便。</p>
+      <p><strong>磁吸设计的实用性存疑</strong>：虽然创意十足，但实际使用中可能会发现磁吸不够稳固、容易脱落。如果你主要是正常手持阅读，这个卖点意义不大。</p>
+      <p><strong>没有前光</strong>：在弱光环境下无法阅读，这对于睡前阅读的用户是个问题。如果你需要前光功能，同价位的其他产品可能没有，但多花 100 元的 <strong>Obook5</strong> 有 20 级前光。</p>
+    `
+  },
+  {
+    id: 109,
+    brand: "XTEINK",
+    brand_cn: "阅星曈",
+    model: "X3",
+    category: "portable",
+    category_cn: "超便携墨水屏",
+    price_cny: "230",
+    price_usd: "$32",
+    image: "assets/images/catalog_ultra_portable/xteink_x3.webp",
+    badge: null,
+    url: "https://mall.jd.com/index-19747042.html",
+    specs: {
+      "屏幕尺寸": "3.7 英寸",
+      "分辨率": "800×480",
+      "重量": "约 60g",
+      "系统": "封闭系统",
+      "特色": "超小屏"
+    },
+    description: `
+      <h4>这不是一台阅读器，这是一张「电子便签」</h4>
+      <p>3.7 英寸的屏幕，对于传统阅读来说确实太小了。但如果换个角度，把它当作<strong>一张可以无限书写、随身携带的电子便签</strong>，你会发现它的价值：记录灵感、临时备忘、碎片化阅读短文章。</p>
+
+      <h4>真正的口袋尺寸</h4>
+      <p>X3 可能是市面上<strong>最小、最轻的墨水屏设备</strong>之一。60g 的重量、3.7 英寸的尺寸，可以轻松放进任何口袋，甚至可以挂在钥匙链上。这种便携性是 6 英寸阅读器永远做不到的。</p>
+
+      <h4>极简主义的美学</h4>
+      <p>没有复杂的功能、没有花哨的界面，X3 就是一个<strong>纯粹的文字显示工具</strong>。这种极简反而让它有了独特的吸引力——在这个功能过载的时代，有一台设备只做一件事，反而是一种奢侈。</p>
+
+      <h4>149 元：入门的最低门槛</h4>
+      <p>如果你只是想尝试一下「墨水屏阅读」的感觉，又不想花大价钱，X3 是完美的试水产品。即使最后发现不适合自己，也不会心疼。</p>
+
+      <h4>适合谁？</h4>
+      <p>极简主义爱好者、喜欢随身携带笔记本的人、想要一个「纯粹阅读工具」的用户。不适合：需要看长篇书籍或 PDF 的用户、追求大屏体验的人。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>3.7 英寸太小了</strong>：这是最大的问题。即使是阅读短文，800×480 的分辨率和 3.7 英寸的屏幕也会让长时间使用很吃力。如果你发现自己经常眯眼或频繁翻页，多花 50 元升级到 <strong>X4</strong>（4.3 英寸）会有明显改善。</p>
+      <p><strong>功能极度精简</strong>：封闭系统 + 超小屏幕意味着它几乎只能用来看纯文字内容。想看漫画、杂志、带图片的文章？基本不可能有好体验。</p>
+      <p><strong>电池容量未知</strong>：官方没有公布电池容量，从体积推测应该很小。虽然墨水屏省电，但如果你是重度用户，可能需要比想象中更频繁地充电。</p>
+      <p><strong>极简主义的代价</strong>：没有前光、没有触摸（待确认）、没有扩展功能。如果你后来发现需要这些功能，这台设备基本没有升级空间，只能换机。建议先想清楚自己是「真极简」还是「觉得极简很酷」。</p>
+    `
+  },
+  {
+    id: 107,
+    brand: "OBOOK",
+    brand_cn: "国文",
+    model: "Obook5",
+    category: "portable",
+    category_cn: "超便携墨水屏",
+    price_cny: "349",
+    price_usd: "$49",
+    image: "assets/images/catalog_ultra_portable/guowen_OBOOK5.jpg",
+    badge: null,
+    url: "https://mall.jd.com/index-169704.html",
+    specs: {
+      "屏幕尺寸": "4.26 英寸",
+      "分辨率": "800×600",
+      "厚度": "4.8mm",
+      "重量": "约 90g",
+      "特色": "快速翻页"
+    },
+    description: `
+      <h4>国文 S2 的升级版</h4>
+      <p>Obook5 是国文 S2 的 2025 重新发布版，保持了<strong>4.26 英寸的便携尺寸和 4.8mm 的轻薄机身</strong>，同时在系统和翻页速度上进行了优化。虽然机身很薄，可以轻松塞进护照夹或夹在笔记本里，但这不是它唯一的卖点。</p>
+
+      <h4>4.26 英寸：便携性和可读性的平衡点</h4>
+      <p>比 3.7 英寸的 X3 大一点，看书更舒服；比 6 英寸的主流阅读器小一点，更便携。这个尺寸对于<strong>小说、散文、短篇文章</strong>来说是最佳选择。虽然看 PDF 还是有点吃力，但作为日常通勤阅读器，完全够用。</p>
+
+      <h4>快速翻页：国文的独家优化</h4>
+      <p>国文在系统优化上下了功夫，Obook5 的翻页速度明显快于同价位产品。虽然比不上旗舰级阅读器，但在便携设备这个类别里，它的流畅度是数一数二的。</p>
+
+      <h4>299 元：中端便携的最优解</h4>
+      <p>比 X3/X4 贵一点，但多花的钱换来了更大的屏幕、更好的做工、更快的翻页。如果你的预算在 300 元左右，想要一台<strong>真正可以作为主力便携阅读器</strong>的设备，Obook5 是最佳选择。</p>
+
+      <h4>适合谁？</h4>
+      <p>预算在 300 元左右、需要一台「能随身带、舒服看」的阅读器的用户。不适合：需要看 PDF 的学术用户、想要彩色屏或更大屏幕的人。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>系统封闭性</strong>：无法安装微信读书、Kindle 等第三方 App，只能通过 USB 传输本地文件。如果你的主要阅读来源是这些平台的在线书库，使用体验会大打折扣。</p>
+      <p><strong>4.26 英寸依然偏小</strong>：虽然比 X3/X4 大，但对于看 PDF、漫画、杂志来说还是太小。如果你的阅读需求不局限于纯文字小说，6 英寸的主流阅读器（虽然便携性差一点）会更合适。</p>
+      <p><strong>品牌知名度低</strong>：国文不如大厂（Kindle、Boox）那样有完善的售后和社区支持。遇到问题可能需要自己摸索，固件更新频率也可能不如大品牌。</p>
+      <p><strong>翻页速度的上限</strong>：虽然在便携设备中算快，但和旗舰级墨水屏显示器（如 <strong>Paperlike 13K Color</strong>）相比还是有明显差距。如果你对响应速度很敏感，这个价位的产品都会让你感到迟滞。</p>
+    `
+  },
+  {
+    id: 5,
+    brand: "Dasung",
+    brand_cn: "大上",
+    model: "Paperlike 13K",
+    category: "monitor",
+    category_cn: "墨水屏显示器",
+    price_cny: "3999",
+    price_usd: "$565",
+    image: "assets/images/catalog_monitor/dasung_paperlike_13k.jpg",
+    badge: null,
+    url: "https://www.dasung.com/",
+    specs: {
+      "屏幕尺寸": "13.3 英寸",
+      "分辨率": "3200×2400",
+      "面板类型": "黑白墨水屏",
+      "刷新率": "37Hz",
+      "接口": "mini-HDMI / USB-C"
+    },
+    description: `
+      <h4>纯粹的黑白阅读体验</h4>
+      <p>Paperlike 13K 是彩色版的黑白版本——去掉了 Kaleido 彩色层，只保留纯粹的黑白墨水屏。这意味着<strong>更高的对比度、更清晰的文字、更快的响应速度</strong>，而且价格便宜了 1300 元。如果你不需要彩色功能，这才是真正的最优解。</p>
+
+      <h4>黑白的优势</h4>
+      <p>没有 Kaleido 彩色层的遮挡，黑白版的文字显示<strong>对比度更高、边缘更锐利</strong>。对于长时间阅读文字内容（代码、论文、文档）的用户，这种纯粹的黑白显示反而比彩色版更舒服、更不累眼。</p>
+
+      <h4>响应速度更快</h4>
+      <p>黑白版的刷新算法不需要处理彩色层，响应速度比彩色版快一点点（虽然提升不大，但能感觉到）。对于需要频繁翻页、滚动的场景，这种流畅度的提升是值得的。</p>
+
+      <h4>3999 元的性价比</h4>
+      <p>比彩色版便宜 1300 元，但核心体验（13.3 英寸、3200×2400 分辨率、低延迟）完全一致。如果你确定自己<strong>不需要彩色功能</strong>（只是想要一台护眼的纯文字显示器），这 1300 元省得值得。</p>
+
+      <h4>适合谁？</h4>
+      <p>纯文字工作者（作家、程序员、学术研究）、不需要代码高亮的用户、预算有限但想要大上品质的人。不适合：需要彩色 PDF 批注、需要查看彩色图表/思维导图的用户——加 1300 元买彩色版会更实用。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>没有彩色</strong>：这是最大的限制。如果你的工作涉及任何彩色内容（代码高亮、PDF 标注、数据可视化），黑白版会让你怀念彩色。这 1300 元的差价换来的彩色功能，对很多人来说是值得的。</p>
+      <p><strong>13.3 英寸依然偏小</strong>：和彩色版一样的尺寸限制。如果需要大屏，<strong>Boox Mira Pro Color 25.3"</strong> 是更好选择（虽然贵很多）。</p>
+      <p><strong>刷新率瓶颈</strong>：即使是黑白版，37Hz 的刷新率对于习惯 LCD 的用户来说还是会感到迟滞。这是墨水屏技术的物理限制，短期内无法突破。</p>
+      <p><strong>价格依然不便宜</strong>：3999 元已经可以买两台不错的 LCD 显示器。如果只是想试试墨水屏，超便携设备（如 <strong>XTEINK X4</strong> 仅需 260 元）是更低成本的尝试方式。</p>
+    `
+  },
+  {
+    id: 201,
+    brand: "SOTSU",
+    brand_cn: "SOTSU",
+    model: "FlipAction Elite 16\"",
+    category: "monitor",
+    category_cn: "便携显示器",
+    price_cny: "5830",
+    price_usd: "S$1,100",
+    image: "assets/images/catalog_monitor/sotsu_flipaction_elite.png",
+    badge: null,
+    url: "https://www.sotsu.com/products/flipaction-elite-16",
+    specs: {
+      "屏幕尺寸": "16 英寸",
+      "分辨率": "2560×1600",
+      "面板类型": "IPS LCD",
+      "刷新率": "60Hz",
+      "接口": "USB-C / mini-HDMI",
+      "特色": "FlipAction 支架"
+    },
+    description: `
+      <h4>便携显示器中的「真 16 英寸」</h4>
+      <p>SOTSU FlipAction 是少数真正做到 16 英寸的便携显示器——不是 15.6 英寸打擦边球，而是实打实的 16 英寸。2560×1600 的分辨率（16:10 比例）意味着<strong>比常见的 1080p 便携屏多出 30% 的垂直空间</strong>，对于需要同时查看多个窗口或处理长文档的用户来说，这是质的提升。</p>
+
+      <h4>FlipAction 支架：被低估的设计</h4>
+      <p>大多数便携显示器的支架都很鸡肋，要么角度固定、要么容易倒。SOTSU 的 FlipAction 支架可以<strong>360° 翻转、多角度悬停</strong>，无论是桌面办公、床上使用、还是竖屏阅读，都能找到舒服的角度。这个支架的手感和稳定性明显好于同价位产品。</p>
+
+      <h4>2.5K 分辨率的实用性</h4>
+      <p>2560×1600 不是 4K，但对于 16 英寸屏幕来说<strong>PPI 刚好达到视网膜级别（189 PPI）</strong>，文字清晰、图像细腻，同时对电脑性能的要求比 4K 低很多。如果你用的是轻薄本或老款 MacBook，这个分辨率是完美平衡点。</p>
+
+      <h4>单 USB-C 供电+显示</h4>
+      <p>支持 USB-C 一线通（供电+显示），如果你的笔记本 USB-C 口支持视频输出，只需要一根线就能连接。对于<strong>数字游民、咖啡厅办公、出差</strong>这些场景，少一根线的体验提升是巨大的。</p>
+
+      <h4>适合谁？</h4>
+      <p>需要便携副屏的轻度移动办公用户、MacBook/轻薄本用户、需要竖屏阅读长文档的程序员/研究人员。不适合：追求极致色彩准确度的设计师、需要高刷新率的游戏玩家。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>不是真 4K</strong>：虽然标榜"4K 级"，但 2560×1600 只是 2.5K。如果你需要真 4K（3840×2160）来做设计或视频剪辑，这不是合适的选择。真 4K 便携屏价格通常在 2500 元以上。</p>
+      <p><strong>色彩准确度一般</strong>：IPS 面板的色域覆盖和色准比不上专业显示器。如果你是平面设计师或摄影师，需要精确的色彩管理，这块屏幕不适合作为主力工具。</p>
+      <p><strong>亮度在户外不够</strong>：便携显示器的通病——最大亮度通常只有 300-400 nits，在强光环境（如户外咖啡厅、阳光直射）下屏幕会发白、难以阅读。如果你经常在户外工作，这是个问题。</p>
+      <p><strong>重量和便携性的权衡</strong>：16 英寸意味着更重、更大。如果你追求极致便携，13.3 英寸或更小的便携屏（如 <strong>Paperlike 13K Color</strong> 墨水屏）会更轻便。FlipAction 更适合「固定在酒店/咖啡厅办公」而不是「背包里随时拿出来」。</p>
+      <p><strong>价格竞争激烈</strong>：1699 元的价位，已经可以买到一些大品牌的 15.6 英寸便携屏（如 ASUS、Dell）。SOTSU 作为小众品牌，售后和品控可能不如大厂靠谱。如果你在意品牌保障，多花几百块买大牌可能更安心。</p>
+    `
+  },
+
+  // Phone category
+  {
+    id: 301,
+    brand: "Light",
+    brand_cn: "Light",
+    model: "Phone 3",
+    category: "phone",
+    category_cn: "手机",
+    price_cny: "2800",
+    price_usd: "$399",
+    image: "assets/images/phone/light_phone_3.jpg",
+    badge: null,
+    url: "https://www.thelightphone.com/",
+    specs: {
+      "屏幕": "OLED",
+      "功能": "通话、短信、导航、音乐",
+      "特色": "极简主义"
+    },
+    description: `
+      <h4>真正的极简手机</h4>
+      <p>Light Phone 3 是为那些<strong>想要摆脱手机成瘾</strong>的人设计的。它只保留了最基本的功能：通话、短信、导航、音乐——没有社交媒体、没有无限滚动的信息流、没有让你分心的 App。这不是「功能机」，而是一种生活方式的选择。</p>
+
+      <h4>OLED 屏幕的进化</h4>
+      <p>相比前代的黑白墨水屏，Light Phone 3 升级到了 OLED 屏幕，显示更清晰、响应更快，但依然保持极简的黑白界面设计。这是功能性和美学的完美平衡。</p>
+
+      <h4>适合谁？</h4>
+      <p>想要数字极简生活的人、需要「第二台手机」来隔离工作和生活的人、厌倦了智能手机干扰的创作者。不适合：需要微信、支付宝等国内应用的用户（几乎所有中国用户）。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>在中国几乎不可用</strong>：没有微信、支付宝、高德地图，在国内的实用性接近于零。Light Phone 是为欧美市场设计的产品，不适合中国的数字生态。</p>
+      <p><strong>价格偏高</strong>：2800 元买一台只能打电话发短信的设备，性价比极低。如果只是想减少手机使用，不如直接删除 App 或使用屏幕时间管理功能。</p>
+      <p><strong>导航功能有限</strong>：虽然有导航，但没有实时路况、没有公交信息，实用性远不如智能手机。</p>
+    `
+  },
+  {
+    id: 302,
+    brand: "Mudita",
+    brand_cn: "Mudita",
+    model: "Kompakt",
+    category: "phone",
+    category_cn: "手机",
+    price_cny: "2400",
+    price_usd: "$349",
+    image: "assets/images/phone/mudita_kompakt.jpg",
+    badge: null,
+    url: "https://mudita.com/products/kompakt/",
+    specs: {
+      "屏幕": "墨水屏",
+      "操作系统": "定制 Android",
+      "特色": "可安装部分 App"
+    },
+    description: `
+      <h4>介于智能手机和功能机之间</h4>
+      <p>Mudita Kompakt 是一台<strong>「可以装 App 的墨水屏手机」</strong>——基于 Android 系统，但只允许安装白名单内的 App（如地图、播客、电子书）。它试图在「完全断网」和「完全沉迷」之间找到平衡点。</p>
+
+      <h4>墨水屏的护眼优势</h4>
+      <p>墨水屏意味着几乎不伤眼、超长续航（可以用一周）、在阳光下清晰可读。如果你的主要需求是阅读、导航、偶尔查信息，墨水屏手机是比 LCD/OLED 更健康的选择。</p>
+
+      <h4>适合谁？</h4>
+      <p>需要部分智能功能（地图、音乐、电子书）但想避免社交媒体的用户。不适合：需要微信、支付宝等国内应用的用户。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>App 生态受限</strong>：虽然基于 Android，但只能安装白名单 App。如果你需要的 App 不在白名单里（99% 的国内 App 都不在），这台手机就没用了。</p>
+      <p><strong>墨水屏的响应速度</strong>：墨水屏刷新慢，滑动、切换应用都有明显延迟。习惯了 iPhone 120Hz 屏幕的用户会觉得难以忍受。</p>
+      <p><strong>价格高</strong>：2400 元可以买一台不错的智能手机，或者 10 台国产功能机。Mudita 的溢价主要来自「理念」，而不是性能。</p>
+    `
+  },
+  {
+    id: 305,
+    brand: "Dawo",
+    brand_cn: "大我",
+    model: "Hibreak Pro Color",
+    category: "phone",
+    category_cn: "手机",
+    price_cny: "3200",
+    price_usd: "$450",
+    image: "assets/images/phone/dawo_hibreak_pro_color.jpg",
+    badge: null,
+    url: "https://www.dawotech.com/",
+    specs: {
+      "屏幕": "6.8 英寸彩色墨水屏",
+      "面板类型": "Kaleido 3",
+      "操作系统": "Android"
+    },
+    description: `
+      <h4>国产彩色墨水屏手机</h4>
+      <p>Hibreak Pro Color 是大我的旗舰墨水屏手机——6.8 英寸大屏、Kaleido 3 彩色墨水屏，可以显示彩色照片、彩色地图、彩色应用界面。这是目前<strong>国产彩色墨水屏手机的最高水平</strong>，虽然色彩表现依然远不如 LCD，但对于需要国内 App 生态的用户来说，这是为数不多的彩色墨水屏选择。</p>
+
+      <h4>Kaleido 3 的彩色体验</h4>
+      <p>Kaleido 3 的色彩饱和度很低、分辨率会打折、刷新速度更慢——但它确实能显示彩色。对于<strong>查看彩色地图、看带插图的电子书、浏览彩色网页</strong>这些场景，有彩色总比没有好。</p>
+
+      <h4>6.8 英寸大屏 + 双卡双待</h4>
+      <p>6.8 英寸的大屏幕适合阅读，双卡双待和 NFC 功能让它成为一台「真手机」而不是玩具。可以安装微信、支付宝等国内 App，是能作为主力机使用的墨水屏手机。</p>
+
+      <h4>适合谁？</h4>
+      <p>需要墨水屏手机、但又不想完全放弃彩色内容的用户。不适合：对色彩有要求的人（Kaleido 的彩色会让你失望）、追求流畅体验的用户。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>彩色效果很差</strong>：Kaleido 3 的彩色饱和度极低，看起来像是「褪色的旧照片」。如果你期待的是 iPhone 那样鲜艳的色彩，这会让你大失所望。</p>
+      <p><strong>刷新速度慢</strong>：彩色墨水屏的刷新延迟非常明显，刷微信、看地图都会有卡顿感。如果你对流畅度有要求，传统 LCD 手机依然是更好的选择。</p>
+      <p><strong>价格偏高</strong>：3200 元的价格已经可以买一台不错的中端智能手机。大我作为小品牌，售后和品控可能不如大厂，这个溢价主要来自彩色墨水屏的稀缺性。</p>
+      <p><strong>电池续航缩短</strong>：彩色模式下的耗电量比黑白墨水屏高不少，虽然依然比 LCD 省电，但续航表现不如预期中的墨水屏手机。</p>
+    `
+  },
+  {
+    id: 306,
+    brand: "Hisense",
+    brand_cn: "海信",
+    model: "A9",
+    category: "phone",
+    category_cn: "手机",
+    price_cny: "2800",
+    price_usd: "$395",
+    image: "assets/images/phone/hisense_a9.jpg",
+    badge: null,
+    url: "https://www.hisense.com/",
+    specs: {
+      "屏幕": "6.1 英寸 + 5.8 英寸双屏",
+      "前屏": "墨水屏",
+      "后屏": "彩色 AMOLED"
+    },
+    description: `
+      <h4>双屏设计的最佳实践</h4>
+      <p>海信 A9 是一台<strong>双屏手机</strong>——正面是 6.1 英寸墨水屏（护眼、省电），背面是 5.8 英寸彩色 AMOLED 屏（鲜艳、流畅）。你可以根据使用场景切换：看书用墨水屏，刷微信用彩色屏。这是目前最聪明的墨水屏手机设计。</p>
+
+      <h4>两块屏幕，最佳选择</h4>
+      <p>不用在「护眼」和「可用性」之间妥协——需要阅读时翻到墨水屏，需要看视频、拍照时翻到彩色屏。这种灵活性是单屏墨水屏手机做不到的。</p>
+
+      <h4>海信的品牌保障</h4>
+      <p>海信是大厂，售后网点多、品控相对靠谱。相比大我这种小品牌，海信的产品更让人放心。</p>
+
+      <h4>适合谁？</h4>
+      <p>想要墨水屏阅读体验、但又不想放弃彩色屏功能的用户。不适合：追求极致轻薄（双屏意味着更厚更重）、预算有限的用户。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>厚重</strong>：双屏设计意味着手机更厚、更重。如果你习惯了现代轻薄手机，A9 的手感会让你不适应。</p>
+      <p><strong>背面屏幕容易误触</strong>：背面的彩色屏在你握持手机时很容易被误触，导致意外操作。这是双屏手机的通病。</p>
+      <p><strong>电池续航的矛盾</strong>：如果你主要用彩色屏，那墨水屏就是摆设，还不如买普通手机；如果你主要用墨水屏，那为什么要为背面的彩色屏买单？双屏设计的实用性存疑。</p>
+      <p><strong>价格偏高</strong>：2800 元的价格，已经可以买一台不错的旗舰智能手机。海信 A9 的溢价主要来自双屏设计，而不是性能。</p>
+    `
+  },
+  {
+    id: 308,
+    brand: "Nothing",
+    brand_cn: "Nothing",
+    model: "Phone (3a)",
+    category: "phone",
+    category_cn: "手机",
+    price_cny: "2200",
+    price_usd: "$329",
+    image: "assets/images/phone/nothing_phone_3a.jpg",
+    badge: null,
+    url: "https://www.nothing.tech/",
+    specs: {
+      "屏幕": "6.5 英寸 OLED",
+      "芯片": "天玑 7200",
+      "特色": "Glyph 灯效界面"
+    },
+    description: `
+      <h4>中端价位的设计标杆</h4>
+      <p>Nothing Phone (3a) 是 Nothing 的中端产品——保留了标志性的 Glyph 灯效背板、透明设计、Nothing OS 的独特体验，但用更便宜的芯片（天玑 7200）把价格拉到 2200 元。如果你想要 Nothing 的设计但预算有限，这是最佳选择。</p>
+
+      <h4>Glyph 灯效的实用性</h4>
+      <p>背面的 LED 灯带不只是装饰——可以显示通知、来电、充电状态、甚至音乐节奏。这种<strong>「不用翻开手机就能知道发生了什么」</strong>的设计，比传统的息屏显示更优雅。</p>
+
+      <h4>Nothing OS 的纯净体验</h4>
+      <p>接近原生 Android 的系统、没有广告、没有预装垃圾应用、界面设计简洁。如果你厌倦了国产 UI 的臃肿，Nothing OS 会让你重新爱上 Android。</p>
+
+      <h4>适合谁？</h4>
+      <p>喜欢独特设计、需要中端性能、追求纯净系统体验的用户。不适合：需要顶级性能（游戏玩家）、需要最强拍照、需要国内应用生态优化的用户。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>天玑 7200 性能一般</strong>：日常使用没问题，但玩《原神》这类大型游戏会卡顿。如果你是性能党，多花钱买旗舰机更合适。</p>
+      <p><strong>拍照水平中规中矩</strong>：虽然有 5000 万主摄，但算法优化一般，成片质量比不上同价位的小米、OPPO。如果你在意拍照，这不是最佳选择。</p>
+      <p><strong>Glyph 灯效费电</strong>：虽然酷炫，但频繁使用 Glyph 灯效会明显增加耗电。如果你想要长续航，需要克制使用这个功能。</p>
+      <p><strong>国内软件适配问题</strong>：Nothing OS 基于原生 Android，有些国内应用（如微信、支付宝）的推送通知可能不及时，需要手动调整权限。</p>
+    `
+  },
+
+  // Notebook category
+  {
+    id: 401,
+    brand: "Leuchtturm1917",
+    brand_cn: "灯塔1917",
+    model: "A5 硬壳笔记本",
+    category: "notebook",
+    category_cn: "手写笔记",
+    price_cny: "120",
+    price_usd: "$18",
+    image: "assets/images/notebook/leuchtturm1917.jpg",
+    badge: null,
+    url: "https://www.leuchtturm1917.com/",
+    specs: {
+      "尺寸": "A5 (148×210mm)",
+      "页数": "249 页",
+      "纸张": "80g/m² 防洇纸",
+      "特色": "编号页码、目录、档案标签"
+    },
+    description: `
+      <h4>纸质笔记本的黄金标准</h4>
+      <p>Leuchtturm1917 是德国百年文具品牌，它的 A5 笔记本是<strong>「如果只推荐一款纸质笔记本，就是它」</strong>的存在。不是因为它有什么花哨的功能，而是因为它把一本笔记本该有的每个细节都做到了极致。</p>
+
+      <h4>80g 防洇纸的重要性</h4>
+      <p>很多便宜笔记本用 60g 或更薄的纸，用钢笔、中性笔写字会洇透到背面。Leuchtturm 的 80g 防洇纸<strong>可以用任何笔写字而不洇墨</strong>，包括钢笔、毛笔、马克笔。这是对手写者最基本的尊重。</p>
+
+      <h4>编号页码 + 目录页</h4>
+      <p>每一页都预先编好页码，前面有空白目录页。这意味着你可以<strong>像使用数字笔记一样快速检索纸质笔记</strong>——写完一篇内容，在目录页标注页码和主题，以后翻看时不用从头翻到尾。这个设计简单但极其实用。</p>
+
+      <h4>硬壳封面 + 橡皮筋</h4>
+      <p>硬壳封面保护内页不被压坏，橡皮筋防止笔记本在包里散开。这些都是「你用过一次就回不去」的设计。</p>
+
+      <h4>适合谁？</h4>
+      <p>认真对待手写笔记的人、需要长期保存笔记的用户、用钢笔或水性笔写字的人。不适合：只是想随便记几笔（买便宜本子就行）、喜欢撕页的人（Leuchtturm 不适合撕）。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>价格偏高</strong>：120 元一本的价格是普通笔记本的 5-10 倍。如果你只是偶尔记笔记，这个投入可能不值得。但如果你每天写、长期用，平摊下来的成本其实不高。</p>
+      <p><strong>硬壳有点重</strong>：相比软皮笔记本，硬壳版更重、更不便携。如果你需要随身带着到处走，重量会是个问题。</p>
+      <p><strong>不能撕页</strong>：虽然有档案标签贴纸，但如果你习惯撕页、重组笔记，活页本（如 Filofax）会更合适。Leuchtturm 是为「从头写到尾」的人设计的。</p>
+      <p><strong>纸张依然不如高端和纸</strong>：虽然 80g 防洇纸已经很好，但对于钢笔爱好者来说，纸张的质感、墨水的发色效果依然比不上专业的和纸本（如 Midori MD）。如果你追求极致的书写体验，那些 300+ 元的日本笔记本会更好。</p>
+    `
+  },
+  {
+    id: 402,
+    brand: "Supernote",
+    brand_cn: "超级笔记",
+    model: "Nomad",
+    category: "notebook",
+    category_cn: "手写笔记",
+    price_cny: "2800",
+    price_usd: "$399",
+    image: "assets/images/notebook/supernote_nomad.jpg",
+    badge: null,
+    url: "https://supernote.com/",
+    specs: {
+      "屏幕": "10.7 英寸墨水屏",
+      "分辨率": "1872×1404",
+      "手写延迟": "7ms",
+      "电池续航": "2-3 周",
+      "特色": "陶瓷笔尖、无需充电笔"
+    },
+    description: `
+      <h4>最接近纸笔体验的电子笔记本</h4>
+      <p>Supernote Nomad 是目前市场上<strong>「手写体验最好」</strong>的电子墨水屏笔记本——不是之一，就是最好。7ms 的手写延迟、陶瓷笔尖的摩擦感、无需充电的电磁笔，这些技术细节加起来，造就了一种「写在纸上」的错觉。</p>
+
+      <h4>7ms 延迟：真正跟手的笔</h4>
+      <p>大多数电子笔记本（包括 iPad + Apple Pencil）的手写延迟在 20-30ms，你能明显感觉到笔尖和屏幕显示之间的「脱节」。Nomad 的 7ms 延迟<strong>几乎消除了这种脱节感</strong>，写字时的流畅度接近真实纸笔。</p>
+
+      <h4>陶瓷笔尖 + 类纸膜</h4>
+      <p>Supernote 的笔尖是陶瓷材质，配合屏幕上的类纸膜，写字时有真实的摩擦感和阻尼——不是光滑的玻璃感，而是铅笔在纸上的「沙沙声」。这种触感对于长时间手写来说至关重要。</p>
+
+      <h4>10.7 英寸：A5 纸张大小</h4>
+      <p>10.7 英寸接近 A5 纸的尺寸，单页可以写下足够多的内容，同时不会像 13.3 英寸设备那样笨重。这是便携性和可用性的最佳平衡点。</p>
+
+      <h4>无限存储 + 云同步</h4>
+      <p>不用担心「写满了」——电子笔记本的存储空间几乎无限，可以同步到云端（Dropbox、Google Drive）。这是纸质笔记本永远做不到的。</p>
+
+      <h4>适合谁？</h4>
+      <p>大量手写笔记的人（学生、研究人员、创作者）、需要检索和整理笔记的用户、想要减少纸张消耗的环保主义者。不适合：只是偶尔记笔记（买纸质本就行）、需要彩色笔记的人。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>价格高昂</strong>：2800 元的价格可以买 23 本 Leuchtturm 笔记本。虽然长期来看电子笔记本更环保、更易管理，但初始投入确实很高。如果你不确定自己会不会长期使用，这是一个风险。</p>
+      <p><strong>墨水屏的刷新问题</strong>：虽然手写延迟只有 7ms，但墨水屏的整体刷新速度依然比不上纸张或 iPad。翻页、缩放、移动笔记时会有明显的「闪烁」和延迟。</p>
+      <p><strong>只有黑白</strong>：墨水屏意味着没有彩色笔记、没有彩色标注。如果你习惯用不同颜色的笔做标记（如康奈尔笔记法、思维导图），这会是个限制。iPad + Apple Pencil 在这方面更灵活。</p>
+      <p><strong>软件生态有限</strong>：Supernote 的系统相对封闭，不能安装第三方 App（如 Notability、GoodNotes）。如果你需要更丰富的功能（如 OCR 手写识别、录音同步），iPad 是更好的选择。</p>
+      <p><strong>屏幕容易刮花</strong>：类纸膜虽然提供了好的手感，但也意味着屏幕更容易被刮花。陶瓷笔尖长期使用会在屏幕上留下痕迹，虽然不影响功能，但强迫症用户会不舒服。</p>
+    `
+  }
+];
+
+// Render products
+    brand: "Supernote",
+    brand_cn: "超级笔记",
+    model: "Heart of Metal 标准笔",
+    category: "accessory",
+    category_cn: "配件",
+    price_cny: "280",
+    price_usd: "$40",
+    image: "assets/images/accessory/supernote_pen.jpg",
+    badge: null,
+    url: "https://supernote.com/",
+    specs: {
+      "类型": "EMR 电磁笔",
+      "笔尖": "陶瓷",
+      "电池": "无需充电",
+      "重量": "15g",
+      "特色": "4096 级压感"
+    },
+    description: `
+      <h4>最好的墨水屏手写笔</h4>
+      <p>Supernote Heart of Metal（HoM）是专为 Supernote 设备设计的 EMR 电磁笔——<strong>无需充电、4096 级压感、陶瓷笔尖</strong>。如果你用 Supernote Nomad 或其他超级笔记设备，这支笔是必备配件，它直接决定了你的手写体验。</p>
+
+      <h4>陶瓷笔尖的触感</h4>
+      <p>HoM 的陶瓷笔尖配合 Supernote 的类纸膜，提供接近真实铅笔的摩擦感和阻尼。这种<strong>「沙沙声」的书写体验</strong>是塑料笔尖或橡胶笔尖做不到的。对于长时间手写，触感的重要性不亚于延迟。</p>
+
+      <h4>无需充电的便利</h4>
+      <p>EMR 技术意味着笔本身不需要电池，通过屏幕的电磁场感应工作。这意味着<strong>永远不用担心笔没电</strong>——拿起就能写，这是 Apple Pencil 或 Surface Pen 做不到的。</p>
+
+      <h4>4096 级压感</h4>
+      <p>支持 4096 级压感，可以根据笔的压力调整线条粗细。虽然墨水屏不像 iPad 那样能显示复杂的笔触效果，但基础的粗细变化对于手写笔记来说已经足够。</p>
+
+      <h4>适合谁？</h4>
+      <p>Supernote 设备用户（必备）、追求最佳手写体验的人。不适合：其他品牌设备用户（HoM 只兼容 Supernote）。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>只兼容 Supernote</strong>：这支笔只能用于超级笔记的设备，不能用于其他品牌的墨水屏本或平板。如果你换设备，这支笔就没用了。</p>
+      <p><strong>价格偏高</strong>：280 元的价格是普通触控笔的 5-10 倍。虽然质量和体验确实更好，但对于预算有限的用户来说，Supernote 自带的基础笔也能用。</p>
+      <p><strong>陶瓷笔尖会磨损</strong>：虽然陶瓷比塑料耐用，但长期使用还是会磨损。笔尖磨平后需要更换，官方替换笔尖也不便宜。</p>
+      <p><strong>重量轻可能不适合所有人</strong>：15g 的重量很轻，对于习惯了重笔（如金属钢笔）的用户，可能会觉得太轻、不够稳定。这是个人偏好问题。</p>
+    `
+  },
+  {
+    id: 502,
+    brand: "Apple",
+    brand_cn: "苹果",
+    model: "雷雳 4 Pro 连接线",
+    category: "accessory",
+    category_cn: "配件",
+    price_cny: "948",
+    price_usd: "$129",
+    image: "assets/images/accessory/thunderbolt4_cable.jpg",
+    badge: null,
+    url: "https://www.apple.com/",
+    specs: {
+      "长度": "1.8 米",
+      "带宽": "40Gb/s",
+      "功率": "100W 供电",
+      "特色": "编织线材、雷雳 4 认证"
+    },
+    description: `
+      <h4>真正的「一线通」</h4>
+      <p>苹果雷雳 4 Pro 连接线是目前<strong>最强的 USB-C 线缆</strong>——40Gb/s 带宽、100W 供电、1.8 米长度、编织线材。如果你用 MacBook Pro、需要连接高分辨率显示器或外置硬盘，这根线能充分发挥雷雳 4 的性能。</p>
+
+      <h4>40Gb/s 带宽的意义</h4>
+      <p>雷雳 4 的 40Gb/s 带宽是普通 USB-C 线（5Gb/s 或 10Gb/s）的 4-8 倍。这意味着你可以<strong>通过一根线连接 8K 显示器、传输 4K 视频文件、同时给笔记本充电</strong>——所有这些都不会卡顿或降速。</p>
+
+      <h4>100W 快充</h4>
+      <p>支持 100W PD 快充，足以给 MacBook Pro 16 英寸满速充电。如果你用雷雳扩展坞，这根线可以同时传输数据、视频信号、给笔记本供电——真正的「一线通」。</p>
+
+      <h4>1.8 米长度 + 编织线材</h4>
+      <p>1.8 米的长度比标配的 1 米线更实用（桌面布线不会太紧张），编织线材比普通塑料线更耐用、不易打结。虽然很贵，但确实是能用很多年的配件。</p>
+
+      <h4>适合谁？</h4>
+      <p>MacBook Pro 用户、需要连接高分辨率显示器的人、追求极致性能的专业用户。不适合：预算有限、只是用来充手机的人（买 20 元的线就行）。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>价格离谱</strong>：948 元一根线，是普通 USB-C 线的 20-40 倍。除非你真的需要 40Gb/s 带宽（大多数人用不到），否则这个价格完全是智商税。</p>
+      <p><strong>大多数设备用不上雷雳 4</strong>：如果你的设备只支持 USB 3.0 或 USB 3.1，这根线的性能会被限制。买之前确认你的设备、显示器、硬盘都支持雷雳 4，否则浪费钱。</p>
+      <p><strong>1.8 米依然不够长</strong>：对于桌面布线（台式机在桌下、显示器在桌上）来说，1.8 米可能还是不够。如果需要更长的线，市面上也有 2 米或 3 米的雷雳 4 线，虽然不是苹果原装。</p>
+      <p><strong>编织线材容易藏灰</strong>：虽然更耐用，但编织材质的缝隙容易积灰，清洁起来比塑料线麻烦。如果你有洁癖，这会让你不舒服。</p>
+    `
+  },
+  {
+    id: 503,
+    brand: "SanDisk",
+    brand_cn: "闪迪",
+    model: "Extreme microSD 512GB",
+    category: "accessory",
+    category_cn: "配件",
+    price_cny: "420",
+    price_usd: "$60",
+    image: "assets/images/accessory/sandisk_microsd.jpg",
+    badge: null,
+    url: "https://www.westerndigital.com/",
+    specs: {
+      "容量": "512GB",
+      "读取速度": "190MB/s",
+      "写入速度": "130MB/s",
+      "等级": "A2 / V30 / U3",
+      "特色": "防水、防震、耐 X 光"
+    },
+    description: `
+      <h4>移动设备的最佳扩展存储</h4>
+      <p>SanDisk Extreme microSD 512GB 是目前<strong>性价比最高的大容量 microSD 卡</strong>——512GB 存储、190MB/s 读取速度、A2 应用性能等级。如果你用 Switch、无人机、运动相机、或者需要扩展手机存储，这张卡是最佳选择。</p>
+
+      <h4>512GB 意味着什么？</h4>
+      <p>可以存储约 10 万张照片、150 小时 1080p 视频、或 200 个大型游戏（如 Switch）。对于大多数人来说，512GB 已经是「一次买够，永远不用担心空间」的容量。</p>
+
+      <h4>190MB/s 读取速度</h4>
+      <p>这个速度足以<strong>直接在 microSD 卡上运行 Switch 游戏、录制 4K 视频、快速传输文件</strong>。相比便宜的 80MB/s 卡，Extreme 的速度提升是肉眼可见的（游戏加载快、视频不掉帧）。</p>
+
+      <h4>A2 应用性能等级</h4>
+      <p>A2 等级意味着这张卡可以<strong>作为手机的应用存储</strong>（Android 手机可以把 App 安装到 microSD 卡上）。如果你的手机支持 microSD 扩展，这张卡可以当作内置存储使用。</p>
+
+      <h4>防水防震</h4>
+      <p>通过 IPX7 防水认证、耐冲击、耐极端温度、耐 X 光。即使掉进水里、摔到地上、过机场安检，数据也不会丢失。这是专业级的可靠性。</p>
+
+      <h4>适合谁？</h4>
+      <p>Switch 玩家、无人机/运动相机用户、需要扩展手机存储的 Android 用户。不适合：iPhone 用户（不支持 microSD）、只需要 64GB 小容量的人（买便宜的就行）。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>写入速度偏慢</strong>：虽然读取速度达到 190MB/s，但写入速度只有 130MB/s。如果你需要录制高码率 4K 视频（如 200Mbps 的素材），这个写入速度可能不够用，需要买 V60 或 V90 级别的卡。</p>
+      <p><strong>512GB 可能太大</strong>：对于只是用来存 Switch 游戏的用户，256GB 已经足够（可以装 100+ 游戏）。多花钱买 512GB 可能用不完，不如省下来买游戏。</p>
+      <p><strong>假卡风险</strong>：SanDisk 是假卡重灾区，某宝上的「便宜 SanDisk」很多是假货（标称 512GB 实际只有 32GB）。一定要从正规渠道购买，否则数据丢失会很惨。</p>
+      <p><strong>microSD 格式即将过时</strong>：越来越多设备（如新款 iPad、手机）不再支持 microSD 卡槽，转而使用云存储或不可扩展的内置存储。如果你未来换设备，这张卡可能没用武之地。</p>
+    `
+  },
+  {
+    id: 504,
+    brand: "Anker",
+    brand_cn: "安克",
+    model: "USB-C U 型转接头",
+    category: "accessory",
+    category_cn: "配件",
+    price_cny: "59",
+    price_usd: "$9",
+    image: "assets/images/accessory/anker_usbc_adapter.jpg",
+    badge: null,
+    url: "https://www.anker.com/",
+    specs: {
+      "类型": "USB-C 母转 USB-C 母",
+      "形状": "U 型 180° 转接",
+      "传输速度": "10Gb/s",
+      "功率": "100W",
+      "特色": "缓解线材弯折"
+    },
+    description: `
+      <h4>延长充电线寿命的神器</h4>
+      <p>Anker USB-C U 型转接头是一个看起来不起眼、但用过就回不去的配件——<strong>把直角的 USB-C 接口变成 180° 弯折</strong>，避免线材在接口处反复弯折而断裂。如果你经常在床上、沙发上给手机/平板充电，这个转接头能让你的充电线多用 1-2 年。</p>
+
+      <h4>为什么需要 U 型转接？</h4>
+      <p>最常见的充电线断裂位置是<strong>接口附近</strong>——因为你在床上玩手机时，线材会在接口处反复弯折、拉扯。U 型转接头把 90° 的弯折变成平滑的 180° 弯曲，<strong>彻底消除了这个断裂点</strong>。</p>
+
+      <h4>100W 功率 + 10Gb/s 传输</h4>
+      <p>虽然只是个转接头，但支持 100W PD 快充和 10Gb/s 数据传输（USB 3.1 Gen 2）。这意味着你可以用它连接 MacBook Pro 充电、传输文件、连接显示器——不会有任何性能损失。</p>
+
+      <h4>小巧便携</h4>
+      <p>只有 2 厘米长，插在线上几乎感觉不到存在。可以一直装在常用的充电线上，不用每次都拆下来。</p>
+
+      <h4>适合谁？</h4>
+      <p>经常在床上/沙发上充电玩手机的人、充电线经常断的人、笔记本用户（避免接口松动）。不适合：从来不边充电边用设备的人（那你的线不会断）。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>增加接口松动风险</strong>：转接头会让整个接口部分变长、变重，插在设备上时更容易松动或被碰掉。如果你经常移动设备，反而可能增加接口损坏风险。</p>
+      <p><strong>不是所有设备都需要</strong>：如果你的充电习惯是「插上就放着不动」（如桌面充电），U 型转接头没什么用。只有在「边充边玩」的场景下才有价值。</p>
+      <p><strong>占用空间</strong>：虽然只有 2 厘米，但如果你的手机壳很厚、或者接口附近有其他按键/插孔，转接头可能会挡住。买之前最好确认一下兼容性。</p>
+      <p><strong>59 元有点贵</strong>：对于一个塑料转接头来说，59 元的价格偏高。某宝上有 10-20 元的同类产品，虽然质量可能不如安克，但功能是一样的。</p>
+    `
+  },
+  {
+    id: 505,
+    brand: "Anker",
+    brand_cn: "安克",
+    model: "氮化镓充电器 100W",
+    category: "accessory",
+    category_cn: "配件",
+    price_cny: "299",
+    price_usd: "$43",
+    image: "assets/images/accessory/anker_gan_charger.jpg",
+    badge: null,
+    url: "https://www.anker.com/",
+    specs: {
+      "功率": "100W（多口分配）",
+      "接口": "3×USB-C + 1×USB-A",
+      "技术": "氮化镓（GaN）",
+      "尺寸": "76×54×32mm",
+      "特色": "可折叠插脚"
+    },
+    description: `
+      <h4>一个充电器搞定所有设备</h4>
+      <p>Anker 氮化镓 100W 充电器是目前<strong>「唯一需要的充电器」</strong>——3 个 USB-C 口 + 1 个 USB-A 口，可以同时给 MacBook、iPad、iPhone、耳机充电。而且体积只有传统充电器的一半，出差旅行只带这一个就够了。</p>
+
+      <h4>氮化镓（GaN）技术</h4>
+      <p>氮化镓芯片比传统硅芯片效率更高、发热更低，这意味着可以<strong>在更小的体积内实现 100W 功率</strong>。这个充电器的大小只相当于 MacBook 原装 61W 充电器，但功率高出 60%。</p>
+
+      <h4>智能功率分配</h4>
+      <p>单口使用时可以输出 100W（给 MacBook Pro 16 英寸满速充电），多口使用时会智能分配功率（如 65W+30W、45W+45W）。系统会自动检测设备需求，不用手动调整。</p>
+
+      <h4>3C+1A 接口配置</h4>
+      <p>3 个 USB-C 口足以给现代所有设备充电（笔记本、平板、手机、耳机），1 个 USB-A 口用于老设备（如蓝牙音箱、Kindle）。这是最实用的接口组合。</p>
+
+      <h4>可折叠插脚</h4>
+      <p>插脚可以折叠收纳，放进包里不会刮花其他物品。这是旅行充电器必备的设计，但很多品牌的 100W 充电器都没有。</p>
+
+      <h4>适合谁？</h4>
+      <p>数码设备多的人、经常出差的人、想要简化桌面布线的用户。不适合：只有一台手机的人（买 20W 小充电器就行）、预算有限的人。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>多口同时使用功率下降</strong>：虽然标称 100W，但同时使用 4 个口时，单口功率会降到 45W 以下。如果你需要同时给 MacBook Pro 和 iPad Pro 快充，可能达不到满速。</p>
+      <p><strong>体积依然不小</strong>：虽然比传统 100W 充电器小，但依然是一个 76×54×32mm 的「砖头」。如果你追求极致便携，65W 或 45W 的小充电器会更轻便（虽然功率低）。</p>
+      <p><strong>发热明显</strong>：100W 满载时充电器会明显发烫（GaN 虽然比硅芯片好，但依然会热）。如果你在夏天的封闭环境使用，温度可能让人不安。</p>
+      <p><strong>不带线</strong>：充电器本身不带线，需要自己准备 USB-C 线。如果你买便宜的线（不支持 100W），会限制充电速度。最好配合支持 100W 的线使用（如苹果雷雳 4 线，虽然很贵）。</p>
+      <p><strong>价格偏高</strong>：299 元的价格是普通充电器的 3-5 倍。虽然安克的品质和售后确实更好，但如果预算有限，国产品牌（如绿联、倍思）的 100W GaN 充电器只要 150-200 元，功能差不多。</p>
+    `
+  },
+  {
+    id: 506,
+    brand: "apov",
+    brand_cn: "apov",
+    model: "Logo 贴纸",
+    category: "accessory",
+    category_cn: "配件",
+    price_cny: "5",
+    price_usd: "$1",
+    image: "assets/images/accessory/apov_sticker.jpg",
+    badge: null,
+    url: "https://apov.sg/",
+    specs: {
+      "尺寸": "50×20mm",
+      "材质": "防水 PVC",
+      "工艺": "模切贴纸",
+      "特色": "可贴于笔记本、水杯"
+    },
+    description: `
+      <h4>表达你的品味</h4>
+      <p>apov Logo 贴纸是一张简单的<strong>黑白 Logo 防水贴纸</strong>——没有花哨的设计、没有复杂的图案，就是 apov.sg 的标志。贴在笔记本电脑、水杯、行李箱上，是一种低调的身份认同。</p>
+
+      <h4>50×20mm 的恰当尺寸</h4>
+      <p>不会太大（不会抢镜）、不会太小（依然能被看到）。贴在 MacBook 上刚好适合 Logo 区域，贴在水杯上不会占据整个侧面。这是经过设计的尺寸，而不是随意决定的。</p>
+
+      <h4>防水 PVC 材质</h4>
+      <p>防水、耐晒、不易褪色。即使贴在经常被手触摸的水杯上，也能保持 1-2 年不掉色。这是专业贴纸该有的质量，而不是打印纸+透明胶的水平。</p>
+
+      <h4>支持小众社区</h4>
+      <p>买这张贴纸，5 块钱的意义不在于贴纸本身，而是<strong>支持 apov 这个实验性质的数码爱好者社区</strong>。我们不是大品牌、不是电商平台，只是一群认真对待数码产品的人。</p>
+
+      <h4>适合谁？</h4>
+      <p>认同 apov 理念的人、喜欢简洁设计的人、想要支持小众社区的用户。不适合：觉得贴纸没用的人（那就别买）。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>只是一张贴纸</strong>：它不会让你的笔记本跑得更快、不会让你的水杯保温效果更好、不会给你带来任何实用价值。如果你追求「性价比」，这张贴纸的性价比是 0。</p>
+      <p><strong>撕下来会有胶痕</strong>：虽然是防水 PVC，但撕下来时依然可能在光滑表面留下胶痕。如果你是那种「贴了又想撕、撕了又后悔」的人，还是别买了。</p>
+      <p><strong>设计极简到有点无聊</strong>：就是黑白两色的 apov.sg 字样，没有任何图案、没有任何装饰。如果你喜欢色彩丰富、设计复杂的贴纸，这张会让你失望。</p>
+      <p><strong>5 块钱也是钱</strong>：虽然只要 5 块，但如果你从来不贴贴纸、也不认同 apov 的理念，这 5 块钱还不如去买一杯奶茶。</p>
+    `
+  }
+];
+
+// Render products
+function renderProducts() {
+  // Separate products by category and sort by price (high to low)
+  const monitors = products
+    .filter(p => p.category === 'monitor')
+    .sort((a, b) => parseInt(b.price_cny) - parseInt(a.price_cny));
+
+  const portable = products
+    .filter(p => p.category === 'portable')
+    .sort((a, b) => parseInt(b.price_cny) - parseInt(a.price_cny));
+
+  const phones = products
+    .filter(p => p.category === 'phone')
+    .sort((a, b) => parseInt(b.price_cny) - parseInt(a.price_cny));
+
+  const notebooks = products
+    .filter(p => p.category === 'notebook')
+    .sort((a, b) => parseInt(b.price_cny) - parseInt(a.price_cny));
+
+  // Render monitors
+  const monitorsGrid = document.getElementById('monitorsGrid');
+  monitorsGrid.innerHTML = '';
+  monitors.forEach(p => {
+    monitorsGrid.appendChild(createProductCard(p));
+  });
+
+  // Render portable devices
+  const portableGrid = document.getElementById('portableGrid');
+  portableGrid.innerHTML = '';
+  portable.forEach(p => {
+    portableGrid.appendChild(createProductCard(p));
+  });
+
+  // Render phones
+  const phonesGrid = document.getElementById('phonesGrid');
+  phonesGrid.innerHTML = '';
+  phones.forEach(p => {
+    phonesGrid.appendChild(createProductCard(p));
+  });
+
+  // Render notebooks
+  const notebooksGrid = document.getElementById('notebooksGrid');
+  notebooksGrid.innerHTML = '';
+  notebooks.forEach(p => {
+    notebooksGrid.appendChild(createProductCard(p));
+  });
+}
+
+// Create product card element
+function createProductCard(p) {
+  const card = document.createElement('div');
+  card.className = 'product-card';
+  card.onclick = () => openProductModal(p);
+
+  const badgeHTML = p.badge ? `<div class="product-badge">${p.badge}</div>` : '';
+
+  card.innerHTML = `
+    <div class="product-image">
+      ${badgeHTML}
+      <img src="${p.image}" alt="${p.model}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext x=%2250%22 y=%2250%22 text-anchor=%22middle%22 font-family=%22monospace%22 font-size=%2214%22 fill=%22%23ccc%22%3EIMG%3C/text%3E%3C/svg%3E'">
+    </div>
+    <div class="product-info">
+      <div class="product-name-line">
+        <span class="product-brand">${p.brand_cn}</span>
+        <span class="product-model">${p.model}</span>
+      </div>
+      <div class="product-price">
+        <span class="price-currency">¥</span>${p.price_cny}
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+// Render a single product (kept for compatibility)
+function renderSingleProduct(p) {
+  const grid = document.getElementById('productsGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  const filtered = [p];
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.onclick = () => openProductModal(p);
+
+    const badgeHTML = p.badge ? `<div class="product-badge">${p.badge}</div>` : '';
+
+    // This code is now handled by createProductCard
+  });
+}
+
+// Open product modal
+function openProductModal(p) {
+  document.getElementById('modalBrand').textContent = p.brand + (p.brand_cn !== p.brand ? ' ' + p.brand_cn : '');
+  document.getElementById('modalModel').textContent = p.model;
+  document.getElementById('modalCategory').textContent = p.category_cn;
+  document.getElementById('modalPrice').textContent = `¥${p.price_cny}`;
+  document.getElementById('modalDescription').innerHTML = p.description;
+
+  // Image
+  const imageSection = document.getElementById('modalImageSection');
+  imageSection.innerHTML = `<img src="${p.image}" alt="${p.model}">`;
+
+  // Specs
+  if (p.specs) {
+    const specsEl = document.getElementById('modalSpecs');
+    const specsList = document.getElementById('modalSpecsList');
+    let specsHTML = '';
+    for (const [label, value] of Object.entries(p.specs)) {
+      specsHTML += `
+        <div class="spec-item">
+          <div class="spec-label">${label}</div>
+          <div class="spec-value">${value}</div>
+        </div>
+      `;
+    }
+    specsList.innerHTML = specsHTML;
+    specsEl.style.display = 'block';
+  } else {
+    document.getElementById('modalSpecs').style.display = 'none';
+  }
+
+  // CTA
+  const cta = document.getElementById('modalCTA');
+  cta.href = p.url;
+
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+// Modal close
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('modalOverlay').classList.remove('active');
+});
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    e.currentTarget.classList.remove('active');
+  }
+});
+
+// Initial render
+renderProducts();
+</script>
+
+</body>
+</html>

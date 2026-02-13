@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电子纸显示器//目录 by apov</title>
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" sizes="32x32" href="assets/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/images/icons/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1eb;
+  --surface: #faf8f4;
+  --surface2: #eeeae3;
+  --border: #d5cfc5;
+  --accent: #5a7a5a;
+  --accent-dim: #4a6a4a;
+  --accent2: #6a7a8a;
+  --text: #2c2c2c;
+  --text-dim: #8a8578;
+  --amber: #b8860b;
+  --red: #b54a4a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', 'Noto Serif SC', monospace;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 65%, rgba(200,190,175,0.3) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+::selection { background: var(--accent); color: #fff; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: rgba(244,241,235,0.92);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.15em; }
+.logo span { color: var(--accent); }
+
+nav { display: flex; gap: 0.25rem; }
+nav a { padding: 0.4rem 0.9rem; font-size: 0.75rem; color: var(--text-dim); border: 1px solid transparent; transition: all 0.2s; font-family: 'Noto Serif SC', serif; }
+nav a:hover, nav a.active { color: var(--accent); border-color: var(--border); background: var(--surface); text-decoration: none; }
+
+.hero { padding: 4rem 2rem; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+.hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; opacity: 0.25; }
+.hero h1 { font-family: 'Noto Serif SC', serif; font-size: clamp(1.8rem,5vw,3rem); font-weight: 700; letter-spacing: 0.06em; position: relative; margin-bottom: 1rem; }
+.hero h1 .highlight { color: var(--accent); }
+.hero p { color: var(--text-dim); font-size: 0.85rem; max-width: 600px; margin: 0 auto; position: relative; font-family: 'Noto Serif SC', serif; }
+.terminal-prompt { margin-top: 2rem; position: relative; display: inline-block; font-size: 0.8rem; color: var(--accent); }
+.terminal-prompt::before { content: '> '; color: var(--text-dim); }
+.terminal-prompt .cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent); vertical-align: text-bottom; animation: blink 1s step-end infinite; margin-left: 2px; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.section-wrap { padding: 2rem; max-width: 1100px; margin: 0 auto; scroll-margin-top: 80px; }
+.section-label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-family: 'Noto Serif SC', serif; }
+
+/* ---- Picks: visual + cards ---- */
+.picks-visual {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.picks-hero-img {
+  max-width: 450px;
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.picks-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pick-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.pick-card:hover {
+  background: var(--surface2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.pick-card-label {
+  font-size: 0.55rem;
+  font-family: 'Noto Serif SC', serif;
+  color: var(--surface);
+  background: var(--accent);
+  padding: 0.15rem 0.5rem;
+  letter-spacing: 0.12em;
+  display: inline-block;
+  margin-bottom: 0.7rem;
+}
+
+.pick-card-brand {
+  font-size: 0.6rem;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.pick-card-model {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  color: var(--text);
+}
+
+.pick-card-tagline {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+}
+
+.pick-card-award {
+  font-size: 0.6rem;
+  color: var(--amber);
+  font-family: 'Noto Serif SC', serif;
+  margin-bottom: 0.8rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(184, 134, 11, 0.08);
+  border-left: 2px solid var(--amber);
+  line-height: 1.5;
+}
+
+.pick-card-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.pick-card-spec {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 0.2rem 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  letter-spacing: 0.03em;
+}
+
+/* ---- Overview article ---- */
+.article-content {
+  max-width: 760px;
+  margin: 0 auto;
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 2;
+  font-family: 'Noto Serif SC', serif;
+}
+.article-content h3 {
+  font-family: 'Space Grotesk', 'Noto Serif SC', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 2rem 0 0.8rem;
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+.article-content h3:first-child { margin-top: 0; }
+.article-content p { margin-bottom: 1rem; color: var(--text-dim); }
+.article-content strong { color: var(--text); }
+.article-meta {
+  max-width: 760px;
+  margin: 0 auto 2rem;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ---- Filter buttons ---- */
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.7rem;
+  font-family: 'Noto Serif SC', serif;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.filter-btn.active {
+  color: var(--surface);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---- Timeline ---- */
+.timeline { position: relative; padding: 0 0 2rem 0; }
+.timeline::before { content: ''; position: absolute; left: 140px; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.timeline-year { position: relative; margin-bottom: 2.5rem; }
+.timeline-year:last-child { margin-bottom: 0; }
+.year-marker { position: absolute; left: 0; top: 0; width: 120px; text-align: right; padding-right: 1.5rem; }
+.year-marker .year-num { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.year-marker .year-count { font-size: 0.65rem; color: var(--text-dim); font-family: 'Noto Serif SC', serif; margin-top: 0.3rem; }
+.timeline-year::after { content: ''; position: absolute; left: 134px; top: 8px; width: 13px; height: 13px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); z-index: 1; }
+.timeline-cards { margin-left: 175px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 0.5rem; }
+
+/* Simplified timeline card */
+.tl-card {
+  background: var(--surface);
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid var(--border);
+}
+.tl-card:hover { background: var(--surface2); }
+
+.tl-card-thumb {
+  width: 80px;
+  height: 80px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  color: var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+  overflow: hidden;
+}
+
+.tl-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.tl-card-info { min-width: 0; }
+.tl-card-info .tl-brand-model {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tl-card-info .tl-brand-model .tl-brand {
+  font-size: 0.6rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 400;
+  margin-right: 0.4rem;
+}
+.tl-card-info .tl-summary {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.5;
+  margin-top: 0.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tl-card-info .tl-tech-label {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border);
+  display: inline-block;
+  letter-spacing: 0.05em;
+  background: var(--bg);
+}
+.tl-card-status {
+  font-size: 0.5rem;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid;
+  letter-spacing: 0.06em;
+  font-family: 'Noto Serif SC', serif;
+  margin-left: auto;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.status-available { color: var(--accent); border-color: var(--accent); }
+.status-upcoming { color: var(--accent2); border-color: var(--accent2); }
+.status-discontinued { color: var(--red); border-color: var(--red); }
+
+/* ---- Detail modal ---- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 2.5rem;
+  position: relative;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.modal-close:hover { color: var(--text); border-color: var(--text); }
+
+.modal-brand { font-size: 0.6rem; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.3rem; }
+.modal-model { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+.modal-tagline { font-size: 0.8rem; color: var(--text-dim); font-family: 'Noto Serif SC', serif; line-height: 1.7; margin-bottom: 1.5rem; }
+
+.modal-image {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.modal-image img {
+  max-width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.modal-placeholder {
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.8;
+}
+
+.modal-website-btn {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+}
+.modal-website-btn:hover {
+  background: var(--accent-dim);
+  text-decoration: none;
+}
+
+footer { border-top: 1px solid var(--border); padding: 2rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.65rem; color: var(--text-dim); }
+footer .sys-info { display: flex; gap: 2rem; }
+
+@media (max-width:900px) {
+  .picks-cards { grid-template-columns: 1fr; }
+  .timeline::before { left: 20px; }
+  .year-marker { position: relative; left: 0; width: auto; text-align: left; padding-left: 45px; padding-right: 0; margin-bottom: 1rem; }
+  .timeline-year::after { left: 14px; }
+  .timeline-cards { margin-left: 45px; grid-template-columns: 1fr; }
+}
+
+@media (max-width:768px) {
+  header { flex-direction: column; gap: 1rem; }
+  .hero { padding: 2.5rem 1.5rem; }
+  .section-wrap { padding: 1.5rem 1rem; }
+  footer { flex-direction: column; gap: 1rem; text-align: center; }
+  footer .sys-info { flex-direction: column; gap: 0.5rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">平静科技<span>//</span>目录</div>
+  <nav>
+    <a href="#picks" data-section="picks">编辑推荐</a>
+    <a href="#timeline" data-section="timeline">时间轴</a>
+    <a href="#overview" data-section="overview">门类综述</a>
+    <a href="#community" data-section="community">社群</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-grid"></div>
+  <h1 onclick="window.open('https://www.bilibili.com/video/BV1r4w5eBEC2/', '_blank')" style="user-select: none;">电子纸 <span class="highlight">显示器</span></h1>
+  <p>为眼睛减负，为专注加分。电子纸显示器完全目录</p>
+
+</section>
+
+<!-- Picks -->
+<section class="section-wrap" id="picks">
+  <div class="section-label">
+    <span>// 编辑推荐（2026 年 1 月）</span>
+  </div>
+  <div class="picks-visual">
+    <img src="assets/images/catalog_monitor/epaper_monitor_editor_pick.png" alt="编辑推荐" class="picks-hero-img">
+  </div>
+  <div class="picks-cards" id="picksCards"></div>
+</section>
+
+<!-- Timeline -->
+<section class="section-wrap" id="timeline">
+  <div class="terminal-prompt">catalog --list --sort=year_desc<span class="cursor"></span></div>
+  <div class="section-label">
+    <span>// 产品时间轴</span>
+    <span id="tlCount">全部产品 · 按年份排列</span>
+  </div>
+  <div class="filter-buttons">
+    <button class="filter-btn active" data-filter="all">全部产品</button>
+    <button class="filter-btn" data-filter="available">在售产品</button>
+    <button class="filter-btn" data-filter="eink">黑白墨水屏</button>
+    <button class="filter-btn" data-filter="color">彩色墨水屏</button>
+    <button class="filter-btn" data-filter="rlcd">RLCD</button>
+  </div>
+  <div class="timeline" id="timelineContainer"></div>
+</section>
+
+<!-- Overview -->
+<section class="section-wrap" id="overview">
+  <div class="section-label">
+    <span>// 门类综述</span>
+  </div>
+  <div class="article-meta">最近更新：2026 年 1 月，编辑：apov 社群</div>
+  <div class="article-content">
+    <h3>电子纸显示器现状</h3>
+    <p>电子纸显示器市场目前以墨水屏（E-Ink 电泳显示）技术为主导。从大上科技 2014 年发布初代 Paperlike 至今，这个品类已经走过十年。墨水屏凭借其双稳态特性、超低功耗和接近纸张的视觉体验，成为目前唯一成熟、可量产的电子纸显示器方案。从最初的"能用就好"到如今 300 PPI、37Hz 乃至 60Hz 的刷新率，墨水屏显示器正在逐步缩小与传统 LCD 之间的体验差距——至少在文字工作场景下。</p>
+
+    <h3>墨水屏尺寸格局</h3>
+    <p>目前市场上的墨水屏显示器主要分为三个尺寸段：25.3 英寸桌面级（大上 Paperlike 253、文石 Mira Pro、大我 B251），13.3 英寸便携级（大上 Paperlike 13K、大我 B13、Modos Enchanter），以及10.3 英寸紧凑副屏（大上 Paperlike 103）。25.3 英寸机型适合作为主力办公屏，13.3 英寸则在便携性和可用性之间取得平衡，是目前竞争最激烈的区间。</p>
+
+    <h3>彩色墨水屏</h3>
+    <p>Kaleido 3 是目前唯一被量产墨水屏显示器采用的彩色电子纸技术。它在黑白 E-Ink 面板上叠加彩色滤光片，可显示 4096 色。代价是彩色模式下有效分辨率减半，且色彩饱和度远不及 LCD/OLED。目前大上、文石、大我均已推出 Kaleido 3 彩色型号。Gallery 技术尚未被任何墨水屏显示器采用。</p>
+
+    <h3>刷新率与残影</h3>
+    <p>刷新率是墨水屏显示器的核心痛点。E-Ink 面板的物理刷新机制决定了它无法匹敌 LCD 的流畅度。新一代产品通过算法优化（如文石 BSR）和硬件加速（如 Modos 的 FPGA 控制器）在持续改善这一体验。大上 Paperlike 13K 达到 37Hz，Paperlike 103 达到 60Hz，Modos Enchanter 目标 60-75Hz。但"残影"仍然是所有墨水屏显示器无法完全消除的特性。</p>
+
+    <h3>低延迟</h3>
+    <p>从大上革命者系列和 Modos 显示器开始，墨水屏显示器进入了低延迟阶段。主要用户体验提升体现在鼠标操作上——鼠标指针终于开始跟手，在墨水屏上实现了"指哪打哪"的体验。这一突破大大提升了墨水屏显示器在需要频繁鼠标操作场景下的可用性，让墨水屏从"纯文字阅读屏"向"可交互工作屏"迈进了一大步。</p>
+
+    <h3>开源与新势力</h3>
+    <p>Modos 是目前唯一采用全开源路线的墨水屏显示器品牌。其 Enchanter 的 FPGA 控制器原理图、固件源码和驱动代码全部公开。这种方式为社区自定义刷新算法、延迟优化和系统集成打开了可能性。产品预计 2026 年通过众筹发货。此外，DIY 社区也出现了一些墨水屏显示器项目，如三喵、小布等开源方案，微雪等开发板厂商也推出了面向开发者的墨水屏模块和套件，为动手能力强的用户提供了更灵活的选择。</p>
+
+    <h3>其他技术路线</h3>
+    <p>除墨水屏之外，市场上还存在少量以"护眼"为卖点的显示技术。RLCD（反射式 LCD）利用环境光反射成像，刷新率可达 60Hz，无残影，代表产品包括 EazeEye Monitor 和 SVD rE 系列。此外还有一些采用柔光处理的普通 LCD 显示器，通过类纸膜、低蓝光等技术减少眼睛疲劳。但总体而言，这些替代路线产品稀少、价格高昂，墨水屏仍然是电子纸显示器的主流方案。</p>
+
+    <h3>选购建议</h3>
+    <p>如果你是长时间文字工作者（作家、程序员、研究人员），一块墨水屏显示器可以显著降低用眼疲劳。选择时优先考虑：使用场景（桌面 vs 便携）、是否需要彩色、预算。13.3 英寸黑白机型是最具性价比的入门选择。不建议将墨水屏作为唯一显示器——它更适合作为专注模式的副屏。</p>
+  </div>
+</section>
+
+<!-- Community -->
+<section class="section-wrap" id="community" style="padding-bottom: 4rem;">
+  <div class="section-label">
+    <span>// 社群</span>
+  </div>
+  <div class="article-content" style="text-align: center;">
+    <h3>加入微信社群</h3>
+    <p>我们建立了电子纸显示器交流社群，欢迎加入讨论。</p>
+    <img src="assets/images/qr-codes/apov_admin_wechat_QR.png" alt="管理员微信二维码" style="max-width: 300px; margin: 2rem auto; display: block;">
+    <p>扫描二维码添加管理员微信，并附言<strong>「显示器群」</strong>即可入群交流。</p>
+  </div>
+</section>
+
+<footer>
+  <span>价格与参数仅供参考</span>
+  <span>a project by <a href="https://apov.sg" target="_blank" rel="noopener noreferrer">apov.sg</a></span>
+</footer>
+
+<!-- Detail modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">×</button>
+    <div class="modal-brand" id="modalBrand"></div>
+    <div class="modal-model" id="modalModel"></div>
+    <div class="modal-tagline" id="modalTagline"></div>
+    <div class="modal-image" id="modalImage" style="display:none;"></div>
+    <a class="modal-website-btn" id="modalWebsiteBtn" target="_blank" rel="noopener noreferrer" style="display:none;">访问官网 →</a>
+  </div>
+</div>
+
+<script>
+// ---- Product data ----
+const products = [
+  {id:1, brand:"Dasung", brand_cn:"大上", model:"Paperlike 253", year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"E-Ink Carta 1250", color:"否", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"选配", refresh_hz:"33", price_usd:"$2,250", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸旗舰黑白墨水屏显示器，33Hz 刷新，支持 VESA 壁挂。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_253.jpg"},
+  {id:2, brand:"Dasung", brand_cn:"大上", model:'Paperlike Color 25.3"', year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"33", price_usd:"$1,899", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，4096 色。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_253_color.jpg"},
+  {id:3, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"E-Ink Carta", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"37", price_usd:"$679", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携墨水屏，300 PPI 高清，37Hz 刷新率，色温前光。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_13k.jpg"},
+  {id:4, brand:"Dasung", brand_cn:"大上", model:"Paperlike 13K Color", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"37", price_usd:"$749", status:"available", status_cn:"在售", tagline_cn:"鼠标跟手，低延迟设计，可能是「可用性」最高的墨水屏显示器。", award:"MyDeepGuide 2025 年度产品", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_13k_color.jpg"},
+  {id:5, brand:"Dasung", brand_cn:"大上", model:"Paperlike 103", year:2025, size_inch:10.3, resolution:"1872x1404", ppi:227, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"有", frontlight:"有", refresh_hz:"60", price_usd:"$349", status:"available", status_cn:"在售", tagline_cn:"10.3 英寸紧凑副屏，60Hz 刷新率，电容触摸，双色温前光。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_103.jpg"},
+  {id:6, brand:"Boox", brand_cn:"文石", model:'Mira Pro 25.3"', year:2021, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"E-Ink Carta", color:"否", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"BSR 4模式", price_usd:"$1,599", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸桌面墨水屏，BSR 刷新算法，色温前光，双扬声器。", url:"https://shop.boox.com/", image:"assets/images/catalog_monitor/thumbs/boox_mira_pro_253_bw.jpg"},
+  {id:7, brand:"Boox", brand_cn:"文石", model:'Mira Pro Color 25.3"', year:2025, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"BSR 4模式", price_usd:"$1,899", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，BSR 刷新。", url:"https://shop.boox.com/", image:"assets/images/catalog_monitor/thumbs/boox_mira_pro_color.jpg"},
+  {id:8, brand:"Boox", brand_cn:"文石", model:'Mira 13.3" (初代)', year:2021, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"4模式", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"初代 13.3 英寸 Mira，开启了便携墨水屏显示器时代。里程碑产品。", url:"https://shop.boox.com/", image:"assets/images/catalog_monitor/thumbs/boox_mira_13.jpg"},
+  {id:9, brand:"Bigme", brand_cn:"大我", model:"B251", year:2024, size_inch:25.3, resolution:"3200x1800", ppi:145, panel_type:"Kaleido 3", color:"是", interfaces:"HDMI, mini-HDMI, DP, USB-C", touch:"否", frontlight:"有", refresh_hz:"—", price_usd:"$1,999", status:"available", status_cn:"在售", tagline_cn:"25.3 英寸彩色墨水屏桌面显示器，Kaleido 3 面板，支持 Miracast/AirPlay 投屏。", url:"https://bigme.vip/", image:"assets/images/catalog_monitor/thumbs/bigme_b251.jpg"},
+  {id:10, brand:"Bigme", brand_cn:"大我", model:"B13", year:2025, size_inch:13.3, resolution:"3200x2400", ppi:300, panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"30", price_usd:"$729", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携彩色墨水屏显示器，300 PPI，支持 DLNA/AirPlay 无线投屏。", url:"https://bigme.vip/", image:"assets/images/catalog_monitor/thumbs/bigme_b13.jpg"},
+  {id:11, brand:"Modos", brand_cn:"Modos", model:"Enchanter", year:2026, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Carta", color:"否", interfaces:"micro-HDMI, USB-C, DP", touch:"否", frontlight:"否", refresh_hz:"60-75", price_usd:"$599", status:"upcoming", status_cn:"敬请期待", tagline_cn:"13.3 英寸开源墨水屏显示器，FPGA 控制器。目前众筹阶段。", url:"https://www.modos.tech/", image:"assets/images/catalog_monitor/thumbs/modos_enchanter.jpg"},
+  // Discontinued Dasung legacy
+  {id:12, brand:"Dasung", brand_cn:"大上", model:"Paperlike (初代)", year:2014, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Fina", color:"否", interfaces:"USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$850", status:"discontinued", status_cn:"已停产", tagline_cn:"世界首款墨水屏电脑显示器，开启全新品类。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_original.jpg"},
+  {id:13, brand:"Dasung", brand_cn:"大上", model:"Paperlike Pro", year:2017, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink Carta", color:"否", interfaces:"HDMI, USB", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$1,099", status:"discontinued", status_cn:"已停产", tagline_cn:"首次支持 HDMI 输入的墨水屏显示器，Carta 面板提升对比度。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_pro.jpg"},
+  {id:14, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD", year:2018, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"40", price_usd:"$683", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列基础版，2K 分辨率，Mobius 柔性面板，40Hz Turbo 刷新。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_hd.jpg"},
+  {id:15, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD-FT", year:2019, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"40", price_usd:"$1,049", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列旗舰版，前光+触摸，2K 分辨率，40Hz 刷新，大上三代经典。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_hd_ft.jpg"},
+  {id:16, brand:"Dasung", brand_cn:"大上", model:"Paperlike U", year:2022, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Carta", color:"否", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"—", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"U 系列便携墨水屏显示器，2K 分辨率，前光+触摸。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_253_u.jpg"},
+  {id:21, brand:"Dasung", brand_cn:"大上", model:"Paperlike HD（铝合金版）", year:2022, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Mobius", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"40", price_usd:"$799", status:"discontinued", status_cn:"已停产", tagline_cn:"HD 系列铝合金外壳版本，2K 分辨率，40Hz 刷新，金属机身。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_hd_铝合金.jpg"},
+  {id:17, brand:"Dasung", brand_cn:"大上", model:'Paperlike Color 12"', year:2024, size_inch:12, resolution:"—", ppi:"—", panel_type:"Kaleido 3", color:"是", interfaces:"mini-HDMI, USB-C", touch:"有", frontlight:"有", refresh_hz:"—", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"12 英寸彩色墨水屏显示器，Kaleido 3 面板，便携设计。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_paperlike_color_12.jpg"},
+  {id:18, brand:"Eazeye", brand_cn:"Eazeye", model:"Monitor 2", year:2025, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器，60Hz 刷新，无残影，彩色显示。", url:"https://www.eazeye.com/", image:"assets/images/catalog_monitor/thumbs/eazeye_monitor_2.jpg"},
+  {id:19, brand:"SVD", brand_cn:"SVD", model:"rE Monitor", year:2024, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$549", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器，60Hz 刷新，环境光反射成像。", url:"https://sunvisiondisplay.com/", image:"assets/images/catalog_monitor/thumbs/svd_re_monitor.jpg"},
+  {id:20, brand:"SVD", brand_cn:"SVD", model:"rE 2 Monitor", year:2025, size_inch:13.3, resolution:"1920x1080", ppi:165, panel_type:"RLCD", color:"是", interfaces:"HDMI, USB-C", touch:"否", frontlight:"有", refresh_hz:"60", price_usd:"$599", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸 RLCD 反射式显示器第二代，60Hz 刷新，改进前光系统。", url:"https://sunvisiondisplay.com/", image:"assets/images/catalog_monitor/thumbs/svd_re_monitor_2.jpg"},
+  {id:22, brand:"Dasung", brand_cn:"大上", model:"Link", year:2022, size_inch:5.84, resolution:"1440x720", ppi:280, panel_type:"E-Ink Carta", color:"否", interfaces:"USB-C", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$299", status:"discontinued", status_cn:"已停产", tagline_cn:"手机墨水屏显示器，5.84 英寸便携副屏，USB-C 连接手机/电脑。", url:"https://www.dasung.com/", image:"assets/images/catalog_monitor/thumbs/dasung_link.jpg"},
+  {id:23, brand:"Hanvon", brand_cn:"汉王", model:"PM1301", year:2022, size_inch:13.3, resolution:"2200x1650", ppi:207, panel_type:"E-Ink Carta 1250", color:"否", interfaces:"mini-HDMI, USB-C", touch:"否", frontlight:"否", refresh_hz:"自研高刷", price_usd:"$550", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸便携墨水屏，自研高刷技术，支持文字、图片、视频三种模式，仅重 0.71kg。", url:"https://www.hanvon.com/", image:"assets/images/catalog_monitor/thumbs/hanwang_pm1301.jpg"},
+  {id:24, brand:"Philips", brand_cn:"飞利浦", model:"13B1K3300", year:2023, size_inch:13.3, resolution:"1600x1200", ppi:150, panel_type:"E-Ink", color:"否", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"否", refresh_hz:"—", price_usd:"$799", status:"available", status_cn:"在售", tagline_cn:"13.3 英寸商务墨水屏显示器，无背光、防眩光、无蓝光设计，支持 SmartRemote 控制。", url:"https://www.philips.com/", image:"assets/images/catalog_monitor/thumbs/philips_13b1k3300_93.jpg"},
+  {id:25, brand:"Philips", brand_cn:"飞利浦", model:"24B1D5600", year:2022, size_inch:24, resolution:"2560x1440 + 1600x1200", ppi:"多面板", panel_type:"IPS LCD + E-Ink", color:"LCD彩色+墨水屏", interfaces:"HDMI, DP, USB-C", touch:"否", frontlight:"LCD背光", refresh_hz:"75Hz (LCD)", price_usd:"$1,499", status:"available", status_cn:"在售", tagline_cn:"创新双屏设计：23.8 英寸 LCD (75Hz) + 13.3 英寸墨水屏，获 CES 创新奖、红点奖和 iF 金奖。", url:"https://www.philips.com/", image:"assets/images/catalog_monitor/thumbs/philips_24b1d5600_93.jpg"}
+];
+
+// ---- Editor picks config ----
+const picksConfig = [
+  { id: 4,  label: "综合最佳" },
+  { id: 7,  label: "高颜值大屏" }
+];
+
+// ---- Helpers ----
+function statusClass(s) {
+  return { available:'status-available', discontinued:'status-discontinued', upcoming:'status-upcoming' }[s] || 'status-available';
+}
+
+function getTechLabel(p) {
+  if (p.panel_type === 'RLCD') return 'RLCD';
+  if (p.color === '是') return '彩色墨水屏';
+  return '黑白墨水屏';
+}
+
+// 映射缩略图到原始图片
+const imageMap = {
+  'dasung_paperlike_253.jpg': 'dasung_paperlike_253.webp',
+  'dasung_paperlike_253_color.jpg': 'dasung_paperlike_253_color.jpeg',
+  'dasung_paperlike_13k.jpg': 'dasung_paperlike_13K.webp',
+  'dasung_paperlike_13k_color.jpg': 'dasung_paperlike_13k_color.jpg',
+  'dasung_paperlike_103.jpg': 'dasung_paperlike_103.jpg',
+  'dasung_paperlike_color_12.jpg': 'dasung_paperlike_color_12.png',
+  'dasung_paperlike_253_u.jpg': 'dasung_paperlike_253_u.webp',
+  'dasung_paperlike_pro.jpg': 'dasung_paperlike_pro.jpg',
+  'dasung_paperlike_hd.jpg': 'dasung_paperlike_hd.jpg',
+  'dasung_paperlike_hd_ft.jpg': 'dasung_paperlike_HD_FT.jpg',
+  'dasung_paperlike_hd_铝合金.jpg': 'dasung_paperlike_HD_铝合金.webp',
+  'dasung_paperlike_original.jpg': 'dasung_paperlike_original.png',
+  'dasung_link.jpg': 'dasung_link.webp',
+  'boox_mira_13.jpg': 'boox_mira_13.jpg',
+  'boox_mira_pro_253_bw.jpg': 'boox_mira_pro_253_bw.webp',
+  'boox_mira_pro_color.jpg': 'Boox_Mira_Pro_Color.jpg',
+  'bigme_b13.jpg': 'bigme_B13.webp',
+  'bigme_b251.jpg': 'bigme_B251.webp',
+  'modos_enchanter.jpg': 'modos_enchanter.png',
+  'eazeye_monitor_2.jpg': 'eazeye_monitor_2.webp',
+  'svd_re_monitor.jpg': 'SVD_rE_monitor.webp',
+  'svd_re_monitor_2.jpg': 'SVD_rE_monitor_2.jpg',
+  'hanwang_pm1301.jpg': 'hanwang_PM1301.png',
+  'philips_13b1k3300_93.jpg': 'philips_13B1K3300_93.webp',
+  'philips_24b1d5600_93.jpg': 'philips_24B1D5600_93.webp'
+};
+
+function openDetail(p) {
+  document.getElementById('modalBrand').textContent = p.brand + (p.brand_cn !== p.brand ? ' ' + p.brand_cn : '');
+  document.getElementById('modalModel').textContent = p.model;
+  document.getElementById('modalTagline').textContent = p.tagline_cn;
+
+  const modalImage = document.getElementById('modalImage');
+  if (p.image) {
+    // 获取缩略图文件名
+    const thumbFilename = p.image.split('/').pop();
+    // 查找对应的原始图片文件名
+    const originalFilename = imageMap[thumbFilename] || thumbFilename;
+    // 构建原始图片路径（确保使用正确的目录）
+    const fullImagePath = p.image.replace('/thumbs/' + thumbFilename, '/' + originalFilename);
+    modalImage.innerHTML = `<img src="${fullImagePath}" alt="${p.model}" style="user-select: none;">`;
+    modalImage.style.display = 'block';
+
+    // Modos 彩蛋：点击图片跳转到微信文章
+    if (p.id === 11) {
+      const img = modalImage.querySelector('img');
+      img.onclick = (e) => {
+        e.stopPropagation();
+        window.open('https://mp.weixin.qq.com/s/3BHYVA20ULi3rxXFCPll6A', '_blank');
+      };
+    }
+  } else {
+    modalImage.style.display = 'none';
+  }
+
+  const websiteBtn = document.getElementById('modalWebsiteBtn');
+  websiteBtn.href = p.url;
+  websiteBtn.style.display = 'inline-block';
+
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+// ---- Render picks as cards ----
+(function() {
+    // ---- PICKS ----
+    const picksCards = document.getElementById('picksCards');
+    picksConfig.forEach(cfg => {
+      const p = products.find(x => x.id === cfg.id);
+      if (!p) return;
+
+      // For Kaleido color screens, show both B&W and color PPI
+      let ppiText = `${p.ppi} PPI`;
+      if (p.panel_type.includes('Kaleido') && p.color === '是') {
+        const colorPpi = Math.round(p.ppi / 2);
+        ppiText = `${p.ppi} PPI (黑白) / ${colorPpi} PPI (彩色)`;
+      }
+
+      // Award badge if exists
+      const awardHTML = p.award ? `<div class="pick-card-award">🏆 ${p.award}</div>` : '';
+
+      const el = document.createElement('div');
+      el.className = 'pick-card';
+      el.onclick = () => openDetail(p);
+      el.innerHTML = `
+        <div class="pick-card-label">${cfg.label}</div>
+        <div class="pick-card-brand">${p.brand} ${p.brand_cn !== p.brand ? p.brand_cn : ''}</div>
+        <div class="pick-card-model">${p.model}</div>
+        <div class="pick-card-tagline">${p.tagline_cn}</div>
+        ${awardHTML}
+        <div class="pick-card-specs">
+          <span class="pick-card-spec">${p.size_inch}"</span>
+          <span class="pick-card-spec">${ppiText}</span>
+          <span class="pick-card-spec">${getTechLabel(p)}</span>
+        </div>`;
+      picksCards.appendChild(el);
+    });
+
+    // ---- TIMELINE ----
+    function filterProducts(filterType) {
+      switch(filterType) {
+        case 'all':
+          return products;
+        case 'available':
+          return products.filter(p => p.status === 'available');
+        case 'eink':
+          return products.filter(p => p.panel_type.includes('E-Ink') && p.color === '否');
+        case 'color':
+          return products.filter(p => (p.panel_type.includes('Kaleido') || p.color === '是') && p.panel_type !== 'RLCD');
+        case 'rlcd':
+          return products.filter(p => p.panel_type === 'RLCD');
+        default:
+          return products;
+      }
+    }
+
+    function renderTimeline(filteredProducts) {
+      const years = [...new Set(filteredProducts.map(p => p.year))].sort((a,b) => b - a);
+      const tlContainer = document.getElementById('timelineContainer');
+      tlContainer.innerHTML = '';
+
+      document.getElementById('tlCount').textContent = `${filteredProducts.length} 款产品 · 按年份排列`;
+
+      years.forEach(year => {
+        const yp = filteredProducts.filter(p => p.year === year);
+        const countLabel = yp.length + ' 款';
+
+        let cardsHTML = '';
+        yp.forEach(p => {
+          const disc = p.status === 'discontinued' ? ' discontinued' : '';
+          const thumbContent = p.image
+            ? `<img src="${p.image}" alt="${p.model}">`
+            : 'IMG';
+          cardsHTML += `
+            <div class="tl-card${disc}" data-id="${p.id}">
+              <div class="tl-card-thumb">${thumbContent}</div>
+              <div class="tl-card-info">
+                <div class="tl-brand-model"><span class="tl-brand">${p.brand_cn}</span>${p.model}</div>
+                <div class="tl-summary">${p.tagline_cn}</div>
+                <div class="tl-tech-label">${getTechLabel(p)}</div>
+              </div>
+              <div class="tl-card-status ${statusClass(p.status)}">${p.status_cn}</div>
+            </div>`;
+        });
+
+        tlContainer.innerHTML += `
+          <div class="timeline-year">
+            <div class="year-marker">
+              <div class="year-num">${year}</div>
+              <div class="year-count">${countLabel}</div>
+            </div>
+            <div class="timeline-cards">${cardsHTML}</div>
+          </div>`;
+      });
+
+      // Attach click handlers to timeline cards
+      document.querySelectorAll('.tl-card').forEach(el => {
+        el.addEventListener('click', () => {
+          const p = products.find(x => x.id === parseInt(el.dataset.id));
+          if (p) openDetail(p);
+        });
+      });
+    }
+
+    // Initial render
+    renderTimeline(products);
+
+    // Filter button handlers
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Update active button
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Filter and re-render
+        const filterType = e.target.dataset.filter;
+        const filtered = filterProducts(filterType);
+        renderTimeline(filtered);
+      });
+    });
+
+    // ---- MODAL ----
+    document.getElementById('modalClose').addEventListener('click', () => {
+      document.getElementById('modalOverlay').classList.remove('active');
+    });
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
+    });
+})();
+
+// ---- Navigation active state management ----
+(function() {
+  const sections = ['picks', 'timeline', 'overview', 'community'];
+  const navLinks = document.querySelectorAll('nav a[data-section]');
+
+  function updateActiveNav() {
+    let currentSection = 'picks';
+    const scrollPos = window.scrollY + 120; // Header height + small offset
+
+    // Find which section we're currently in
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const sectionId = sections[i];
+      const section = document.getElementById(sectionId);
+      if (section && section.offsetTop <= scrollPos) {
+        currentSection = sectionId;
+        break;
+      }
+    }
+
+    navLinks.forEach(link => {
+      if (link.dataset.section === currentSection) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveNav);
+  window.addEventListener('load', updateActiveNav);
+  updateActiveNav();
+})();
+</script>
+
+</body>
+</html>

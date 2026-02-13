@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReinkCase Studio</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/reink/style.css">
+</head>
+<body>
+    <div class="grain-overlay"></div>
+
+    <main class="container">
+        <div class="studio-content">
+            <div class="preview-section">
+                <a href="index.html" class="back-link">← 返回首页</a>
+                <h1 class="studio-title">
+                    <span class="title-line">Reink</span>
+                    <span class="title-line accent">Studio</span>
+                </h1>
+                <div class="preview-frame">
+                    <div class="phone-container">
+                        <img src="" alt="Background Wallpaper" class="background-wallpaper" id="backgroundWallpaper" style="display: none;">
+                        <img src="assets/images/reink/reink17pro.png" alt="Phone Case Mockup" class="mockup-image" id="mockupImage">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gallery-section">
+                <div class="gallery-wrapper">
+                    <button class="gallery-nav gallery-nav-left" id="scrollLeft">‹</button>
+                    <div class="image-gallery" id="imageGallery">
+                        <!-- Gallery images will be populated here -->
+                    </div>
+                    <button class="gallery-nav gallery-nav-right" id="scrollRight">›</button>
+                </div>
+                
+                <div class="upload-section">
+                    <label for="imageUpload" class="upload-btn">
+                        <span class="upload-text">上传您的设计</span>
+                        <span class="upload-icon">+</span>
+                    </label>
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="assets/reink/script.js"></script>
+</body>
+</html>
