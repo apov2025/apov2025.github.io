@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
 <title>apov.sg/store</title>
 
 <!-- Favicons -->
@@ -52,14 +53,25 @@ a:hover { text-decoration: underline; }
 header {
   border-bottom: none;
   padding: 1.5rem 2rem;
+  padding-top: max(1.5rem, env(safe-area-inset-top));
   display: flex;
   justify-content: center;
   align-items: center;
   position: sticky;
   top: 0;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(12px);
+  background: var(--bg);
   z-index: 100;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: calc(-1 * env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background: var(--bg);
+  z-index: -1;
 }
 
 .logo {
@@ -350,15 +362,92 @@ nav a:hover, nav a.active {
   background: #ffffff;
   padding: 3rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   border-right: 1px solid var(--border);
+  position: relative;
 }
 
 .modal-image-section img {
   max-width: 100%;
   height: auto;
   object-fit: contain;
+}
+
+.modal-gallery-main {
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.modal-gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.2rem;
+  color: var(--text);
+  z-index: 10;
+}
+
+.modal-gallery-nav:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.modal-gallery-nav.prev {
+  left: -18px;
+}
+
+.modal-gallery-nav.next {
+  right: -18px;
+}
+
+.modal-gallery-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.modal-gallery-thumb {
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.modal-gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-gallery-thumb:hover {
+  border-color: var(--accent);
+}
+
+.modal-gallery-thumb.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .modal-content-section {
@@ -568,11 +657,9 @@ footer {
   <div class="filter-bar">
     <span class="filter-option active" data-category="all">全部产品</span>
     <span class="filter-separator">/</span>
-    <span class="filter-option" data-category="portable">超便携阅读器</span>
+    <span class="filter-option" data-category="portable">超便携</span>
     <span class="filter-separator">/</span>
-    <span class="filter-option" data-category="phone">手机</span>
-    <span class="filter-separator">/</span>
-    <span class="filter-option" data-category="notebook">手写笔记</span>
+    <span class="filter-option" data-category="notebook">手写</span>
     <span class="filter-separator">/</span>
     <span class="filter-option" data-category="monitor">显示器</span>
   </div>
@@ -607,90 +694,146 @@ footer {
 <script>
 // Product data with consumer-focused descriptions
 const products = [
-  // Monitor category - Editor's picks
+  // Monitor category
+
   {
-    id: 4,
+    id: 5,
     brand: "Dasung",
     brand_cn: "大上",
-    model: "Paperlike 13K Color",
+    model: "Paperlike 13K",
     category: "monitor",
     category_cn: "墨水屏显示器",
-    price_cny: "5299",
-    price_usd: "$749",
+    price_cny: "3999",
+    price_usd: "$565",
     screen_size: 13.3,
-    image: "assets/images/store/dasung_paperlike_13k_color.jpg",
+    image: "assets/images/store/dasung_paperlike_13k_bw.png",
     badge: null,
     url: "https://www.dasung.com/",
     specs: {
       "屏幕尺寸": "13.3 英寸",
       "分辨率": "3200×2400",
-      "面板类型": "Kaleido 3 彩色墨水屏",
+      "面板类型": "黑白墨水屏",
       "刷新率": "37Hz",
       "接口": "mini-HDMI / USB-C"
     },
     description: `
-      <h4>为什么推荐这款？</h4>
-      <p>如果你只能买一台墨水屏显示器，就选它。大上 Paperlike 13K Color 是目前市场上<strong>「可用性」最高的墨水屏显示器</strong>——不是性能最强，也不是屏幕最大，而是真正能让你每天用、用得顺手的那一款。</p>
+      <h4>纯粹的黑白阅读体验</h4>
+      <p>Paperlike 13K 是彩色版的黑白版本——去掉了 Kaleido 彩色层，只保留纯粹的黑白墨水屏。这意味着<strong>更高的对比度、更清晰的文字、更快的响应速度</strong>，而且价格便宜了 1300 元。如果你不需要彩色功能，这才是真正的最优解。</p>
 
-      <h4>真正的低延迟体验</h4>
-      <p>这是第一台让鼠标「跟手」的墨水屏显示器。你可以在上面处理邮件、浏览网页、编辑文档，而不会有那种「鼠标飘在半空中」的割裂感。对于需要频繁点击操作的场景，这是质的飞跃。</p>
+      <h4>黑白的优势</h4>
+      <p>没有 Kaleido 彩色层的遮挡，黑白版的文字显示<strong>对比度更高、边缘更锐利</strong>。对于长时间阅读文字内容（代码、论文、文档）的用户，这种纯粹的黑白显示反而比彩色版更舒服、更不累眼。</p>
 
-      <h4>彩色，但不鸡肋</h4>
-      <p>Kaleido 3 彩色面板的色彩饱和度确实不如 LCD，但它有自己的用途：代码高亮、PDF 批注、思维导图，这些场景下的色彩标记能显著提升效率。而且得益于墨水屏的特性，<strong>即使是彩色模式也几乎不伤眼</strong>。</p>
+      <h4>响应速度更快</h4>
+      <p>黑白版的刷新算法不需要处理彩色层，响应速度比彩色版快一点点（虽然提升不大，但能感觉到）。对于需要频繁翻页、滚动的场景，这种流畅度的提升是值得的。</p>
 
-      <h4>13.3 英寸的便携性</h4>
-      <p>大到可以作为主力副屏，小到可以装进背包随身带。如果你是数字游民、或者需要在咖啡厅/图书馆办公，这个尺寸是完美的平衡点。</p>
+      <h4>3999 元的性价比</h4>
+      <p>比彩色版便宜 1300 元，但核心体验（13.3 英寸、3200×2400 分辨率、低延迟）完全一致。如果你确定自己<strong>不需要彩色功能</strong>（只是想要一台护眼的纯文字显示器），这 1300 元省得值得。</p>
 
-      <h4>适合什么人？</h4>
-      <p>程序员（代码高亮真的有用）、作家、研究人员、需要长时间盯屏的知识工作者。不适合：视频剪辑、平面设计、游戏玩家。</p>
+      <h4>适合谁？</h4>
+      <p>纯文字工作者（作家、程序员、学术研究）、不需要代码高亮的用户、预算有限但想要大上品质的人。不适合：需要彩色 PDF 批注、需要查看彩色图表/思维导图的用户——加 1300 元买彩色版会更实用。</p>
 
       <h4>局限性与潜在改进空间</h4>
-      <p><strong>彩色分辨率打折</strong>：Kaleido 3 面板在彩色模式下有效分辨率减半，彩色内容看起来会有明显的颗粒感。如果你主要用彩色功能，色彩饱和度远不如 LCD。</p>
-      <p><strong>13.3 英寸的屏幕限制</strong>：对于需要同时查看多个窗口或大量文本的用户（如学术研究、代码审查），屏幕还是偏小。如果预算充足且有桌面空间，<strong>Boox Mira Pro Color 25.3"</strong> 的大屏体验会更好。</p>
-      <p><strong>价格不算便宜</strong>：5299 元的价格已经接近入门级 LCD 显示器的两倍。如果只是想尝试墨水屏，超便携设备（如 <strong>XTEINK X4</strong> 仅需 199 元）是更低风险的选择。</p>
+      <p><strong>没有彩色</strong>：这是最大的限制。如果你的工作涉及任何彩色内容（代码高亮、PDF 标注、数据可视化），黑白版会让你怀念彩色。这 1300 元的差价换来的彩色功能，对很多人来说是值得的。</p>
+      <p><strong>13.3 英寸依然偏小</strong>：和彩色版一样的尺寸限制。如果需要大屏，<strong>Boox Mira Pro Color 25.3"</strong> 是更好选择（虽然贵很多）。</p>
+      <p><strong>刷新率瓶颈</strong>：即使是黑白版，37Hz 的刷新率对于习惯 LCD 的用户来说还是会感到迟滞。这是墨水屏技术的物理限制，短期内无法突破。</p>
+      <p><strong>价格依然不便宜</strong>：3999 元已经可以买两台不错的 LCD 显示器。如果只是想试试墨水屏，超便携设备（如 <strong>XTEINK X4</strong> 260 元、<strong>X3</strong> 230 元）是更低成本的尝试方式。</p>
     `
   },
   {
-    id: 7,
-    brand: "Boox",
-    brand_cn: "文石",
-    model: "Mira Pro Color 25.3\"",
+    id: 11,
+    brand: "Modos",
+    brand_cn: "Modos",
+    model: "Enchanter",
     category: "monitor",
     category_cn: "墨水屏显示器",
-    price_cny: "13499",
-    price_usd: "$1,899",
-    screen_size: 25.3,
-    image: "assets/images/store/Boox_Mira_Pro_Color.jpg",
+    price_cny: "4200",
+    price_usd: "$599",
+    screen_size: 13.3,
+    image: "assets/images/store/modos_logo.png",
     badge: null,
-    url: "https://shop.boox.com/",
+    url: "https://www.modos.tech/",
+    gallery: [
+      "assets/images/store/modos_display/modos_enchanter_01.png",
+      "assets/images/store/modos_display/modos_enchanter_02.png",
+      "assets/images/store/modos_display/modos_enchanter_03.png",
+      "assets/images/store/modos_display/modos_enchanter_04.png",
+      "assets/images/store/modos_display/modos_enchanter_05.png",
+      "assets/images/store/modos_display/modos_enchanter_06.png"
+    ],
     specs: {
-      "屏幕尺寸": "25.3 英寸",
-      "分辨率": "3200×1800",
-      "面板类型": "Kaleido 3 彩色墨水屏",
-      "刷新率": "BSR 4种模式",
-      "接口": "HDMI / DP / USB-C"
+      "屏幕尺寸": "13.3 英寸",
+      "分辨率": "2400×1600",
+      "PPI": "300",
+      "面板类型": "E-Ink Carta",
+      "刷新率": "60-75Hz",
+      "接口": "micro-HDMI / USB-C / DP"
     },
     description: `
-      <h4>大屏墨水屏的终极选择</h4>
-      <p>如果你想要一台<strong>桌面级墨水屏显示器</strong>，能够取代你的 LCD 主屏，那么 Mira Pro Color 25.3" 是目前市场上最成熟的选择。这不是一台「玩具」，而是一台真正可以作为生产力工具的显示器。</p>
+      <h4>开源墨水屏显示器的先驱</h4>
+      <p>Modos Enchanter 是目前唯一采用<strong>全开源路线</strong>的墨水屏显示器。FPGA 控制器原理图、固件源码和驱动代码全部公开。这不仅是一台显示器，更是一个可以被社区持续改进的平台。</p>
 
-      <h4>25.3 英寸意味着什么？</h4>
-      <p>足够大，可以并排显示两个 A4 文档；可以一边写代码一边看文档；可以舒服地阅读长篇论文而不需要频繁缩放。这是墨水屏显示器中的「办公桌主角」，而不是配角。</p>
+      <h4>60-75Hz：打破墨水屏刷新率天花板</h4>
+      <p>通过定制 FPGA 控制器，Enchanter 的目标刷新率达到 60-75Hz——这是传统墨水屏显示器难以企及的水平。虽然仍会有残影，但在流畅度上已经接近低端 LCD 的体验。</p>
 
-      <h4>文石的 BSR 刷新技术</h4>
-      <p>文石的 BSR（Boox Super Refresh）算法提供 4 种刷新模式，你可以根据使用场景切换：阅读模式几乎无残影，快速模式可以看视频（虽然体验一般），平衡模式适合日常办公。这种灵活性是大上没有的。</p>
+      <h4>为什么选择开源？</h4>
+      <p>开源意味着你可以根据自己的需求调整刷新算法、优化延迟、甚至开发自定义功能。对于<strong>极客、开发者、注重隐私的用户</strong>来说，这种可控性是封闭产品无法提供的。</p>
 
-      <h4>彩色版的意义</h4>
-      <p>在 25.3 英寸的大屏上，彩色的价值被放大了。你可以用它来<strong>审阅设计稿、查看数据图表、阅读带插图的技术文档</strong>——这些场景下，即使是不够鲜艳的 Kaleido 3 色彩，也比黑白要实用得多。</p>
+      <h4>众筹阶段，值得期待</h4>
+      <p>Enchanter 目前处于众筹阶段，预计 2026 年发货。虽然还未量产，但其技术路线和理念已经吸引了大量关注。如果你愿意等待，这可能是未来最具潜力的墨水屏显示器。</p>
 
-      <h4>谁应该买它？</h4>
-      <p>预算充足、需要大屏墨水屏作为主力办公屏的用户。特别适合：学术研究、技术写作、大量阅读文献的工作。不适合：预算有限、桌面空间小、需要高刷新率的用户。</p>
+      <h4>适合谁？</h4>
+      <p>喜欢折腾开源硬件的极客、需要高刷新率的用户、不想被大厂锁定的开发者。不适合：只想要开箱即用的普通用户、需要立即购买的人（目前仍在众筹）。</p>
 
       <h4>局限性与潜在改进空间</h4>
-      <p><strong>价格高昂</strong>：13499 元的售价是这个品类中的顶级定价，对于大多数人来说是一笔不小的投资。如果预算有限，<strong>Dasung Paperlike 13K Color</strong>（5299 元）能提供 60% 的价格实现 80% 的功能。</p>
-      <p><strong>体积和重量</strong>：25.3 英寸意味着这是一台完全不便携的桌面显示器，需要固定工作空间。如果你需要便携性，13.3 英寸的 <strong>Paperlike 13K Color</strong> 可以装进背包。</p>
-      <p><strong>彩色依然有限</strong>：即使在 25.3 英寸的大屏上，Kaleido 3 的色彩表现依然无法与 LCD 媲美。如果你的工作涉及大量彩色内容（如设计审阅、照片编辑），这不是合适的选择。</p>
-      <p><strong>刷新率瓶颈</strong>：BSR 虽然已经是墨水屏中的优秀水平，但对于习惯了 60Hz+ LCD 的用户，还是会感觉到明显的迟滞。这是墨水屏技术本身的物理限制，短期内难以突破。</p>
+      <p><strong>尚未量产</strong>：Enchanter 目前仍在众筹阶段，实际体验如何需要等产品发货后才能验证。如果你需要现在就买，大上或文石的成熟产品更稳妥。</p>
+      <p><strong>开源门槛</strong>：虽然开源是优势，但对于不懂技术的用户来说，反而可能成为负担。如果你只想要「插上就能用」的体验，封闭系统的产品更省心。</p>
+      <p><strong>社区支持待验证</strong>：开源产品的长期价值取决于社区活跃度。如果社区冷清，开源的优势就无法发挥。</p>
+      <p><strong>价格竞争激烈</strong>：4200 元的价格与大上 13K 黑白版（3999 元）接近，但大上是成熟量产产品。需要权衡开源灵活性与产品成熟度。</p>
+    `
+  },
+  {
+    id: 201,
+    brand: "SOTSU",
+    brand_cn: "SOTSU",
+    model: "FlipAction Elite 16\"",
+    category: "monitor",
+    category_cn: "便携显示器",
+    price_cny: "5830",
+    price_usd: "S$1,100",
+    screen_size: 16,
+    image: "assets/images/store/sotsu_flipaction_elite.png",
+    badge: null,
+    url: "https://www.sotsu.com/products/flipaction-elite-16",
+    specs: {
+      "屏幕尺寸": "16 英寸",
+      "分辨率": "2560×1600",
+      "面板类型": "IPS LCD",
+      "刷新率": "60Hz",
+      "接口": "USB-C / mini-HDMI",
+      "特色": "FlipAction 支架"
+    },
+    description: `
+      <h4>便携显示器中的「真 16 英寸」</h4>
+      <p>SOTSU FlipAction 是少数真正做到 16 英寸的便携显示器——不是 15.6 英寸打擦边球，而是实打实的 16 英寸。2560×1600 的分辨率（16:10 比例）意味着<strong>比常见的 1080p 便携屏多出 30% 的垂直空间</strong>，对于需要同时查看多个窗口或处理长文档的用户来说，这是质的提升。</p>
+
+      <h4>FlipAction 支架：被低估的设计</h4>
+      <p>大多数便携显示器的支架都很鸡肋，要么角度固定、要么容易倒。SOTSU 的 FlipAction 支架可以<strong>360° 翻转、多角度悬停</strong>，无论是桌面办公、床上使用、还是竖屏阅读，都能找到舒服的角度。这个支架的手感和稳定性明显好于同价位产品。</p>
+
+      <h4>2.5K 分辨率的实用性</h4>
+      <p>2560×1600 不是 4K，但对于 16 英寸屏幕来说<strong>PPI 刚好达到视网膜级别（189 PPI）</strong>，文字清晰、图像细腻，同时对电脑性能的要求比 4K 低很多。如果你用的是轻薄本或老款 MacBook，这个分辨率是完美平衡点。</p>
+
+      <h4>单 USB-C 供电+显示</h4>
+      <p>支持 USB-C 一线通（供电+显示），如果你的笔记本 USB-C 口支持视频输出，只需要一根线就能连接。对于<strong>数字游民、咖啡厅办公、出差</strong>这些场景，少一根线的体验提升是巨大的。</p>
+
+      <h4>适合谁？</h4>
+      <p>需要便携副屏的轻度移动办公用户、MacBook/轻薄本用户、需要竖屏阅读长文档的程序员/研究人员。不适合：追求极致色彩准确度的设计师、需要高刷新率的游戏玩家。</p>
+
+      <h4>局限性与潜在改进空间</h4>
+      <p><strong>价格高昂</strong>：5830 元（S$1,100）的售价已经接近中端笔记本电脑的价格。这个定价主要来自 FlipAction 支架的专利设计和 16 英寸真实尺寸。如果预算有限，常规 15.6 英寸便携屏价格通常在 1000-2000 元区间。</p>
+      <p><strong>不是真 4K</strong>：2560×1600 只是 2.5K 分辨率。如果你需要真 4K（3840×2160）来做设计或视频剪辑，这不是合适的选择。</p>
+      <p><strong>色彩准确度一般</strong>：IPS 面板的色域覆盖和色准比不上专业显示器。如果你是平面设计师或摄影师，需要精确的色彩管理，这块屏幕不适合作为主力工具。</p>
+      <p><strong>亮度在户外不够</strong>：便携显示器的通病——最大亮度通常只有 300-400 nits，在强光环境（如户外咖啡厅、阳光直射）下屏幕会发白、难以阅读。</p>
+      <p><strong>重量和便携性的权衡</strong>：16 英寸意味着更重、更大。如果你追求极致便携，13.3 英寸的墨水屏显示器会更轻便。FlipAction 更适合「固定在酒店/咖啡厅办公」而不是「背包里随时拿出来」。</p>
     `
   },
 
@@ -759,8 +902,8 @@ const products = [
       "特色": "磁吸设计"
     },
     description: `
-      <h4>199 元的「阅读自由」</h4>
-      <p>这可能是市场上<strong>性价比最高的墨水屏阅读器</strong>。不到 200 元的价格，买到的不仅是一块墨水屏，更是一种「随时随地阅读」的可能性。扔包里、放口袋、吸在手机背面，完全不用心疼。</p>
+      <h4>260 元的超高性价比</h4>
+      <p>这可能是市场上<strong>性价比最高的墨水屏阅读器</strong>。260 元的价格，买到的不仅是一块墨水屏，更是一种「随时随地阅读」的可能性。扔包里、放口袋、吸在手机背面，完全不用心疼。</p>
 
       <h4>磁吸设计：最被低估的创新</h4>
       <p>X4 的磁吸设计看起来像个噱头，但实际用起来会发现它的妙处：<strong>吸在手机壳背面</strong>，通勤路上单手阅读；吸在冰箱上，变成厨房菜谱；吸在床头，睡前阅读不用找地方放。这种灵活性是传统阅读器做不到的。</p>
@@ -775,7 +918,7 @@ const products = [
       <p>预算有限的学生、想要第二台备用阅读器的轻度用户、追求极致便携性的通勤族。不适合：需要大屏看 PDF 的学术用户、想要丰富功能的重度阅读爱好者。</p>
 
       <h4>局限性与潜在改进空间</h4>
-      <p><strong>4.3 英寸屏幕的阅读局限</strong>：虽然便携，但长时间阅读小说还是会觉得屏幕太小、翻页频繁。如果预算允许多加 100 元，<strong>Obook5</strong> 的 4.26 英寸屏幕虽然看起来差不多，但实际阅读体验会更好。</p>
+      <p><strong>4.3 英寸屏幕的阅读局限</strong>：虽然便携，但长时间阅读小说还是会觉得屏幕太小、翻页频繁。如果预算允许多加约 90 元，<strong>Obook5</strong>（349 元）的 4.26 英寸屏幕虽然尺寸相近，但实际阅读体验和做工会更好。</p>
       <p><strong>封闭系统限制</strong>：无法安装第三方 App（如微信读书、Kindle），只能通过传输本地文件。如果你的书库主要在这些平台上，使用会很不方便。</p>
       <p><strong>磁吸设计的实用性存疑</strong>：虽然创意十足，但实际使用中可能会发现磁吸不够稳固、容易脱落。如果你主要是正常手持阅读，这个卖点意义不大。</p>
       <p><strong>没有前光</strong>：在弱光环境下无法阅读，这对于睡前阅读的用户是个问题。如果你需要前光功能，同价位的其他产品可能没有，但多花 100 元的 <strong>Obook5</strong> 有 20 级前光。</p>
@@ -811,14 +954,14 @@ const products = [
       <h4>极简主义的美学</h4>
       <p>没有复杂的功能、没有花哨的界面，X3 就是一个<strong>纯粹的文字显示工具</strong>。这种极简反而让它有了独特的吸引力——在这个功能过载的时代，有一台设备只做一件事，反而是一种奢侈。</p>
 
-      <h4>149 元：入门的最低门槛</h4>
-      <p>如果你只是想尝试一下「墨水屏阅读」的感觉，又不想花大价钱，X3 是完美的试水产品。即使最后发现不适合自己，也不会心疼。</p>
+      <h4>230 元：超便携的入门之选</h4>
+      <p>如果你只是想尝试一下「墨水屏阅读」的感觉，又不想花大价钱，X3 是性价比很高的试水产品。即使最后发现不适合自己，也不会太心疼。</p>
 
       <h4>适合谁？</h4>
       <p>极简主义爱好者、喜欢随身携带笔记本的人、想要一个「纯粹阅读工具」的用户。不适合：需要看长篇书籍或 PDF 的用户、追求大屏体验的人。</p>
 
       <h4>局限性与潜在改进空间</h4>
-      <p><strong>3.7 英寸太小了</strong>：这是最大的问题。即使是阅读短文，800×480 的分辨率和 3.7 英寸的屏幕也会让长时间使用很吃力。如果你发现自己经常眯眼或频繁翻页，多花 50 元升级到 <strong>X4</strong>（4.3 英寸）会有明显改善。</p>
+      <p><strong>3.7 英寸太小了</strong>：这是最大的问题。即使是阅读短文，800×480 的分辨率和 3.7 英寸的屏幕也会让长时间使用很吃力。如果你发现自己经常眯眼或频繁翻页，多花 30 元升级到 <strong>X4</strong>（260 元，4.3 英寸）会有明显改善。</p>
       <p><strong>功能极度精简</strong>：封闭系统 + 超小屏幕意味着它几乎只能用来看纯文字内容。想看漫画、杂志、带图片的文章？基本不可能有好体验。</p>
       <p><strong>电池容量未知</strong>：官方没有公布电池容量，从体积推测应该很小。虽然墨水屏省电，但如果你是重度用户，可能需要比想象中更频繁地充电。</p>
       <p><strong>极简主义的代价</strong>：没有前光、没有触摸（待确认）、没有扩展功能。如果你后来发现需要这些功能，这台设备基本没有升级空间，只能换机。建议先想清楚自己是「真极简」还是「觉得极简很酷」。</p>
@@ -834,19 +977,18 @@ const products = [
     price_cny: "349",
     price_usd: "$49",
     screen_size: 4.26,
-    image: "assets/images/store/guowen_OBOOK5.jpg",
+    image: "assets/images/store/guowen_OBOOK5.png",
     badge: null,
     url: "https://mall.jd.com/index-169704.html",
     specs: {
       "屏幕尺寸": "4.26 英寸",
       "分辨率": "800×600",
-      "厚度": "4.8mm",
       "重量": "约 90g",
       "特色": "快速翻页"
     },
     description: `
       <h4>国文 S2 的升级版</h4>
-      <p>Obook5 是国文 S2 的 2025 重新发布版，保持了<strong>4.26 英寸的便携尺寸和 4.8mm 的轻薄机身</strong>，同时在系统和翻页速度上进行了优化。虽然机身很薄，可以轻松塞进护照夹或夹在笔记本里，但这不是它唯一的卖点。</p>
+      <p>Obook5 是国文 S2 的 2025 重新发布版，保持了<strong>4.26 英寸的便携尺寸</strong>，同时在系统和翻页速度上进行了优化。轻巧的机身可以轻松塞进口袋或夹在笔记本里，是日常通勤的好伴侣。</p>
 
       <h4>4.26 英寸：便携性和可读性的平衡点</h4>
       <p>比 3.7 英寸的 X3 大一点，看书更舒服；比 6 英寸的主流阅读器小一点，更便携。这个尺寸对于<strong>小说、散文、短篇文章</strong>来说是最佳选择。虽然看 PDF 还是有点吃力，但作为日常通勤阅读器，完全够用。</p>
@@ -854,8 +996,8 @@ const products = [
       <h4>快速翻页：国文的独家优化</h4>
       <p>国文在系统优化上下了功夫，Obook5 的翻页速度明显快于同价位产品。虽然比不上旗舰级阅读器，但在便携设备这个类别里，它的流畅度是数一数二的。</p>
 
-      <h4>299 元：中端便携的最优解</h4>
-      <p>比 X3/X4 贵一点，但多花的钱换来了更大的屏幕、更好的做工、更快的翻页。如果你的预算在 300 元左右，想要一台<strong>真正可以作为主力便携阅读器</strong>的设备，Obook5 是最佳选择。</p>
+      <h4>349 元：中端便携的均衡之选</h4>
+      <p>比 X3/X4 贵一些，但多花的钱换来了更大的屏幕、更好的做工、更快的翻页。如果你的预算在 350 元左右，想要一台<strong>真正可以作为主力便携阅读器</strong>的设备，Obook5 是值得考虑的选择。</p>
 
       <h4>适合谁？</h4>
       <p>预算在 300 元左右、需要一台「能随身带、舒服看」的阅读器的用户。不适合：需要看 PDF 的学术用户、想要彩色屏或更大屏幕的人。</p>
@@ -868,237 +1010,47 @@ const products = [
     `
   },
   {
-    id: 5,
-    brand: "Dasung",
-    brand_cn: "大上",
-    model: "Paperlike 13K",
-    category: "monitor",
-    category_cn: "墨水屏显示器",
-    price_cny: "3999",
-    price_usd: "$565",
-    screen_size: 13.3,
-    image: "assets/images/store/dasung_paperlike_13k_bw.png",
+    id: 110,
+    brand: "Boox",
+    brand_cn: "文石",
+    model: "Palma 2 Pro",
+    category: "portable",
+    category_cn: "超便携墨水屏",
+    price_cny: "1699",
+    price_usd: "$239",
+    screen_size: 6.13,
+    image: "assets/images/store/boox_palma_2_pro.webp",
     badge: null,
-    url: "https://www.dasung.com/",
+    url: "https://shop.boox.com/",
     specs: {
-      "屏幕尺寸": "13.3 英寸",
-      "分辨率": "3200×2400",
-      "面板类型": "黑白墨水屏",
-      "刷新率": "37Hz",
-      "接口": "mini-HDMI / USB-C"
+      "屏幕尺寸": "6.13 英寸",
+      "分辨率": "1648×824",
+      "处理器": "八核 2.4GHz",
+      "系统": "Android 13",
+      "特色": "手机形态、可安装 App"
     },
     description: `
-      <h4>纯粹的黑白阅读体验</h4>
-      <p>Paperlike 13K 是彩色版的黑白版本——去掉了 Kaleido 彩色层，只保留纯粹的黑白墨水屏。这意味着<strong>更高的对比度、更清晰的文字、更快的响应速度</strong>，而且价格便宜了 1300 元。如果你不需要彩色功能，这才是真正的最优解。</p>
+      <h4>手机形态的开放式墨水屏阅读器</h4>
+      <p>Boox Palma 2 Pro 是一台<strong>「长得像手机的墨水屏阅读器」</strong>——6.13 英寸屏幕、可以装进口袋、基于 Android 13 系统可以安装各种 App。如果你想要一台既能看书、又能当备用手机使用的设备，Palma 2 Pro 是目前最成熟的选择。</p>
 
-      <h4>黑白的优势</h4>
-      <p>没有 Kaleido 彩色层的遮挡，黑白版的文字显示<strong>对比度更高、边缘更锐利</strong>。对于长时间阅读文字内容（代码、论文、文档）的用户，这种纯粹的黑白显示反而比彩色版更舒服、更不累眼。</p>
+      <h4>手机形态的优势</h4>
+      <p>不同于传统的砖头形电子书阅读器，Palma 2 Pro 的尺寸和重量接近手机，可以<strong>单手持握、随时掏出来阅读</strong>。6.13 英寸的屏幕比手机大一点，但又不会像 7 英寸阅读器那样装不进口袋。</p>
 
-      <h4>响应速度更快</h4>
-      <p>黑白版的刷新算法不需要处理彩色层，响应速度比彩色版快一点点（虽然提升不大，但能感觉到）。对于需要频繁翻页、滚动的场景，这种流畅度的提升是值得的。</p>
+      <h4>开放的 Android 系统</h4>
+      <p>基于 Android 13，你可以安装微信读书、Kindle、得到、甚至浏览器。这是封闭系统的阅读器（如 Kindle、Kobo）做不到的。想看网文？装个起点 App。想听播客？装个小宇宙。<strong>所有内容都能在墨水屏上护眼阅读</strong>。</p>
 
-      <h4>3999 元的性价比</h4>
-      <p>比彩色版便宜 1300 元，但核心体验（13.3 英寸、3200×2400 分辨率、低延迟）完全一致。如果你确定自己<strong>不需要彩色功能</strong>（只是想要一台护眼的纯文字显示器），这 1300 元省得值得。</p>
-
-      <h4>适合谁？</h4>
-      <p>纯文字工作者（作家、程序员、学术研究）、不需要代码高亮的用户、预算有限但想要大上品质的人。不适合：需要彩色 PDF 批注、需要查看彩色图表/思维导图的用户——加 1300 元买彩色版会更实用。</p>
-
-      <h4>局限性与潜在改进空间</h4>
-      <p><strong>没有彩色</strong>：这是最大的限制。如果你的工作涉及任何彩色内容（代码高亮、PDF 标注、数据可视化），黑白版会让你怀念彩色。这 1300 元的差价换来的彩色功能，对很多人来说是值得的。</p>
-      <p><strong>13.3 英寸依然偏小</strong>：和彩色版一样的尺寸限制。如果需要大屏，<strong>Boox Mira Pro Color 25.3"</strong> 是更好选择（虽然贵很多）。</p>
-      <p><strong>刷新率瓶颈</strong>：即使是黑白版，37Hz 的刷新率对于习惯 LCD 的用户来说还是会感到迟滞。这是墨水屏技术的物理限制，短期内无法突破。</p>
-      <p><strong>价格依然不便宜</strong>：3999 元已经可以买两台不错的 LCD 显示器。如果只是想试试墨水屏，超便携设备（如 <strong>XTEINK X4</strong> 仅需 260 元）是更低成本的尝试方式。</p>
-    `
-  },
-  {
-    id: 201,
-    brand: "SOTSU",
-    brand_cn: "SOTSU",
-    model: "FlipAction Elite 16\"",
-    category: "monitor",
-    category_cn: "便携显示器",
-    price_cny: "5830",
-    price_usd: "S$1,100",
-    screen_size: 16,
-    image: "assets/images/store/sotsu_flipaction_elite.png",
-    badge: null,
-    url: "https://www.sotsu.com/products/flipaction-elite-16",
-    specs: {
-      "屏幕尺寸": "16 英寸",
-      "分辨率": "2560×1600",
-      "面板类型": "IPS LCD",
-      "刷新率": "60Hz",
-      "接口": "USB-C / mini-HDMI",
-      "特色": "FlipAction 支架"
-    },
-    description: `
-      <h4>便携显示器中的「真 16 英寸」</h4>
-      <p>SOTSU FlipAction 是少数真正做到 16 英寸的便携显示器——不是 15.6 英寸打擦边球，而是实打实的 16 英寸。2560×1600 的分辨率（16:10 比例）意味着<strong>比常见的 1080p 便携屏多出 30% 的垂直空间</strong>，对于需要同时查看多个窗口或处理长文档的用户来说，这是质的提升。</p>
-
-      <h4>FlipAction 支架：被低估的设计</h4>
-      <p>大多数便携显示器的支架都很鸡肋，要么角度固定、要么容易倒。SOTSU 的 FlipAction 支架可以<strong>360° 翻转、多角度悬停</strong>，无论是桌面办公、床上使用、还是竖屏阅读，都能找到舒服的角度。这个支架的手感和稳定性明显好于同价位产品。</p>
-
-      <h4>2.5K 分辨率的实用性</h4>
-      <p>2560×1600 不是 4K，但对于 16 英寸屏幕来说<strong>PPI 刚好达到视网膜级别（189 PPI）</strong>，文字清晰、图像细腻，同时对电脑性能的要求比 4K 低很多。如果你用的是轻薄本或老款 MacBook，这个分辨率是完美平衡点。</p>
-
-      <h4>单 USB-C 供电+显示</h4>
-      <p>支持 USB-C 一线通（供电+显示），如果你的笔记本 USB-C 口支持视频输出，只需要一根线就能连接。对于<strong>数字游民、咖啡厅办公、出差</strong>这些场景，少一根线的体验提升是巨大的。</p>
+      <h4>八核处理器 + BSR 刷新</h4>
+      <p>2.4GHz 八核处理器让 Palma 2 Pro 的响应速度明显快于传统电子书阅读器。配合文石的 BSR 刷新算法，翻页流畅、滑动跟手，甚至可以勉强看视频（虽然体验一般）。</p>
 
       <h4>适合谁？</h4>
-      <p>需要便携副屏的轻度移动办公用户、MacBook/轻薄本用户、需要竖屏阅读长文档的程序员/研究人员。不适合：追求极致色彩准确度的设计师、需要高刷新率的游戏玩家。</p>
+      <p>需要一台能装 App 的墨水屏阅读器的用户、想要减少手机使用但又离不开某些 App 的人、追求便携性的通勤族。不适合：只想要纯粹阅读体验（开放系统会带来诱惑）、预算有限的用户。</p>
 
       <h4>局限性与潜在改进空间</h4>
-      <p><strong>不是真 4K</strong>：虽然标榜"4K 级"，但 2560×1600 只是 2.5K。如果你需要真 4K（3840×2160）来做设计或视频剪辑，这不是合适的选择。真 4K 便携屏价格通常在 2500 元以上。</p>
-      <p><strong>色彩准确度一般</strong>：IPS 面板的色域覆盖和色准比不上专业显示器。如果你是平面设计师或摄影师，需要精确的色彩管理，这块屏幕不适合作为主力工具。</p>
-      <p><strong>亮度在户外不够</strong>：便携显示器的通病——最大亮度通常只有 300-400 nits，在强光环境（如户外咖啡厅、阳光直射）下屏幕会发白、难以阅读。如果你经常在户外工作，这是个问题。</p>
-      <p><strong>重量和便携性的权衡</strong>：16 英寸意味着更重、更大。如果你追求极致便携，13.3 英寸或更小的便携屏（如 <strong>Paperlike 13K Color</strong> 墨水屏）会更轻便。FlipAction 更适合「固定在酒店/咖啡厅办公」而不是「背包里随时拿出来」。</p>
-      <p><strong>价格竞争激烈</strong>：1699 元的价位，已经可以买到一些大品牌的 15.6 英寸便携屏（如 ASUS、Dell）。SOTSU 作为小众品牌，售后和品控可能不如大厂靠谱。如果你在意品牌保障，多花几百块买大牌可能更安心。</p>
-    `
-  },
-
-  // Phone category
-  {
-    id: 301,
-    brand: "Light",
-    brand_cn: "Light",
-    model: "Phone 3",
-    category: "phone",
-    category_cn: "手机",
-    price_cny: "2800",
-    price_usd: "$399",
-    screen_size: 3.5,
-    image: "assets/images/store/light_phone_3.webp",
-    badge: null,
-    url: "https://www.thelightphone.com/",
-    specs: {
-      "屏幕": "OLED",
-      "功能": "通话、短信、导航、音乐",
-      "特色": "极简主义"
-    },
-    description: `
-      <h4>真正的极简手机</h4>
-      <p>Light Phone 3 是为那些<strong>想要摆脱手机成瘾</strong>的人设计的。它只保留了最基本的功能：通话、短信、导航、音乐——没有社交媒体、没有无限滚动的信息流、没有让你分心的 App。这不是「功能机」，而是一种生活方式的选择。</p>
-
-      <h4>OLED 屏幕的进化</h4>
-      <p>相比前代的黑白墨水屏，Light Phone 3 升级到了 OLED 屏幕，显示更清晰、响应更快，但依然保持极简的黑白界面设计。这是功能性和美学的完美平衡。</p>
-
-      <h4>适合谁？</h4>
-      <p>想要数字极简生活的人、需要「第二台手机」来隔离工作和生活的人、厌倦了智能手机干扰的创作者。不适合：需要微信、支付宝等国内应用的用户（几乎所有中国用户）。</p>
-
-      <h4>局限性与潜在改进空间</h4>
-      <p><strong>在中国几乎不可用</strong>：没有微信、支付宝、高德地图，在国内的实用性接近于零。Light Phone 是为欧美市场设计的产品，不适合中国的数字生态。</p>
-      <p><strong>价格偏高</strong>：2800 元买一台只能打电话发短信的设备，性价比极低。如果只是想减少手机使用，不如直接删除 App 或使用屏幕时间管理功能。</p>
-      <p><strong>导航功能有限</strong>：虽然有导航，但没有实时路况、没有公交信息，实用性远不如智能手机。</p>
-    `
-  },
-  {
-    id: 302,
-    brand: "Mudita",
-    brand_cn: "Mudita",
-    model: "Kompakt",
-    category: "phone",
-    category_cn: "手机",
-    price_cny: "2400",
-    price_usd: "$349",
-    screen_size: 4.3,
-    image: "assets/images/store/mudita_kompakt.webp",
-    badge: null,
-    url: "https://mudita.com/products/kompakt/",
-    specs: {
-      "屏幕": "墨水屏",
-      "操作系统": "定制 Android",
-      "特色": "可安装部分 App"
-    },
-    description: `
-      <h4>介于智能手机和功能机之间</h4>
-      <p>Mudita Kompakt 是一台<strong>「可以装 App 的墨水屏手机」</strong>——基于 Android 系统，但只允许安装白名单内的 App（如地图、播客、电子书）。它试图在「完全断网」和「完全沉迷」之间找到平衡点。</p>
-
-      <h4>墨水屏的护眼优势</h4>
-      <p>墨水屏意味着几乎不伤眼、超长续航（可以用一周）、在阳光下清晰可读。如果你的主要需求是阅读、导航、偶尔查信息，墨水屏手机是比 LCD/OLED 更健康的选择。</p>
-
-      <h4>适合谁？</h4>
-      <p>需要部分智能功能（地图、音乐、电子书）但想避免社交媒体的用户。不适合：需要微信、支付宝等国内应用的用户。</p>
-
-      <h4>局限性与潜在改进空间</h4>
-      <p><strong>App 生态受限</strong>：虽然基于 Android，但只能安装白名单 App。如果你需要的 App 不在白名单里（99% 的国内 App 都不在），这台手机就没用了。</p>
-      <p><strong>墨水屏的响应速度</strong>：墨水屏刷新慢，滑动、切换应用都有明显延迟。习惯了 iPhone 120Hz 屏幕的用户会觉得难以忍受。</p>
-      <p><strong>价格高</strong>：2400 元可以买一台不错的智能手机，或者 10 台国产功能机。Mudita 的溢价主要来自「理念」，而不是性能。</p>
-    `
-  },
-  {
-    id: 306,
-    brand: "Hisense",
-    brand_cn: "海信",
-    model: "A9",
-    category: "phone",
-    category_cn: "手机",
-    price_cny: "2800",
-    price_usd: "$395",
-    screen_size: 6.1,
-    image: "assets/images/store/hisense_a9.png",
-    badge: null,
-    url: "https://www.hisense.com/",
-    specs: {
-      "屏幕": "6.1 英寸 + 5.8 英寸双屏",
-      "前屏": "墨水屏",
-      "后屏": "彩色 AMOLED"
-    },
-    description: `
-      <h4>双屏设计的最佳实践</h4>
-      <p>海信 A9 是一台<strong>双屏手机</strong>——正面是 6.1 英寸墨水屏（护眼、省电），背面是 5.8 英寸彩色 AMOLED 屏（鲜艳、流畅）。你可以根据使用场景切换：看书用墨水屏，刷微信用彩色屏。这是目前最聪明的墨水屏手机设计。</p>
-
-      <h4>两块屏幕，最佳选择</h4>
-      <p>不用在「护眼」和「可用性」之间妥协——需要阅读时翻到墨水屏，需要看视频、拍照时翻到彩色屏。这种灵活性是单屏墨水屏手机做不到的。</p>
-
-      <h4>海信的品牌保障</h4>
-      <p>海信是大厂，售后网点多、品控相对靠谱。相比大我这种小品牌，海信的产品更让人放心。</p>
-
-      <h4>适合谁？</h4>
-      <p>想要墨水屏阅读体验、但又不想放弃彩色屏功能的用户。不适合：追求极致轻薄（双屏意味着更厚更重）、预算有限的用户。</p>
-
-      <h4>局限性与潜在改进空间</h4>
-      <p><strong>厚重</strong>：双屏设计意味着手机更厚、更重。如果你习惯了现代轻薄手机，A9 的手感会让你不适应。</p>
-      <p><strong>背面屏幕容易误触</strong>：背面的彩色屏在你握持手机时很容易被误触，导致意外操作。这是双屏手机的通病。</p>
-      <p><strong>电池续航的矛盾</strong>：如果你主要用彩色屏，那墨水屏就是摆设，还不如买普通手机；如果你主要用墨水屏，那为什么要为背面的彩色屏买单？双屏设计的实用性存疑。</p>
-      <p><strong>价格偏高</strong>：2800 元的价格，已经可以买一台不错的旗舰智能手机。海信 A9 的溢价主要来自双屏设计，而不是性能。</p>
-    `
-  },
-  {
-    id: 308,
-    brand: "Nothing",
-    brand_cn: "Nothing",
-    model: "Phone (3a)",
-    category: "phone",
-    category_cn: "手机",
-    price_cny: "2200",
-    price_usd: "$329",
-    screen_size: 6.5,
-    image: "assets/images/store/nothing_phone_3a.webp",
-    badge: null,
-    url: "https://www.nothing.tech/",
-    specs: {
-      "屏幕": "6.5 英寸 OLED",
-      "芯片": "天玑 7200",
-      "特色": "Glyph 灯效界面"
-    },
-    description: `
-      <h4>中端价位的设计标杆</h4>
-      <p>Nothing Phone (3a) 是 Nothing 的中端产品——保留了标志性的 Glyph 灯效背板、透明设计、Nothing OS 的独特体验，但用更便宜的芯片（天玑 7200）把价格拉到 2200 元。如果你想要 Nothing 的设计但预算有限，这是最佳选择。</p>
-
-      <h4>Glyph 灯效的实用性</h4>
-      <p>背面的 LED 灯带不只是装饰——可以显示通知、来电、充电状态、甚至音乐节奏。这种<strong>「不用翻开手机就能知道发生了什么」</strong>的设计，比传统的息屏显示更优雅。</p>
-
-      <h4>Nothing OS 的纯净体验</h4>
-      <p>接近原生 Android 的系统、没有广告、没有预装垃圾应用、界面设计简洁。如果你厌倦了国产 UI 的臃肿，Nothing OS 会让你重新爱上 Android。</p>
-
-      <h4>适合谁？</h4>
-      <p>喜欢独特设计、需要中端性能、追求纯净系统体验的用户。不适合：需要顶级性能（游戏玩家）、需要最强拍照、需要国内应用生态优化的用户。</p>
-
-      <h4>局限性与潜在改进空间</h4>
-      <p><strong>天玑 7200 性能一般</strong>：日常使用没问题，但玩《原神》这类大型游戏会卡顿。如果你是性能党，多花钱买旗舰机更合适。</p>
-      <p><strong>拍照水平中规中矩</strong>：虽然有 5000 万主摄，但算法优化一般，成片质量比不上同价位的小米、OPPO。如果你在意拍照，这不是最佳选择。</p>
-      <p><strong>Glyph 灯效费电</strong>：虽然酷炫，但频繁使用 Glyph 灯效会明显增加耗电。如果你想要长续航，需要克制使用这个功能。</p>
-      <p><strong>国内软件适配问题</strong>：Nothing OS 基于原生 Android，有些国内应用（如微信、支付宝）的推送通知可能不及时，需要手动调整权限。</p>
+      <p><strong>价格偏高</strong>：1699 元的价格已经可以买一台不错的 Android 手机。如果你只是想要一台纯粹的阅读器，Kindle Paperwhite（999 元）或 <strong>XTEINK X4</strong>（260 元）性价比更高。</p>
+      <p><strong>6.13 英寸的尴尬</strong>：比手机大、比阅读器小。看 PDF 会觉得屏幕太小需要频繁缩放，但又没有 7 英寸阅读器那么舒服。这个尺寸是便携性和可读性的妥协。</p>
+      <p><strong>开放系统的诱惑</strong>：虽然能装 App 是优势，但也意味着更多干扰。如果你容易分心，可能会发现自己在墨水屏上刷微博、看抖音——这就失去了「专注阅读」的初衷。</p>
+      <p><strong>续航不如传统阅读器</strong>：Android 系统 + 后台 App 意味着耗电量比 Kindle 高很多。虽然官方宣称数周续航，但如果你频繁使用 App、联网，可能几天就要充电。</p>
+      <p><strong>没有通话功能</strong>：虽然长得像手机，但 Palma 2 Pro 不能打电话、不能插 SIM 卡。如果你想要一台「能打电话的墨水屏设备」，目前市场上没有完美方案。</p>
     `
   },
   {
@@ -1146,54 +1098,6 @@ const products = [
       <p><strong>只有黑白</strong>：墨水屏意味着没有彩色笔记、没有彩色标注。如果你习惯用不同颜色的笔做标记（如康奈尔笔记法、思维导图），这会是个限制。iPad + Apple Pencil 在这方面更灵活。</p>
       <p><strong>软件生态有限</strong>：Supernote 的系统相对封闭，不能安装第三方 App（如 Notability、GoodNotes）。如果你需要更丰富的功能（如 OCR 手写识别、录音同步），iPad 是更好的选择。</p>
       <p><strong>屏幕容易刮花</strong>：类纸膜虽然提供了好的手感，但也意味着屏幕更容易被刮花。陶瓷笔尖长期使用会在屏幕上留下痕迹，虽然不影响功能，但强迫症用户会不舒服。</p>
-    `
-  },
-  {
-    id: 403,
-    brand: "reMarkable",
-    brand_cn: "reMarkable",
-    model: "Paper Pro Move",
-    category: "notebook",
-    category_cn: "手写笔记",
-    price_cny: "5800",
-    price_usd: "$799",
-    screen_size: 11.8,
-    image: "assets/images/store/remarkable_paper_pro_move.jpg",
-    badge: null,
-    url: "https://remarkable.com/",
-    specs: {
-      "屏幕": "11.8 英寸彩色墨水屏",
-      "分辨率": "2160×1620",
-      "手写延迟": "12ms",
-      "电池续航": "2 周",
-      "特色": "彩色显示、侧边快捷键"
-    },
-    description: `
-      <h4>彩色墨水屏笔记本的新标杆</h4>
-      <p>reMarkable Paper Pro Move 是 reMarkable 的首款<strong>彩色墨水屏笔记本</strong>——11.8 英寸大屏、12ms 手写延迟、支持彩色标注和彩色 PDF。如果你一直想要一台能显示彩色的电子笔记本，但又不想要 iPad 的蓝光刺激，这是目前最好的选择。</p>
-
-      <h4>彩色墨水屏的意义</h4>
-      <p>终于可以在墨水屏上<strong>用彩色笔做标注、查看彩色 PDF、看彩色图表</strong>了。虽然色彩饱和度不如 iPad，但对于笔记场景来说（强调不同内容、区分章节、标记重点），这个彩色水平已经够用。</p>
-
-      <h4>11.8 英寸接近 A4</h4>
-      <p>11.8 英寸的屏幕接近 A4 纸张大小，可以完整显示 PDF 文档、不用频繁缩放。对于学术阅读、论文批注、大量笔记的场景，这个尺寸是完美的。</p>
-
-      <h4>侧边快捷键设计</h4>
-      <p>Paper Pro Move 增加了侧边快捷键，可以快速切换工具（笔、橡皮、高亮）、翻页、撤销。这种<strong>单手操作</strong>的设计对于手写体验提升很大——不用频繁点屏幕切换工具。</p>
-
-      <h4>reMarkable 的软件生态</h4>
-      <p>reMarkable 的系统极简、专注，没有社交媒体、没有游戏、甚至没有浏览器。这是一台<strong>「只为手写和阅读设计」</strong>的设备，如果你需要专注工具，这种「减法设计」反而是优势。</p>
-
-      <h4>适合谁？</h4>
-      <p>需要大量手写笔记、想要彩色标注功能、愿意为专注体验付费的用户（学术研究、律师、医生）。不适合：预算有限、需要多任务处理、想要完整平板功能的人（买 iPad 更合适）。</p>
-
-      <h4>局限性与潜在改进空间</h4>
-      <p><strong>价格极高</strong>：5800 元的价格几乎是 Supernote Nomad 的两倍、是 iPad Air 的 1.5 倍。reMarkable 的溢价主要来自彩色墨水屏技术和品牌溢价，性价比不高。</p>
-      <p><strong>彩色效果依然有限</strong>：虽然支持彩色，但墨水屏的色彩饱和度远不如 LCD。如果你期待的是 iPad 那样鲜艳的色彩，会失望。彩色墨水屏更像是「淡淡的水彩」而不是「油画」。</p>
-      <p><strong>手写延迟比 Supernote 慢</strong>：12ms 的延迟虽然已经很好，但依然比 Supernote 的 7ms 慢。对于手写体验非常敏感的用户，这个差距能感觉到。</p>
-      <p><strong>软件生态封闭</strong>：reMarkable 的系统非常封闭，不能安装第三方 App、不能浏览网页、甚至连基础的文件管理都很有限。如果你需要灵活性，这会让你抓狂。</p>
-      <p><strong>电池续航缩短</strong>：彩色墨水屏的耗电量比黑白屏高，虽然官方宣称 2 周续航，但实际使用（频繁手写、彩色模式）可能只有 1 周左右。</p>
-      <p><strong>需要订阅服务</strong>：reMarkable 的云同步、OCR 识别等高级功能需要订阅 Connect 服务（每月 $2.99）。虽然不贵，但长期算下来也是一笔开支。</p>
     `
   }
 ];
@@ -1256,6 +1160,10 @@ function renderSingleProduct(p) {
   });
 }
 
+// Gallery state
+let currentGalleryIndex = 0;
+let currentGallery = [];
+
 // Open product modal
 function openProductModal(p) {
   document.getElementById('modalBrand').textContent = p.brand + (p.brand_cn !== p.brand ? ' ' + p.brand_cn : '');
@@ -1264,9 +1172,18 @@ function openProductModal(p) {
   document.getElementById('modalPrice').textContent = `¥${p.price_cny}`;
   document.getElementById('modalDescription').innerHTML = p.description;
 
-  // Image
+  // Image or Gallery
   const imageSection = document.getElementById('modalImageSection');
-  imageSection.innerHTML = `<img src="${p.image}" alt="${p.model}">`;
+  if (p.gallery && p.gallery.length > 0) {
+    // Multi-image gallery
+    currentGallery = p.gallery;
+    currentGalleryIndex = 0;
+    renderGallery();
+  } else {
+    // Single image
+    currentGallery = [];
+    imageSection.innerHTML = `<img src="${p.image}" alt="${p.model}">`;
+  }
 
   // Specs
   if (p.specs) {
@@ -1306,6 +1223,52 @@ function openProductModal(p) {
   }
 
   document.getElementById('modalOverlay').classList.add('active');
+
+  // Reset scroll position to top when opening a new modal
+  const modal = document.querySelector('.modal');
+  if (modal) {
+    modal.scrollTop = 0;
+  }
+}
+
+// Render gallery
+function renderGallery() {
+  const imageSection = document.getElementById('modalImageSection');
+
+  let thumbsHTML = '';
+  currentGallery.forEach((img, idx) => {
+    const activeClass = idx === currentGalleryIndex ? 'active' : '';
+    thumbsHTML += `<div class="modal-gallery-thumb ${activeClass}" onclick="changeGalleryImage(${idx})"><img src="${img}" alt="图片${idx + 1}"></div>`;
+  });
+
+  const navHTML = currentGallery.length > 1 ? `
+    <div class="modal-gallery-nav prev" onclick="prevGalleryImage()">‹</div>
+    <div class="modal-gallery-nav next" onclick="nextGalleryImage()">›</div>
+  ` : '';
+
+  imageSection.innerHTML = `
+    <div class="modal-gallery-main">
+      ${navHTML}
+      <img src="${currentGallery[currentGalleryIndex]}" alt="产品图片">
+    </div>
+    ${currentGallery.length > 1 ? `<div class="modal-gallery-thumbs">${thumbsHTML}</div>` : ''}
+  `;
+}
+
+// Gallery navigation
+function changeGalleryImage(index) {
+  currentGalleryIndex = index;
+  renderGallery();
+}
+
+function nextGalleryImage() {
+  currentGalleryIndex = (currentGalleryIndex + 1) % currentGallery.length;
+  renderGallery();
+}
+
+function prevGalleryImage() {
+  currentGalleryIndex = (currentGalleryIndex - 1 + currentGallery.length) % currentGallery.length;
+  renderGallery();
 }
 
 // Modal close
