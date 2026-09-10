@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#edf0f2" />
+    <meta name="description" content="Customize your OBOOK5 case finish, front plate, and button colors." />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>Make your OBOOK5</title>
+    <script type="module" crossorigin src="./assets/index-Cr8_wagl.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/three-CDXOc2O8.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BRaYIMvF.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <h1>Make your OBOOK5</h1>
+    </header>
+
+    <main class="workbench">
+      <section class="stage-section" aria-label="3D device viewer">
+        <div id="viewer" class="viewer"><div id="loading" class="loading" role="status"><span class="loader"></span>Loading…</div></div>
+        <div class="stage-bottom">
+          <div class="view-tools" role="group" aria-label="Model views">
+            <button class="icon-button" id="rotate" aria-label="Start auto-rotation" aria-pressed="false" title="Auto-rotate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 8a7 7 0 0 1 12-2l2 3M4 15l2 3a7 7 0 0 0 12-2"/></svg></button>
+            <span class="tool-divider"></span>
+            <button class="view-button" id="pan" aria-pressed="false" title="Drag up or down">Pan</button>
+            <button class="view-button" data-view="front" aria-pressed="false">Front</button>
+            <button class="view-button" data-view="back" aria-pressed="false">Back</button>
+            <button class="view-button" data-view="side" aria-pressed="false">Side</button>
+            <button class="view-button" data-view="bottom" aria-pressed="false">Ports</button>
+            <span class="tool-divider"></span>
+            <button class="icon-button" id="reset" aria-label="Reset view" title="Reset view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6"/></svg></button>
+          </div>
+          <div class="zoom-tools" role="group" aria-label="Zoom"><button class="icon-button" id="zoom-out" aria-label="Zoom out">−</button><button class="icon-button" id="zoom-in" aria-label="Zoom in">+</button></div>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <fieldset class="finish-selector"><legend>Case finish</legend>
+          <label class="finish-option"><input type="radio" name="finish" value="glossy" aria-label="Glossy polycarbonate" checked /><span class="material-sample plastic-sample" id="plastic-sample"></span><span class="finish-text"><strong>Glossy polycarbonate</strong></span><span class="radio-indicator"></span></label>
+          <label class="finish-option"><input type="radio" name="finish" value="matte" aria-label="Matte polycarbonate" /><span class="material-sample plastic-sample matte-sample" id="matte-sample"></span><span class="finish-text"><strong>Matte polycarbonate</strong></span><span class="radio-indicator"></span></label>
+          <label class="finish-option"><input type="radio" name="finish" value="aluminum" /><span class="material-sample aluminum-sample" id="aluminum-sample"></span><span class="finish-text"><strong>Brushed aluminum</strong></span><span class="radio-indicator"></span></label>
+        </fieldset>
+        <fieldset class="color-selector" id="case-colors"><legend>Case color <span id="color-name">Teal</span></legend><div id="color-options" class="color-options"></div></fieldset>
+        <fieldset class="color-selector front-selector"><legend>Front plate <span id="front-color-name">Black</span></legend><div class="color-options"><label class="color-choice" title="Black"><input type="radio" name="front-color" value="black" aria-label="Black" checked /><span class="color-dot" style="background-color:#252729"></span></label><label class="color-choice" title="White"><input type="radio" name="front-color" value="white" aria-label="White" /><span class="color-dot" style="background-color:#ededeb"></span></label><label class="color-choice" title="Light gray"><input type="radio" name="front-color" value="gray" aria-label="Light gray" /><span class="color-dot" style="background-color:#bfc3c5"></span></label></div></fieldset>
+        <fieldset class="color-selector" id="button-colors"><legend>Button color <span id="button-color-name">Original orange</span></legend><div id="button-options" class="color-options"></div></fieldset>
+      </aside>
+    </main>
+    <div id="announcement" class="sr-only" role="status" aria-live="polite"></div>
+  </body>
+</html>

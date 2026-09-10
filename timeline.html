@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>墨水屏大事件时间轴 - apov</title>
+
+    <!-- Open Graph / 微信分享 -->
+    <meta property="og:title" content="墨水屏大事件时间轴 - apov">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://apov.sg/assets/images/icons/android-chrome-512x512.png">
+    <meta property="og:url" content="https://apov.sg/timeline.html">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --cream: #FBF7F0;
+            --warm-white: #FEFCF8;
+            --charcoal: #2C2C2C;
+            --warm-grey: #8B8680;
+            --accent-gold: #D4A574;
+            --deep-brown: #4A3728;
+            --soft-shadow: rgba(44, 44, 44, 0.08);
+            --border-light: rgba(139, 134, 128, 0.15);
+            --sony-blue: #0066CC;
+            --kindle-orange: #E47911;
+            --china-red: #E74C3C;
+            --tech-green: #27AE60;
+            --commercial-purple: #8E44AD;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
+            line-height: 1.6;
+            font-weight: 300;
+            overflow-x: hidden;
+        }
+
+        .grain-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image:
+                radial-gradient(circle at 20% 80%, transparent 50%, rgba(44, 44, 44, 0.1) 100%),
+                radial-gradient(circle at 80% 20%, transparent 50%, rgba(44, 44, 44, 0.1) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--warm-grey);
+            font-weight: 400;
+            margin-top: 8px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--warm-grey);
+            text-decoration: none;
+            margin-bottom: 25px;
+            padding: 6px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .back-link:hover {
+            color: var(--accent-gold);
+            border-color: var(--accent-gold);
+        }
+
+        /* 图例 */
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 40px;
+            padding: 12px 16px;
+            background: var(--warm-white);
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-sony { background: var(--sony-blue); }
+        .dot-kindle { background: var(--kindle-orange); }
+        .dot-china { background: var(--china-red); }
+        .dot-tech { background: var(--tech-green); }
+        .dot-commercial { background: var(--commercial-purple); }
+
+        /* 时间轴布局 - 两区域 */
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+            margin-left: 400px; /* 左侧段状事件区域 */
+            margin-right: 60px; /* 右侧留白 */
+            min-height: 2250px;
+        }
+
+        /* 中央垂直时间线 */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-light);
+        }
+
+        /* 点状事件 - 中间区域 */
+        .timeline-event {
+            position: absolute;
+            padding-left: 30px;
+            display: flex;
+            align-items: center;
+            min-height: 22px;
+            left: 0;
+            width: 520px;
+        }
+
+        /* 事件文字错开 - 避免重叠 */
+        .timeline-event.offset-right {
+            padding-left: 50px;
+        }
+
+        .timeline-event.offset-far-right {
+            padding-left: 70px;
+        }
+
+        /* 段状事件 - 左侧区域，改为彩色竖线 */
+        .timeline-period {
+            position: absolute;
+            width: 5px;
+            border-radius: 2px;
+        }
+
+        /* 段状事件层级定位 - 多条竖线并列 */
+        .timeline-period.layer-1 {
+            left: -380px;
+        }
+
+        .timeline-period.layer-2 {
+            left: -320px;
+        }
+
+        .timeline-period.layer-3 {
+            left: -260px;
+        }
+
+        .timeline-period.layer-4 {
+            left: -200px;
+        }
+
+        .timeline-period.layer-5 {
+            left: -140px;
+        }
+
+        .timeline-period.layer-6 {
+            left: -80px;
+        }
+
+        .timeline-period.layer-7 {
+            left: -20px;
+        }
+
+        /* 段状事件颜色 */
+        .timeline-period.sony {
+            background: var(--sony-blue);
+        }
+
+        .timeline-period.kindle {
+            background: var(--kindle-orange);
+        }
+
+        .timeline-period.china {
+            background: var(--china-red);
+        }
+
+        .timeline-period.commercial {
+            background: var(--commercial-purple);
+        }
+
+        .timeline-period.tech {
+            background: var(--tech-green);
+        }
+
+        /* 段状事件标签 */
+        .period-label {
+            position: absolute;
+            left: -70px;
+            top: 0;
+            width: 65px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+            transform-origin: left top;
+            white-space: nowrap;
+        }
+
+        .period-label-bottom {
+            position: absolute;
+            left: -70px;
+            bottom: 0;
+            width: 65px;
+            font-size: 0.7rem;
+            font-family: 'Playfair Display', serif;
+            line-height: 1.2;
+            font-weight: 500;
+        }
+
+        /* 标签颜色与线条颜色一致 */
+        .timeline-period.sony .period-label,
+        .timeline-period.sony .period-label-bottom {
+            color: var(--sony-blue);
+        }
+
+        .timeline-period.kindle .period-label,
+        .timeline-period.kindle .period-label-bottom {
+            color: var(--kindle-orange);
+        }
+
+        .timeline-period.china .period-label,
+        .timeline-period.china .period-label-bottom {
+            color: var(--china-red);
+        }
+
+        .timeline-period.commercial .period-label,
+        .timeline-period.commercial .period-label-bottom {
+            color: var(--commercial-purple);
+        }
+
+        .timeline-period.tech .period-label,
+        .timeline-period.tech .period-label-bottom {
+            color: var(--tech-green);
+        }
+
+        /* 段状事件悬停效果 */
+        .timeline-period:hover {
+            width: 8px;
+            margin-left: -1.5px;
+        }
+
+        /* 事件点 - 统一颜色 */
+        .event-dot {
+            position: absolute;
+            left: -3.5px;
+            top: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--charcoal);
+            border: 2px solid var(--charcoal);
+            z-index: 2;
+        }
+
+        .event-dot.milestone {
+            width: 11px;
+            height: 11px;
+            left: -5px;
+            top: 6px;
+            border-width: 2.5px;
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px var(--cream);
+        }
+
+        /* 事件内容 */
+        .event-content {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .event-year {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            color: var(--deep-brown);
+            min-width: 65px;
+            font-size: 0.8rem;
+        }
+
+        .event-text {
+            color: var(--charcoal);
+            flex: 1;
+        }
+
+        .event-text:hover {
+            color: var(--accent-gold);
+        }
+
+        /* 参考文献引用 */
+        .ref {
+            font-size: 0.65rem;
+            vertical-align: super;
+            color: var(--accent-gold);
+            margin-left: 3px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .ref:hover {
+            color: var(--deep-brown);
+            text-decoration: underline;
+        }
+
+        /* 事件可点击样式 */
+        .timeline-event {
+            cursor: pointer;
+        }
+
+        .timeline-event:hover .event-content {
+            background: rgba(212, 165, 116, 0.05);
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin: -6px -10px;
+        }
+
+        .timeline-period {
+            cursor: pointer;
+        }
+
+        /* 详情卡片 Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(44, 44, 44, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--warm-white);
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(44, 44, 44, 0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 2rem;
+            color: var(--warm-grey);
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--charcoal);
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--deep-brown);
+            margin-bottom: 10px;
+        }
+
+        .modal-time {
+            font-size: 1rem;
+            color: var(--warm-grey);
+            margin-bottom: 25px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .modal-description {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--charcoal);
+            margin-bottom: 20px;
+        }
+
+        .modal-tag {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .modal-tag.sony {
+            background: rgba(0, 102, 204, 0.15);
+            color: var(--sony-blue);
+        }
+
+        .modal-tag.kindle {
+            background: rgba(228, 121, 17, 0.15);
+            color: var(--kindle-orange);
+        }
+
+        .modal-tag.china {
+            background: rgba(231, 76, 60, 0.15);
+            color: var(--china-red);
+        }
+
+        .modal-tag.tech {
+            background: rgba(39, 174, 96, 0.15);
+            color: var(--tech-green);
+        }
+
+        .modal-tag.commercial {
+            background: rgba(142, 68, 173, 0.15);
+            color: var(--commercial-purple);
+        }
+
+        .modal-reference {
+            font-size: 0.85rem;
+            color: var(--warm-grey);
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* 年代标记 */
+        .decade-marker {
+            position: absolute;
+            left: -100px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--deep-brown);
+        }
+
+        .decade-marker::after {
+            content: '';
+            position: absolute;
+            left: 98px;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background: var(--deep-brown);
+        }
+
+        /* 参考文献列表 */
+        .references {
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 2px solid var(--border-light);
+        }
+
+        .references-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--deep-brown);
+            margin-bottom: 30px;
+        }
+
+        .reference-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .reference-item {
+            margin-bottom: 16px;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            color: var(--charcoal);
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .reference-number {
+            position: absolute;
+            left: 0;
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        .reference-item a {
+            color: var(--accent-gold);
+            text-decoration: none;
+        }
+
+        .reference-item a:hover {
+            text-decoration: underline;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .timeline {
+                margin-left: 180px;
+                margin-right: 0;
+            }
+
+            .timeline-period.layer-1 {
+                left: -170px;
+            }
+
+            .timeline-period.layer-2 {
+                left: -140px;
+            }
+
+            .timeline-period.layer-3 {
+                left: -110px;
+            }
+
+            .timeline-period.layer-4 {
+                left: -80px;
+            }
+
+            .timeline-period.layer-5 {
+                left: -50px;
+            }
+
+            .timeline-period.layer-6 {
+                left: -20px;
+            }
+
+            .timeline-period.layer-7 {
+                left: -10px;
+            }
+
+            .period-label {
+                font-size: 0.65rem;
+                left: -65px;
+            }
+
+            .period-label-bottom {
+                font-size: 0.6rem;
+                left: -65px;
+            }
+
+            .timeline-image {
+                display: none; /* 平板隐藏图片 */
+            }
+
+            .event-content {
+                width: 100%;
+            }
+
+            .timeline-event.offset-right {
+                padding-left: 40px;
+            }
+
+            .timeline-event.offset-far-right {
+                padding-left: 50px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .timeline {
+                margin-left: 60px;
+                margin-right: 20px;
+            }
+
+            .timeline-period {
+                display: none; /* 移动端隐藏段状事件 */
+            }
+
+            .event-year {
+                min-width: 50px;
+                font-size: 0.7rem;
+            }
+
+            .event-content {
+                font-size: 0.75rem;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .decade-marker {
+                left: -60px;
+                font-size: 0.95rem;
+            }
+
+            .decade-marker::after {
+                left: 58px;
+            }
+
+            .legend {
+                gap: 10px;
+            }
+
+            .legend-item {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grain-overlay"></div>
+
+    <div class="container">
+        <a href="index.html" class="back-link">← 返回首页</a>
+
+        <div class="header">
+            <h1 class="main-title">墨水屏大事件时间轴</h1>
+            <p class="subtitle">从 Sony 的先驱，到 Kindle 的辉煌，再到中国品牌的崛起</p>
+        </div>
+
+        <!-- 图例 -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot dot-sony"></div>
+                <span>Sony</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot dot-kindle"></div>
+                <span>Kindle</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot dot-china"></div>
+                <span>中国品牌</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot dot-tech"></div>
+                <span>技术创新</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot dot-commercial"></div>
+                <span>商业应用</span>
+            </div>
+        </div>
+
+        <!-- 时间轴 -->
+        <!-- 起始点：2004.4，比例尺：100px/年 -->
+        <div class="timeline">
+
+            <!-- 段状事件 - 彩色竖线 -->
+            <!-- Layer 1: Sony 时代 -->
+            <div class="timeline-period sony layer-1" style="top: 0px; height: 983px;">
+                <div class="period-label" style="top: 10px;">Sony</div>
+                <div class="period-label-bottom" style="bottom: 10px;">04-14</div>
+            </div>
+
+            <!-- Layer 2: ESL 商业化 -->
+            <div class="timeline-period commercial layer-2" style="top: 367px; height: 1783px;">
+                <div class="period-label" style="top: 10px;">ESL</div>
+                <div class="period-label-bottom" style="bottom: 10px;">08-</div>
+            </div>
+
+            <!-- Layer 3: 汉王 -->
+            <div class="timeline-period china layer-3" style="top: 467px; height: 400px;">
+                <div class="period-label" style="top: 10px;">汉王</div>
+                <div class="period-label-bottom" style="bottom: 10px;">09-13</div>
+            </div>
+
+            <!-- Layer 4: Kindle 中国 -->
+            <div class="timeline-period kindle layer-4" style="top: 917px; height: 1128px;">
+                <div class="period-label" style="top: 10px;">Kindle</div>
+                <div class="period-label-bottom" style="bottom: 10px;">13-24</div>
+            </div>
+
+            <!-- Layer 5: 手写板 -->
+            <div class="timeline-period tech layer-5" style="top: 1287px; height: 863px;">
+                <div class="period-label" style="top: 10px;">手写板</div>
+                <div class="period-label-bottom" style="bottom: 10px;">17-</div>
+            </div>
+
+            <!-- Layer 6: 中国品牌 -->
+            <div class="timeline-period china layer-6" style="top: 1167px; height: 983px;">
+                <div class="period-label" style="top: 10px;">中国品牌</div>
+                <div class="period-label-bottom" style="bottom: 10px;">16-</div>
+            </div>
+
+            <!-- Layer 1 下方: 彩色屏 -->
+            <div class="timeline-period tech layer-1" style="top: 1575px; height: 575px;">
+                <div class="period-label" style="top: 10px;">彩色屏</div>
+                <div class="period-label-bottom" style="bottom: 10px;">20-</div>
+            </div>
+
+            <div class="decade-marker" style="top: 0px;">2000s</div>
+
+            <!-- 2004.4 = 0px -->
+            <div class="timeline-event" style="top: 0px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2004.4</span>
+                    <span class="event-text">Sony Librie 发布 - 全球首款 E Ink 电子阅读器<a href="#ref1" class="ref">[1]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder sony">S</div>
+                        <div class="image-caption">Sony Librie</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2006.9 = 242px -->
+            <div class="timeline-event" style="top: 242px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2006.9</span>
+                    <span class="event-text">Sony Reader PRS-500 在北美上市<a href="#ref2" class="ref">[2]</a></span>
+                </div>
+            </div>
+
+            <!-- 2007.11 = 358px -->
+            <div class="timeline-event" style="top: 358px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2007.11</span>
+                    <span class="event-text">Amazon Kindle 发布，5.5 小时售罄<a href="#ref4" class="ref">[4]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder kindle">K</div>
+                        <div class="image-caption">Kindle 1代</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2007 = 333px -->
+            <div class="timeline-event offset-right" style="top: 333px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2007</span>
+                    <span class="event-text">元太科技收购飞利浦电子纸部门，成为 E Ink 大股东<a href="#ref3" class="ref">[3]</a></span>
+                </div>
+            </div>
+
+            <!-- 2008 = 367px -->
+            <div class="timeline-event offset-right" style="top: 367px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2008</span>
+                    <span class="event-text">E Ink 推出 ESL（电子货架标签）解决方案，开启商业应用<a href="#ref5" class="ref">[5]</a></span>
+                </div>
+            </div>
+
+            <!-- 2009 = 467px -->
+            <div class="timeline-event" style="top: 467px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2009</span>
+                    <span class="event-text">汉王电子书在中国市场崛起</span>
+                </div>
+            </div>
+
+            <!-- 2009 同年 = 493px -->
+            <div class="timeline-event offset-right" style="top: 493px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2009</span>
+                    <span class="event-text">元太科技完全收购 E Ink，成为全球电子纸龙头<a href="#ref6" class="ref">[6]</a></span>
+                </div>
+            </div>
+
+            <div class="decade-marker" style="top: 567px;">2010s</div>
+
+            <!-- 2010 = 567px -->
+            <div class="timeline-event" style="top: 590px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2010</span>
+                    <span class="event-text">汉王占据中国电子阅读器市场 90% 份额<a href="#ref20" class="ref">[20]</a></span>
+                </div>
+            </div>
+
+            <!-- 2010 同年 = 616px -->
+            <div class="timeline-event offset-right" style="top: 616px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2010</span>
+                    <span class="event-text">元太收购 SiPix，进一步巩固电子纸技术优势<a href="#ref7" class="ref">[7]</a></span>
+                </div>
+            </div>
+
+            <!-- 2011.9 = 742px -->
+            <div class="timeline-event" style="top: 742px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2011.9</span>
+                    <span class="event-text">Kindle Touch 和 Kindle Fire 发布</span>
+                </div>
+            </div>
+
+            <!-- 2012 = 767px -->
+            <div class="timeline-event" style="top: 767px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2012</span>
+                    <span class="event-text">法国零售商 Casino 开始大规模部署 ESL</span>
+                </div>
+            </div>
+
+            <!-- 2013 = 867px -->
+            <div class="timeline-event" style="top: 867px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2013</span>
+                    <span class="event-text">Remarkable 成立，开创手写电子纸板概念</span>
+                </div>
+            </div>
+
+            <!-- 2013 同年另一事件 -->
+            <div class="timeline-event offset-right" style="top: 893px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2013</span>
+                    <span class="event-text">文石（ONYX）推出首款 Android 电子阅读器</span>
+                </div>
+            </div>
+
+            <!-- 2013.6 = 917px -->
+            <div class="timeline-event" style="top: 919px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2013.6</span>
+                    <span class="event-text">Kindle 正式进入中国市场<a href="#ref8" class="ref">[8]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder kindle">K</div>
+                        <div class="image-caption">Kindle 进入中国</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2014.2 = 983px -->
+            <div class="timeline-event" style="top: 983px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2014.2</span>
+                    <span class="event-text">Sony 正式退出电子阅读器市场<a href="#ref9" class="ref">[9]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder sony">S</div>
+                        <div class="image-caption">Sony 退出</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2014 同年 = 1009px -->
+            <div class="timeline-event offset-right" style="top: 1009px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2014</span>
+                    <span class="event-text">沃尔玛开始在美国门店测试 ESL</span>
+                </div>
+            </div>
+
+            <!-- 2015 = 1067px -->
+            <div class="timeline-event" style="top: 1067px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2015</span>
+                    <span class="event-text">家乐福在法国全面部署 ESL，开启欧洲零售数字化浪潮</span>
+                </div>
+            </div>
+
+            <!-- 2016 = 1167px -->
+            <div class="timeline-event" style="top: 1167px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2016</span>
+                    <span class="event-text">文石 BOOX Max 大屏阅读器上市</span>
+                </div>
+            </div>
+
+            <!-- 2016 同年 = 1193px -->
+            <div class="timeline-event offset-right" style="top: 1193px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2016</span>
+                    <span class="event-text">清越科技（DES）成立，研发国产彩色电子纸技术</span>
+                </div>
+            </div>
+
+            <!-- 2017 = 1267px -->
+            <div class="timeline-event" style="top: 1267px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2017</span>
+                    <span class="event-text">掌阅推出 iReader 硬件，软硬件一体化</span>
+                </div>
+            </div>
+
+            <!-- 2017.3 = 1287px -->
+            <div class="timeline-event" style="top: 1293px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2017.3</span>
+                    <span class="event-text">Remarkable 1 正式发布，带动手写电子纸板热潮<a href="#ref10" class="ref">[10]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder tech">R</div>
+                        <div class="image-caption">Remarkable 1</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2018 = 1367px -->
+            <div class="timeline-event" style="top: 1367px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2018</span>
+                    <span class="event-text">盒马鲜生全面启用 ESL，引领中国新零售数字化</span>
+                </div>
+            </div>
+
+            <!-- 2018 同年 = 1393px -->
+            <div class="timeline-event offset-right" style="top: 1393px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2018</span>
+                    <span class="event-text">永辉超市、沃尔玛中国大规模部署 ESL</span>
+                </div>
+            </div>
+
+            <!-- 2019 = 1467px -->
+            <div class="timeline-event" style="top: 1467px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2019</span>
+                    <span class="event-text">科大讯飞推出智能办公本，主打 AI 手写识别</span>
+                </div>
+            </div>
+
+            <!-- 2019.5 = 1508px -->
+            <div class="timeline-event" style="top: 1493px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2019.5</span>
+                    <span class="event-text">E Ink 推出 ACeP（Advanced Color ePaper）全彩技术<a href="#ref11" class="ref">[11]</a></span>
+                </div>
+            </div>
+
+            <!-- 2019 同年 = 1519px -->
+            <div class="timeline-event offset-right" style="top: 1519px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2019</span>
+                    <span class="event-text">清越科技推出 DES 彩色电子纸样品</span>
+                </div>
+            </div>
+
+            <div class="decade-marker" style="top: 1567px;">2020s</div>
+
+            <!-- 2020.1 = 1575px -->
+            <div class="timeline-event" style="top: 1590px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2020.1</span>
+                    <span class="event-text">E Ink Kaleido 彩色墨水屏量产（CES 发布）<a href="#ref12" class="ref">[12]</a></span>
+                </div>
+            </div>
+
+            <!-- 2020.4 = 1600px -->
+            <div class="timeline-event" style="top: 1616px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2020.4</span>
+                    <span class="event-text">海信推出彩色墨水屏手机 A5 系列</span>
+                </div>
+            </div>
+
+            <!-- 2020 同年 = 1642px -->
+            <div class="timeline-event offset-right" style="top: 1642px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2020</span>
+                    <span class="event-text">京东方（BOE）发布电子纸显示技术，进入电子纸市场</span>
+                </div>
+            </div>
+
+            <!-- 2021 = 1667px -->
+            <div class="timeline-event" style="top: 1667px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2021</span>
+                    <span class="event-text">文石、掌阅推出彩色墨水屏阅读器</span>
+                </div>
+            </div>
+
+            <!-- 2021 同年 = 1693px -->
+            <div class="timeline-event offset-right" style="top: 1693px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2021</span>
+                    <span class="event-text">ESL 全球市场规模突破 10 亿美元，年增长率超 20%<a href="#ref19" class="ref">[19]</a></span>
+                </div>
+            </div>
+
+            <!-- 2021.3 = 1692px -->
+            <div class="timeline-event" style="top: 1719px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2021.3</span>
+                    <span class="event-text">Remarkable 2 发布，超薄设计引领手写板新标准<a href="#ref13" class="ref">[13]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder tech">R</div>
+                        <div class="image-caption">Remarkable 2</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2022 = 1767px -->
+            <div class="timeline-event" style="top: 1767px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2022</span>
+                    <span class="event-text">墨案、小米有品等品牌涌入市场</span>
+                </div>
+            </div>
+
+            <!-- 2022.5 = 1808px -->
+            <div class="timeline-event" style="top: 1793px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2022.5</span>
+                    <span class="event-text">E Ink Gallery 3 彩色屏推出，色彩提升显著<a href="#ref15" class="ref">[15]</a></span>
+                </div>
+            </div>
+
+            <!-- 2022.6.2 = 1818px -->
+            <div class="timeline-event" style="top: 1819px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2022.6.2</span>
+                    <span class="event-text">Kindle 宣布一年后停止中国电子书店运营<a href="#ref14" class="ref">[14]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder kindle">K</div>
+                        <div class="image-caption">Kindle 退出中国</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2023 = 1867px -->
+            <div class="timeline-event" style="top: 1867px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2023</span>
+                    <span class="event-text">文石推出电子纸显示器 Mira 系列</span>
+                </div>
+            </div>
+
+            <!-- 2023 同年 = 1893px -->
+            <div class="timeline-event offset-right" style="top: 1893px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2023</span>
+                    <span class="event-text">中国 ESL 厂商汉朔、云里物里全球市场份额超 40%</span>
+                </div>
+            </div>
+
+            <!-- 2023.5 = 1908px -->
+            <div class="timeline-event" style="top: 1919px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2023.5</span>
+                    <span class="event-text">E Ink 推出 Kaleido 3 和 Carta 1300（SID Display Week）<a href="#ref16" class="ref">[16]</a></span>
+                </div>
+            </div>
+
+            <!-- 2023 同年 = 1945px -->
+            <div class="timeline-event offset-right" style="top: 1945px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2023</span>
+                    <span class="event-text">清越科技 DES 彩色电子纸开始小批量出货</span>
+                </div>
+            </div>
+
+            <!-- 2024 = 1967px -->
+            <div class="timeline-event" style="top: 1967px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2024</span>
+                    <span class="event-text">文石、掌阅在海外市场份额持续增长</span>
+                </div>
+            </div>
+
+            <!-- 2024 同年 = 1993px -->
+            <div class="timeline-event offset-right" style="top: 1993px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2024</span>
+                    <span class="event-text">彩色 ESL 在全球零售业广泛应用，提升动态营销效果</span>
+                </div>
+            </div>
+
+            <!-- 2024.5 = 2008px -->
+            <div class="timeline-event" style="top: 2019px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2024.5</span>
+                    <span class="event-text">E Ink 推出 Spectra 6 彩色技术，支持 60,000+ 色彩<a href="#ref17" class="ref">[17]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder tech">E</div>
+                        <div class="image-caption">Spectra 6</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2024.6.30 = 2045px -->
+            <div class="timeline-event" style="top: 2045px;">
+                <div class="event-dot milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2024.6.30</span>
+                    <span class="event-text">Kindle 中国电子书店正式关闭<a href="#ref18" class="ref">[18]</a></span>
+                </div>
+                <div class="timeline-image" style="top: 0px;">
+                    <div class="image-wrapper">
+                        <div class="event-placeholder kindle">K</div>
+                        <div class="image-caption">Kindle 停止运营</div>
+                        <div class="image-connector" style="width: 210px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2024 同年 = 2071px -->
+            <div class="timeline-event offset-right" style="top: 2071px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2024</span>
+                    <span class="event-text">Costco、Target 等美国零售巨头加速部署 ESL</span>
+                </div>
+            </div>
+
+            <!-- 2025 = 2097px -->
+            <div class="timeline-event" style="top: 2097px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2025</span>
+                    <span class="event-text">超便携墨水屏设备（如 Reink）成为新热点</span>
+                </div>
+            </div>
+
+            <!-- 2025 同年 = 2123px -->
+            <div class="timeline-event offset-right" style="top: 2123px;">
+                <div class="event-dot"></div>
+                <div class="event-content">
+                    <span class="event-year">2025</span>
+                    <span class="event-text">E Ink Gallery 4 预计发布，刷新速度和色彩进一步提升</span>
+                </div>
+            </div>
+
+            <!-- 2025+ = 2149px -->
+            <div class="timeline-event" style="top: 2149px;">
+                <div class="event-dot commercial milestone"></div>
+                <div class="event-content">
+                    <span class="event-year">2025+</span>
+                    <span class="event-text">元太期待 Spectra 大彩屏带动第二波商用爆发（广告牌、公交站牌、机场指示等）</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 参考文献 -->
+        <div class="references">
+            <h2 class="references-title">参考文献</h2>
+            <ol class="reference-list">
+                <li class="reference-item" id="ref1">
+                    <span class="reference-number">[1]</span>
+                    Sony Corporation. (2004). "Sony Librie: World's First E Ink eBook Reader". Press Release.
+                </li>
+                <li class="reference-item" id="ref2">
+                    <span class="reference-number">[2]</span>
+                    Sony Corporation. (2006). "Sony Reader PRS-500 Launched in North America". <a href="https://www.sony.com" target="_blank">Sony Official</a>
+                </li>
+                <li class="reference-item" id="ref3">
+                    <span class="reference-number">[3]</span>
+                    E Ink Holdings. (2007). "Prime View International Acquires Philips Electrophoretic Display Business". Company Announcement.
+                </li>
+                <li class="reference-item" id="ref4">
+                    <span class="reference-number">[4]</span>
+                    Amazon.com. (2007). "Introducing Amazon Kindle". <a href="https://www.amazon.com/b?node=16571048011" target="_blank">Amazon Press Release</a>
+                </li>
+                <li class="reference-item" id="ref5">
+                    <span class="reference-number">[5]</span>
+                    E Ink Corporation. (2008). "E Ink Launches Electronic Shelf Label Solutions". Technical Documentation.
+                </li>
+                <li class="reference-item" id="ref6">
+                    <span class="reference-number">[6]</span>
+                    E Ink Holdings. (2009). "Prime View International Completes Acquisition of E Ink Corporation". <a href="https://www.eink.com" target="_blank">E Ink Official</a>
+                </li>
+                <li class="reference-item" id="ref7">
+                    <span class="reference-number">[7]</span>
+                    E Ink Holdings. (2010). "E Ink Acquires SiPix Technology". Company Press Release.
+                </li>
+                <li class="reference-item" id="ref8">
+                    <span class="reference-number">[8]</span>
+                    Amazon.com. (2013). "Kindle Store Launches in China". <a href="https://press.aboutamazon.com" target="_blank">Amazon News</a>
+                </li>
+                <li class="reference-item" id="ref9">
+                    <span class="reference-number">[9]</span>
+                    Sony Corporation. (2014). "Sony to Exit eReader Market". Reuters, February 2014.
+                </li>
+                <li class="reference-item" id="ref10">
+                    <span class="reference-number">[10]</span>
+                    Remarkable. (2017). "Remarkable 1 Launch". <a href="https://remarkable.com" target="_blank">Remarkable Official</a>
+                </li>
+                <li class="reference-item" id="ref11">
+                    <span class="reference-number">[11]</span>
+                    E Ink Corporation. (2019). "E Ink Introduces ACeP Full-Color ePaper Technology". SID Display Week 2019.
+                </li>
+                <li class="reference-item" id="ref12">
+                    <span class="reference-number">[12]</span>
+                    E Ink Corporation. (2020). "E Ink Kaleido Color ePaper Technology". CES 2020. <a href="https://www.eink.com/kaleido.html" target="_blank">E Ink Kaleido</a>
+                </li>
+                <li class="reference-item" id="ref13">
+                    <span class="reference-number">[13]</span>
+                    Remarkable. (2021). "Introducing Remarkable 2". <a href="https://remarkable.com/store/remarkable-2" target="_blank">Remarkable 2</a>
+                </li>
+                <li class="reference-item" id="ref14">
+                    <span class="reference-number">[14]</span>
+                    Amazon.com. (2022). "Amazon Kindle China Service Adjustment Notice". June 2, 2022.
+                </li>
+                <li class="reference-item" id="ref15">
+                    <span class="reference-number">[15]</span>
+                    E Ink Corporation. (2022). "E Ink Gallery 3 Color ePaper". SID Display Week 2022.
+                </li>
+                <li class="reference-item" id="ref16">
+                    <span class="reference-number">[16]</span>
+                    E Ink Corporation. (2023). "E Ink Kaleido 3 and Carta 1300". <a href="https://www.eink.com" target="_blank">E Ink Technologies</a>
+                </li>
+                <li class="reference-item" id="ref17">
+                    <span class="reference-number">[17]</span>
+                    E Ink Corporation. (2024). "E Ink Spectra 6 Advanced Color ePaper". <a href="https://www.eink.com/spectra.html" target="_blank">E Ink Spectra</a>
+                </li>
+                <li class="reference-item" id="ref18">
+                    <span class="reference-number">[18]</span>
+                    Amazon.com. (2024). "Kindle China Store Closure". June 30, 2024.
+                </li>
+                <li class="reference-item" id="ref19">
+                    <span class="reference-number">[19]</span>
+                    IHS Markit. (2021). "Electronic Shelf Label Market Analysis Report". Industry Research.
+                </li>
+                <li class="reference-item" id="ref20">
+                    <span class="reference-number">[20]</span>
+                    Hanvon Technology. (2010). "Annual Report - Chinese eReader Market Leadership". Company Documentation.
+                </li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
