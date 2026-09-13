@@ -5,18 +5,18 @@
   <meta name="theme-color" content="#eef1f4" />
   <meta name="description" content="便携墨水屏正面尺寸比较，选择并排、机身对齐或屏幕对齐。" />
   <title>设备尺寸对比</title><link rel="icon" href="./favicon.svg" />
-  <script type="module" crossorigin src="./assets/compare-BdEv7IAp.js"></script>
+  <script type="module" crossorigin src="./assets/compare-DYAS6i0n.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-P2Xu9kJm.js">
-  <link rel="stylesheet" crossorigin href="./assets/compare-DMWSqG_C.css">
+  <link rel="stylesheet" crossorigin href="./assets/compare-CoMpq96G.css">
 </head>
 <body>
   <main>
     <section class="workbench" aria-label="等比例设备比较台">
-      <div class="stage-top"><button id="reset" class="reset" title="恢复默认设备与初始视图" aria-label="重置">↺</button><div class="render-selector" role="group" aria-label="显示方式"><button id="simulated" aria-pressed="true">机型模拟</button><button id="wireframe" aria-pressed="false">线框</button></div></div>
+      <div class="stage-top"><button id="reset" class="reset" title="随机两台设备" aria-label="随机两台设备">↺</button><div class="render-selector" role="group" aria-label="显示方式"><button id="simulated" aria-pressed="true">机型模拟</button><button id="wireframe" aria-pressed="false">线框</button></div></div>
       <div class="comparison-scene" id="comparison-scene"><div class="viewport" id="viewport"><svg id="stage" xmlns="http://www.w3.org/2000/svg" aria-label="设备尺寸比较"></svg><div id="empty" hidden>在列表中选择设备</div></div><aside id="comparison-sidebar" class="comparison-sidebar" aria-label="选择设备"><div id="layer-list"></div></aside></div>
-      <div class="stage-footer"><span id="scale-note">同一比例显示，非屏幕上的实物大小</span><div class="scale-bar"><i></i><span>20 mm</span></div><div class="zoom"><button id="zoom-out" aria-label="缩小">−</button><button id="zoom-reset" title="适应画布">适应</button><button id="zoom-in" aria-label="放大">＋</button></div></div>
+      <div class="stage-footer"><span id="scale-note">模拟器显示相对大小，非实际实物大小；每次打开默认随机显示两台墨水屏设备</span><div class="scale-bar"><i></i><span>20 mm</span></div><div class="zoom"><button id="zoom-out" aria-label="缩小">−</button><button id="zoom-reset" title="适应画布">适应</button><button id="zoom-in" aria-label="放大">＋</button></div></div>
     </section>
-    <div class="interaction"><span id="view-label" class="sr-only" aria-live="polite"></span><div class="dock" id="dock"><button id="lineup" class="active">并列（底边对齐）</button><button id="text-align">并列（相同文字）</button><button id="body-align">重叠（机身对齐）</button><button id="screen-align">重叠（屏幕对齐）</button><span class="dock-divider"></span><button id="swap" title="交换前后顺序" aria-label="交换前后顺序">⇄</button><button id="settings-toggle" aria-label="对齐与透明度设置" title="对齐与透明度" aria-expanded="false">•••</button></div><div id="settings" class="settings" hidden><div><span>对齐角</span><div class="corners" aria-label="对齐角"><button data-corner="tl" aria-label="左上角" aria-pressed="false">⌜</button><button data-corner="tr" aria-label="右上角" aria-pressed="false">⌝</button><button data-corner="bl" aria-label="左下角" aria-pressed="true">⌞</button><button data-corner="br" aria-label="右下角" aria-pressed="false">⌟</button></div></div><label>前层透明度<input id="opacity" type="range" min="10" max="90" value="45" /><output id="opacity-value">45%</output></label><button id="card-rotate">旋转信用卡</button><button id="share">复制比较链接</button></div></div>
+    <div class="interaction"><span id="view-label" class="sr-only" aria-live="polite"></span><div class="dock" id="dock"><button id="lineup" class="active">并列（底边对齐）</button><button id="text-align">并列（相同文字）</button><button id="body-align">重叠（机身对齐）</button><button id="screen-align">重叠（屏幕对齐）</button><span class="dock-divider view-share-divider"></span><button id="share">分享这个比较</button><span class="dock-divider"></span><button id="swap" title="交换前后顺序" aria-label="交换前后顺序">⇄</button><button id="settings-toggle" aria-label="对齐与透明度设置" title="对齐与透明度" aria-expanded="false">•••</button></div><div id="settings" class="settings" hidden><div><span>对齐角</span><div class="corners" aria-label="对齐角"><button data-corner="tl" aria-label="左上角" aria-pressed="false">⌜</button><button data-corner="tr" aria-label="右上角" aria-pressed="false">⌝</button><button data-corner="bl" aria-label="左下角" aria-pressed="true">⌞</button><button data-corner="br" aria-label="右下角" aria-pressed="false">⌟</button></div></div><label>前层透明度<input id="opacity" type="range" min="10" max="90" value="45" /><output id="opacity-value">45%</output></label><button id="card-rotate">旋转信用卡</button></div></div>
     <div id="comparison-result" class="comparison-result" aria-live="polite"></div>
   </main>
   <div id="toast" role="status" aria-live="polite"></div>
