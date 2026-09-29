@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f8fafa">
+  <meta name="description" content="在浏览器里体验 CrossPoint 开源墨水屏固件。运行 MoveCall 的 OnePage WebAssembly 移植，支持实体按键与键盘操作。">
+  <title>墨水屏固件模拟器 · apov</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='13' y='4' width='38' height='56' rx='5' fill='%235b726e'/%3E%3Crect x='17' y='9' width='30' height='41' fill='%23e3e8e5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script src="coi-serviceworker.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body data-state="loading">
+  <header class="site-header"><a href="https://apov.sg/" class="wordmark">apov<span> / 实验室</span></a><nav aria-label="网站导航"><a href="#credits">关于这个模拟器</a><a href="https://apov.sg/">返回 apov.sg</a></nav></header>
+  <main>
+    <div class="intro"><h1>墨水屏固件模拟器</h1><p>一台放在浏览器里的阅读器。</p></div>
+    <div class="workspace">
+      <section class="device-stage" aria-label="OnePage 模拟阅读器">
+        <div class="device" aria-label="阅读器，使用方向键、Enter 确认、Escape 返回、P 电源">
+          <span class="device-seam" aria-hidden="true"></span>
+          <div class="display">
+            <canvas id="screen" width="480" height="800" role="img" aria-label="CrossPoint 固件显示屏，画面由原固件生成"></canvas>
+            <div id="boot" role="status"><span class="boot-symbol" aria-hidden="true">▤</span><span id="boot-text">正在准备阅读器…</span><button id="retry" hidden>重新加载</button></div>
+          </div>
+          <div class="device-brand" aria-hidden="true">OnePage</div>
+          <div class="front-keys">
+            <button data-key="0" class="hardware-key back-key" aria-label="返回，Escape" title="返回 · Esc">↶</button>
+            <div class="front-rocker"><button data-key="2" class="hardware-key" aria-label="向左，左方向键" title="向左 · ←">‹</button><button data-key="3" class="hardware-key" aria-label="向右，右方向键" title="向右 · →">›</button></div>
+            <button data-key="1" class="hardware-key confirm-key" aria-label="确认，Enter" title="确认 · Enter">○</button>
+          </div>
+          <button data-key="6" class="hardware-key side-key power-key" aria-label="电源，暂不支持锁屏" title="浏览器版暂不支持锁屏 / 唤醒"><span aria-hidden="true">⏻</span></button>
+          <div class="side-rocker"><button data-key="4" class="hardware-key side-key" aria-label="上一页，上方向键" title="上一页 · ↑"><span aria-hidden="true">−</span></button><button data-key="5" class="hardware-key side-key" aria-label="下一页，下方向键" title="下一页 · ↓"><span aria-hidden="true">+</span></button></div>
+        </div>
+        <p class="device-caption">OnePage <span>480 × 800 · 七个实体键</span></p>
+      </section>
+      <section class="controls" aria-label="模拟器操作">
+        <div class="status-line"><span id="status-dot"></span><span id="status" role="status">正在启动固件</span></div>
+        <h2>从按下一个键开始。</h2>
+        <p class="lead">点击机身上的按键，或直接用键盘操作。屏幕没有触控，菜单、书架和翻页都由固件响应。</p>
+        <dl class="shortcuts">
+          <div><dt>上下移动 / 翻页</dt><dd><kbd>↑</kbd><kbd>↓</kbd></dd></div>
+          <div><dt>左右选择</dt><dd><kbd>←</kbd><kbd>→</kbd></dd></div>
+          <div><dt>确认 / 打开菜单</dt><dd><kbd>Enter</kbd></dd></div>
+          <div><dt>返回</dt><dd><kbd>Esc</kbd></dd></div>
+          <div><dt>电源键</dt><dd><kbd>P</kbd><small>暂不支持锁屏</small></dd></div>
+        </dl>
+        <div class="book-section">
+          <button id="import-book" class="file-button" disabled>＋ 导入一本书</button><input id="book-file" type="file" accept=".epub,.txt" hidden disabled>
+          <p>支持 EPUB、TXT，只在本地读取。导入后从固件的文件浏览器打开；重启后需重新导入。</p>
+          <p id="message" role="status">已预置《狂人日记》和《爱丽丝梦游仙境》。</p>
+        </div>
+        <div class="utility-actions"><button id="capture" disabled>保存屏幕图片</button><button id="restart">重启模拟器</button></div>
+        <p class="session-note" id="input-status" aria-live="polite">准备好后，就可以开始翻页。</p><p class="unsupported-note">本浏览器版暂不支持锁屏 / 唤醒、File Transfer、Wi-Fi、蓝牙及在线服务。传书请用上方“导入一本书”。</p>
+      </section>
+    </div>
+    <section id="credits" class="credits">
+      <div><h2>运行开源固件，感谢原作者。</h2><p>固件原作：<a href="https://github.com/crosspoint-reader/crosspoint-reader" target="_blank" rel="noopener noreferrer">Dave Allie 与 CrossPoint Reader 贡献者</a>。OnePage 移植及浏览器版：<a href="https://github.com/MoveCall/crosspoint-onepage" target="_blank" rel="noopener noreferrer">MoveCall</a>。本站直接使用其现成的 <a href="https://github.com/MoveCall/onepage-reader-web/tree/0e0c2031f90e68958120ff58658e623a0fe7dc14/public/simulator" target="_blank" rel="noopener noreferrer">WebAssembly 构建</a>，apov 负责页面与操作外框。</p></div>
+      <details><summary>版本、开源许可与模拟范围</summary><p>采用上游标记为 20260722-zh4 的浏览器构建。原固件在浏览器线程中运行，通过虚拟 SD 卡、按键和显示缓冲区与页面交互。设备外框为 OnePage 示意，不是阅星曈原厂固件或精确硬件复刻。</p><p>本版本用于体验阅读与菜单；不模拟 Wi-Fi、蓝牙、充电、真实电量、深度休眠恢复或电子纸刷新波形。若固件进入休眠或停滞，可点击“重启模拟器”。不连接或刷写你的实体设备。</p><p><a href="licenses/CrossPoint-MIT.txt" target="_blank" rel="noopener">固件 MIT 许可</a> · <a href="licenses/coi-serviceworker-MIT.txt" target="_blank" rel="noopener">Guido Zuidhof 等的隔离脚本许可</a> · <a href="licenses/LXGW-WenKai-OFL.txt" target="_blank" rel="noopener">霞鹜文楷字体许可</a> · <a href="README.md" target="_blank" rel="noopener">源码与构建来源</a></p></details>
+    </section>
+  </main>
+  <dialog id="unsupported-dialog" aria-labelledby="unsupported-title"><h2 id="unsupported-title">此功能暂不支持</h2><p id="unsupported-message"></p><button id="dismiss-unsupported" autofocus>知道了，继续体验</button></dialog>
+  <footer>apov · a point of view</footer>
+</body>
+</html>
