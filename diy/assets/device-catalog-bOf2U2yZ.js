@@ -1,0 +1,1 @@
+var e=[{id:`obook5`,name:`OBOOK5`,href:`./obook5.html`,size:`70 × 125 × 8.3 mm`},{id:`prototype`,name:`Prototype v1`,href:`./prototype.html`,size:`76 × 125 × 8.3 mm · 3.5 mm 耳机孔`},{id:`paper`,name:`PaperMono`,href:`./paper.html`,size:`62 × 101 × 8 mm`},{id:`pkd`,name:`pkd`,href:`./pkd.html`,size:`Paper Keyboard Duo`}];export{e as t};

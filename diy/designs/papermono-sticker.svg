@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="944" height="1016" viewBox="0 0 944 1016">
+  <title>paper mono(type) — typographic label</title>
+  <rect width="944" height="1016" fill="#e9eae5"/>
+  <g fill="#292d2a" font-family="'Courier New', Courier, monospace">
+    <text x="76" y="157" font-size="48" letter-spacing="1">paper</text>
+    <text x="64" y="548" font-size="320" font-weight="700" letter-spacing="-4">mono</text>
+    <text x="830" y="633" font-size="60" text-anchor="end">(type)</text>
+  </g>
+</svg>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>prototype developer edition — apov</title>
+  <meta name="description" content="prototype developer edition. A monochrome e-reader with programmable touch surfaces and dot-matrix virtual keys.">
+  <link rel="canonical" href="https://apov.sg/catalog/product/prototype-developer/">
+  <link rel="icon" href="/catalog/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../prototype/developer-edition.css?v=developer-3">
+  <link rel="stylesheet" href="./style.css?v=3">
+  <script type="module" src="./page.js?v=5"></script>
+</head>
+<body>
+  <header class="developer-header">
+    <a href="/catalog/" class="catalog-link">Catalog <span>by apov</span></a>
+    <nav aria-label="Language"><button type="button" data-language="zh-CN" lang="zh-CN" aria-pressed="false">中文</button><span aria-hidden="true">/</span><button type="button" data-language="en" lang="en" aria-pressed="true">English</button></nav>
+  </header>
+  <main>
+    <div class="developer-intro">
+      <h1 data-zh="prototype 开发者版本">prototype developer edition</h1>
+    </div>
+    <div id="developer-viewer" class="developer-viewer" role="group" aria-label="prototype developer edition 3D model">
+      <div class="developer-view-tools">
+        <button id="developer-reset" type="button" data-zh="归位">Reset view</button>
+      </div>
+    </div>
+    <div class="developer-layouts" role="group" aria-label="Dot-matrix key layouts">
+      <button type="button" data-developer-layout="off" aria-pressed="true" data-zh="默认">Default</button>
+      <button type="button" data-developer-layout="side" aria-pressed="false" data-zh="侧边翻页键">Side page keys</button>
+      <button type="button" data-developer-layout="bottom" aria-pressed="false" data-zh="底部翻页键">Bottom page keys</button>
+      <button type="button" data-developer-layout="custom" aria-pressed="false" data-zh="自定义功能">Custom functions</button>
+    </div>
+    <noscript><img class="developer-static" src="../prototype/media/developer-default.webp?v=developer-4" width="1500" height="1500" alt="Dark gray developer prototype with a clean front and speaker grille"><p>Enable JavaScript to rotate the model and preview key layouts.</p></noscript>
+  </main>
+  <footer><a href="../prototype/" data-zh="返回 prototype">Back to prototype</a></footer>
+</body>
+</html>

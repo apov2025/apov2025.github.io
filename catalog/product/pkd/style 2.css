@@ -1,0 +1,25 @@
+/* Share the prototype product's type, collage, controls, spacing and viewer surface. */
+.pkd-page { padding-bottom: 70px; }
+.pkd-page .explore.section-space { margin-top:0; }
+.pkd-page .product-intro { margin:24px 0 0;text-align:center; }
+.pkd-page .product-intro h1 { margin:0;font-size:clamp(15px,1.6vw,20px);font-weight:400;line-height:1.5;letter-spacing:-.3px;text-wrap:balance; }
+.pkd-page .product-intro strong { font-weight:600; }
+.pkd-page .hero-copy { margin-top: 24px; }
+.pkd-page .viewer-tools { position:absolute;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;gap:12px;pointer-events:none; }
+.pkd-page .assembly-actions { display:flex;flex-wrap:wrap;gap:4px 18px; }
+.pkd-page .viewer-tools button { pointer-events:auto;min-height:40px;padding:8px 0;font-size:12px;color:#4a5054;background:transparent;cursor:pointer; }
+.pkd-page .viewer-tools button[aria-pressed="true"] { color:#171717;font-weight:600; }
+.pkd-page .viewer-tools button:disabled { opacity:.4;cursor:default; }
+.pkd-page .keyboard-options { display:flex;flex-wrap:wrap;gap:6px;align-items:center; }
+.pkd-page .keyboard-options button { min-height:40px;padding:9px 13px;font-size:12px;border:1px solid transparent;border-radius:24px;cursor:pointer; }
+.pkd-page .keyboard-options button[aria-pressed="true"] { border-color:#aeb7bd;background:#f3f5f5; }
+.pkd-page .keyboard-options span { font-size:12px;margin-right:3px; }
+.pkd-page .viewer { height:650px; }
+@media(max-width:700px){
+ .pkd-page .viewer { height:510px; }
+ .pkd-page .viewer-tools { left:14px;right:14px;gap:8px; }
+ .pkd-page .assembly-actions { gap:4px 12px; }
+ .pkd-page .viewer-tools button { font-size:11px; }
+ .pkd-page .hero-collage { grid-template-columns:repeat(4,minmax(0,1fr)); }
+ .pkd-page .color-controls { gap:8px; }
+}

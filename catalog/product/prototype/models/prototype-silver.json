@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "device": "prototype",
+  "dimensionsMm": {
+    "width": 76.0086455331412,
+    "height": 132,
+    "depth": 6.2
+  },
+  "appearance": {
+    "caseMaterial": "aluminum",
+    "caseFinish": "brushed",
+    "caseColor": "#c9cdd2",
+    "frontColor": "#101214",
+    "buttonColor": "#626b74"
+  },
+  "screenContent": "blank",
+  "rearProfile": "Broad crowned back with tapered shoulders",
+  "designRevision": "Slim catalog concept; headphone jack removed; USB-C dimensions retained."
+}

@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || '@playwright/test');
+const base = process.env.BASE_URL || 'http://127.0.0.1:5176';
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' });
+  const errors = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto(`${base}/catalog/product/prototype/`);
+  assert.equal(await page.locator('#developer-viewer').count(), 0, 'Developer model moved off ordinary product page');
+  await page.locator('.developer-spec-link').click();
+  assert.equal(new URL(page.url()).pathname, '/catalog/product/prototype-developer/');
+  await page.locator('#developer-viewer.developer-viewer--ready').waitFor();
+  assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(0, 0, 0)');
+  assert.equal(await page.locator('#developer-viewer').getAttribute('data-developer-layout'), 'off');
+  assert.equal(await page.locator('button[data-developer-layout]').count(), 4, 'Default plus three LED layouts');
+  assert.equal(await page.locator('.developer-intro p').count(), 0);
+  const canvas = page.locator('#developer-viewer canvas');
+  const initial = await canvas.screenshot();
+  const layouts = [];
+  for (const id of ['side', 'bottom', 'custom']) {
+    await page.locator(`button[data-developer-layout="${id}"]`).click();
+    assert.equal(await page.locator('#developer-viewer').getAttribute('data-developer-layout'), id);
+    const current = await canvas.screenshot();
+    assert.ok(!current.equals(initial), `${id} shows LED keys`);
+    assert.ok(layouts.every(image => !current.equals(image)), `${id} is distinct`);
+    layouts.push(current);
+    await canvas.screenshot({ path: `/tmp/developer-layout-${id}.png` });
+  }
+  await page.locator('button[data-developer-layout="off"]').click();
+  assert.equal(await page.locator('#developer-viewer').getAttribute('data-developer-layout'), 'off');
+  assert.ok((await canvas.screenshot()).equals(initial), 'Deselecting returns to the clean front');
+  assert.equal(await page.locator('#developer-auto-rotate').count(), 0, 'Auto rotation removed');
+  await canvas.focus();
+  await page.keyboard.press('ArrowRight');
+  assert.ok(!(await canvas.screenshot()).equals(initial), 'Manual orbit moves the model');
+  await page.locator('#developer-reset').click();
+  await page.mouse.move(0, 0);
+  const reset = await canvas.screenshot();
+  assert.ok(reset.equals(initial), 'Reset returns to the exact initial front view');
+  await page.evaluate(() => new Promise(resolve => { let count = 0; const step = () => ++count >= 25 ? resolve() : requestAnimationFrame(step); requestAnimationFrame(step); }));
+  assert.ok((await canvas.screenshot()).equals(reset), 'Front view remains stationary');
+  await page.screenshot({ path: '/tmp/prototype-developer-page.png', fullPage: true });
+  await canvas.focus();
+  await page.keyboard.press('ArrowRight');
+  assert.ok(!(await canvas.screenshot()).equals(initial), 'The model rotates');
+  await page.locator('[data-language="zh-CN"]').click();
+  assert.match(await canvas.getAttribute('aria-label'), /交互式/);
+  assert.equal(await page.locator('h1').textContent(), 'prototype 开发者版本');
+  assert.deepEqual(await page.locator('button[data-developer-layout]').allTextContents(), ['默认','侧边翻页键','底部翻页键','自定义功能']);
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.locator('button[data-developer-layout="side"]').click();
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.screenshot({ path: '/tmp/prototype-developer-page-mobile.png', fullPage: true });
+  assert.deepEqual(errors, []);
+  console.log('PASS: separate black page, ordinary-page entry, default LEDs off, three distinct layouts, manual orbit and reset, explicit default, orbit, localization and mobile fit.');
+} finally { await browser.close(); }
