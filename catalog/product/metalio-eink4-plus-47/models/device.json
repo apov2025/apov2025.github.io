@@ -1,0 +1,77 @@
+{
+  "source": "Metalio E-INK4 Plus47.step",
+  "units": "meters",
+  "bounds": [
+    [
+      -0.035368484409360766,
+      -0.061095,
+      -0.0039147
+    ],
+    [
+      0.035990017823820004,
+      0.061094999493404016,
+      0.003918
+    ]
+  ],
+  "materials": {
+    "Case": {
+      "metalness": 0.9,
+      "roughness": 0.44
+    },
+    "Front": {
+      "metalness": 0.0,
+      "roughness": 0.48
+    },
+    "Back": {
+      "metalness": 0.0,
+      "roughness": 0.48
+    },
+    "Buttons": {
+      "metalness": 0.25,
+      "roughness": 0.4
+    },
+    "Screen": {
+      "metalness": 0.0,
+      "roughness": 0.88
+    },
+    "Details": {
+      "metalness": 0.0,
+      "roughness": 0.8
+    },
+    "ConnectorMetal": {
+      "metalness": 1.0,
+      "roughness": 0.26
+    },
+    "ConnectorBlack": {
+      "metalness": 0.0,
+      "roughness": 0.75
+    },
+    "TouchLeft": {
+      "metalness": 0.0,
+      "roughness": 0.65
+    },
+    "TouchCenter": {
+      "metalness": 0.0,
+      "roughness": 0.65
+    },
+    "TouchRight": {
+      "metalness": 0.0,
+      "roughness": 0.65
+    },
+    "TouchInk": {
+      "metalness": 0.0,
+      "roughness": 0.65
+    },
+    "Contacts": {
+      "metalness": 0.85,
+      "roughness": 0.3
+    }
+  },
+  "display": "Neutral static e-paper surface; no firmware simulation",
+  "addedDetails": [
+    "Recessed USB-C metal shell, insulator, tongue and two contact rows",
+    "Closed color-matched microSD cover, seam, finger relief, seat and card"
+  ],
+  "detailProvenance": "Presentation geometry added inside source STEP openings; not an engineering reproduction of internals",
+  "orientationStatus": "Source screen and capacitive-key orientation"
+}

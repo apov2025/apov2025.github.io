@@ -6,6 +6,6 @@
 
 /* Square, transparent assembled pkd cover. */
 .product-image.pkd{overflow-x:clip;overflow-y:visible}
-.product-image.pkd .product-image-crop{width:min(144px,140%);height:auto;aspect-ratio:1;scale:1;overflow:visible}
+.product-image.pkd .product-image-crop{width:min(144px,140%);height:auto;aspect-ratio:1;scale:.85;overflow:visible}
 @media(max-width:600px){.product-image.pkd .product-image-crop{width:min(140px,140%)}}
 .product-image.pkd img{transform:none}

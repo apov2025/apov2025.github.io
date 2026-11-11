@@ -1,40 +1,86 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#ffffff" />
-  <meta name="description" content="Discover independent e-paper products and the people who make them. Real devices, thoughtful details, and a direct connection to the maker." />
-  <meta property="og:title" content="Read/0 'Pico' by MindReset — Catalog by apov" />
-  <meta property="og:description" content="An independent epaper product catalog." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://apov.sg/catalog/product/mindreset-read-pico/" />
-  <meta property="og:image" content="https://apov.sg/catalog/images/tickey-cutout.png" />
-  <link rel="canonical" href="https://apov.sg/catalog/product/mindreset-read-pico/" />
-  <link rel="icon" href="/catalog/favicon.svg" type="image/svg+xml" />
-  <title>Read/0 'Pico' by MindReset — Catalog by apov</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>Read/0 &#x27;Pico&#x27; — Catalog by apov</title>
+  <meta name="description" content="A slim e-paper device for reading and custom display projects.">
+  <meta property="og:title" content="Read/0 &#x27;Pico&#x27;">
+  <meta property="og:image" content="https://apov.sg/catalog/product/mindreset-read-pico/media/card.webp">
+  <link rel="canonical" href="https://apov.sg/catalog/product/mindreset-read-pico/">
+  <link rel="icon" href="/catalog/favicon.svg">
+  <link rel="stylesheet" href="/catalog/assets/index-CuUu9no1.css?v=pkd-visible-5">
+  <link rel="stylesheet" href="/catalog/product/prototype/style.css?v=developer-3">
+  <link rel="stylesheet" href="/catalog/assets/apov-custom.css?v=specs-1">
   <script defer src="https://cloud.umami.is/script.js" data-website-id="2a4f1c7c-1ed3-4780-81dc-a93d8bd3355a" data-domains="apov.sg"></script>
-  <script type="module" crossorigin src="/catalog/assets/index-CZ9_AzTW.js?v=concept-label-3"></script>
-  <link rel="stylesheet" crossorigin href="/catalog/assets/index-CuUu9no1.css?v=pkd-visible-5">
+  <script type="module" src="/catalog/assets/apov-custom-page.js?v=devices-2"></script>
 </head>
-<body>
-  <a class="skip-link" href="#collection">Skip to products</a>
+<body data-device="mindreset-read-pico">
+  <a class="skip-link" href="#product" data-zh="跳转到产品">Skip to product</a>
   <header class="site-header">
-    <h1 class="site-title"><a href="/catalog/"><strong>Catalog</strong> <span>by apov</span></a></h1>
-    <div class="language-switch" role="group" aria-label="Language"><button type="button" lang="zh-CN" data-language="zh-CN" aria-pressed="false">中文</button><span aria-hidden="true">/</span><button type="button" lang="en" data-language="en" aria-pressed="true">English</button></div>
-
+    <a class="site-title" href="/catalog/"><strong>Catalog</strong> <span>by apov</span></a>
+    <div class="language-switch" role="group" aria-label="Language">
+      <button type="button" lang="zh-CN" data-language="zh-CN" aria-pressed="false">中文</button><span aria-hidden="true">/</span><button type="button" lang="en" data-language="en" aria-pressed="true">English</button>
+    </div>
   </header>
-  <main>
-    <section id="collection" class="collection" aria-labelledby="collection-title">
-      <h2 id="collection-title" class="sr-only">Products</h2>
-      <div class="catalog-results">
-        <span id="product-count" class="sr-only" role="status"></span>
-        <div id="product-grid" class="product-grid"></div>
+  <main id="product" class="prototype-page apov-custom-page">
+    <section id="explore" class="explore section-space" aria-label="Interactive 3D model">
+      <div id="viewer" class="viewer" data-viewer-state="idle">
+        <img id="viewer-poster" src="./media/viewer.webp" width="1200" height="900" alt="Read/0 &#x27;Pico&#x27;">
+        <div id="model-canvas"></div>
+        <div class="single-view-tools">
+          <div><button type="button" data-view="front" data-model-control disabled data-zh="正面">Front</button><button type="button" data-view="back" data-model-control disabled data-zh="背面">Back</button><button type="button" data-view="side" data-model-control disabled data-zh="侧面">Side</button></div>
+          <button id="auto-rotate" type="button" aria-pressed="false" data-model-control disabled data-zh="自动旋转">Auto rotate</button>
+        </div>
+        <button class="load-model" id="load-model" type="button" aria-describedby="viewer-status" hidden data-zh="重试加载 3D 模型">Retry loading 3D model</button>
+        <p id="viewer-status" class="viewer-status" role="status" aria-live="polite"></p>
       </div>
+      <div class="product-intro">
+        <h1><strong>Read/0 &#x27;Pico&#x27;</strong> <span data-zh="思维重置">MindReset</span></h1>
+        <p data-zh="轻薄电子纸设备，适合阅读与自定义显示项目。">A slim e-paper device for reading and custom display projects.</p>
+        <div class="concept-note"><p data-zh="颜色仅供可视化预览，不代表在售配色。">Colors are visualizations, not available stock options.</p></div>
+      </div>
+      <div class="customization-actions">
+        <button id="random-colorway" class="random-colorway" type="button" data-model-control disabled data-zh="随机搭配">Randomize</button>
+        <button id="design-own" class="viewer-action" type="button" aria-expanded="false" aria-controls="customization-panel" data-zh="自己设计">Design my own</button>
+      </div>
+      <div class="texture-options shell-material-options" role="group" aria-label="Shell material">
+        <button type="button" data-shell-material="original" aria-pressed="true" data-model-control disabled data-zh="原材质 · 铝框与玻璃">Original · aluminum & glass</button>
+        <button type="button" data-shell-material="polycarbonate" aria-pressed="false" data-model-control disabled data-zh="聚碳酸酯外壳">Polycarbonate shell</button>
+      </div>
+      <div id="customization-panel" class="color-controls" hidden><label><span data-zh="中框">Frame</span><input type="color" data-color-part="caseColor" value="#a6a6a3" data-model-control disabled></label>
+<label><span data-zh="前面板">Front panel</span><input type="color" data-color-part="frontColor" value="#ededeb" data-model-control disabled></label>
+<label><span data-zh="实体侧键">Side buttons</span><input type="color" data-color-part="buttonColor" value="#41454c" data-model-control disabled></label>
+<label><span data-zh="后面板">Rear panel</span><input type="color" data-color-part="backColor" value="#ededeb" data-model-control disabled></label>
+<label><span data-zh="左横线">Left touch line</span><input type="color" data-color-part="touchLeftColor" value="#a3acab" data-model-control disabled></label>
+<label><span data-zh="中间圆环">Center touch ring</span><input type="color" data-color-part="touchCenterColor" value="#a3acab" data-model-control disabled></label>
+<label><span data-zh="右横线">Right touch line</span><input type="color" data-color-part="touchRightColor" value="#a3acab" data-model-control disabled></label></div>
+      <noscript><p>Enable JavaScript for interactive 3D viewing. / 启用 JavaScript 以交互查看 3D 模型。</p></noscript>
     </section>
+    <section id="specifications" class="spec-section section-space" aria-labelledby="spec-title">
+      <div class="spec-intro"><h2 id="spec-title" data-zh="原机规格与材质">Original specifications & materials</h2></div>
+      <dl class="design-specs">
+        <div><dt data-zh="型号">Model</dt><dd data-zh="RDP-G01-W">RDP-G01-W</dd></div>
+        <div><dt data-zh="屏幕">Display</dt><dd data-zh="4.7 英寸黑白电子纸；684 × 1216；约 297 PPI；16 级灰度">4.7-inch monochrome e-paper; 684 × 1216; approx. 297 PPI; 16 gray levels</dd></div>
+        <div><dt data-zh="处理器">Processor</dt><dd data-zh="ESP32-S3 双核 Xtensa LX7">ESP32-S3 dual-core Xtensa LX7</dd></div>
+        <div><dt data-zh="内存与闪存">Memory</dt><dd data-zh="512 KB SRAM · 8 MB PSRAM · 16 MB Flash">512 KB SRAM · 8 MB PSRAM · 16 MB Flash</dd></div>
+        <div><dt data-zh="存储扩展">Storage expansion</dt><dd data-zh="microSD 最高 512 GB；FAT32 格式">microSD up to 512 GB; FAT32</dd></div>
+        <div><dt data-zh="触控与操作">Touch &amp; controls</dt><dd data-zh="CST836U 双点触控；三个电容触摸键">CST836U two-point touch; three capacitive keys</dd></div>
+        <div><dt data-zh="无线连接">Wireless</dt><dd data-zh="2.4 GHz Wi-Fi（802.11b/g/n）；蓝牙 LE 5.0">2.4 GHz Wi-Fi (802.11b/g/n); Bluetooth LE 5.0</dd></div>
+        <div><dt data-zh="电池">Battery</dt><dd data-zh="2050 mAh；可更换钴酸锂电池组">2050 mAh; replaceable LCO battery pack</dd></div>
+        <div><dt data-zh="接口与供电">Port &amp; power</dt><dd data-zh="USB-C 充电／固件烧录；5 V ⎓ 1.8 A">USB-C charging / firmware flashing; 5 V ⎓ 1.8 A</dd></div>
+        <div><dt data-zh="传感器与声音">Sensors &amp; audio</dt><dd data-zh="SC7A20H 加速度计；蜂鸣器">SC7A20H accelerometer; buzzer</dd></div>
+        <div><dt data-zh="中框">Frame</dt><dd data-zh="细磨砂铝合金">Fine matte aluminum alloy</dd></div>
+        <div><dt data-zh="正面玻璃">Front glass</dt><dd data-zh="AGC 玻璃；蚀刻抗反射表面；防指纹涂层">AGC glass; etched anti-reflective finish; anti-fingerprint coating</dd></div>
+        <div><dt data-zh="后面板">Rear panel</dt><dd data-zh="亮面玻璃">Glossy glass</dd></div>
+        <div><dt data-zh="尺寸">Dimensions</dt><dd data-zh="117.5 × 66.2 × 7.3 毫米">117.5 × 66.2 × 7.3 mm</dd></div>
+        <div><dt data-zh="重量">Weight</dt><dd data-zh="91 ± 2 克">91 ± 2 g</dd></div>
+      </dl>
+      <p class="spec-sources"><span data-zh="资料来源：">Sources: </span><a href="https://dot.mindreset.tech/docs/read_0" data-zh="MindReset 官方规格">MindReset specifications</a> · <a href="https://github.com/MindReset/read_pico_firmware" data-zh="硬件文档">Hardware documentation</a></p>
+    </section>
+    <section class="community-invitation" aria-label="Product links"><a class="community-link" href="https://dot.mindreset.tech/docs/read_0" data-zh="MindReset 产品详情">MindReset product details</a></section>
   </main>
-  <footer class="site-footer"><span>© 2026 Catalog by apov</span></footer>
-  <dialog id="product-dialog" aria-labelledby="product-title"></dialog>
-  <noscript><p class="noscript">This collection uses JavaScript to show product cards. You can also visit <a href="https://www.eniacelec.com/pages/ticket">TICKEY’s official product page</a>.</p></noscript>
+  <footer class="site-footer"><span>© 2026 Catalog by apov</span><a href="/catalog/" data-zh="全部产品">All products</a></footer>
 </body>
 </html>
