@@ -119,3 +119,9 @@ body.preorder-open { overflow: hidden; }
 .color-actions { justify-content: center; }
 
 .developer-spec-link { text-decoration: underline; text-underline-offset: 4px; }
+
+.prototype-v1-film { max-width: 480px; padding-bottom: 65px; }
+.prototype-v1-film h2 { margin-bottom: 16px; font-size: 18px; letter-spacing: -.3px; }
+.prototype-v1-film figure { margin: 0; }
+.prototype-v1-film video { display: block; width: 100%; max-height: 270px; aspect-ratio: 16 / 9; object-fit: contain; background: #edf0f2; border-radius: 4px; }
+.prototype-v1-film figcaption { margin-top: 12px; color: var(--prototype-muted); font-size: 12px; line-height: 1.65; }

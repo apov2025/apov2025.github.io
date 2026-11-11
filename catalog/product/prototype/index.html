@@ -15,9 +15,8 @@
   <link rel="canonical" href="https://apov.sg/catalog/product/prototype/">
   <link rel="icon" href="/catalog/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/catalog/assets/index-CuUu9no1.css?v=pkd-visible-5">
-  <link rel="stylesheet" href="./style.css?v=button-align-1">
-  <link rel="stylesheet" href="./reader.css?v=reader-5">
-  <script type="module" src="./page.js?v=concept-purchase-8"></script>
+  <link rel="stylesheet" href="./style.css?v=v1-film-2">
+  <script type="module" src="./page.js?v=appearance-9"></script>
 </head>
 <body>
   <a class="skip-link" href="#product" data-zh="跳转到产品">Skip to product</a>
@@ -67,23 +66,8 @@
     <section id="explore" class="explore section-space" aria-label="Interactive 3D model" data-aria-zh="交互式 3D 模型">
 
       <div class="viewer" id="viewer" data-viewer-state="idle">
-        <div class="viewer-modes" role="group" aria-label="Explore prototype" data-aria-zh="探索 prototype">
-        <button id="appearance-mode" type="button" aria-pressed="true" data-zh="设计外观">Design appearance</button>
-        <button id="experience-mode" type="button" aria-pressed="false" disabled data-zh="体验系统">Try the system</button>
-      </div>
         <img id="viewer-poster" src="./media/viewer-side.webp?v=profile-5" width="1200" height="1000" loading="lazy" alt="Sea-glass prototype in a front three-quarter view" data-alt-zh="海玻璃绿 prototype 正面斜视图，展示正面、顶部与侧面厚度">
         <div id="model-canvas"></div>
-        <div id="reading-demo" class="reader-demo" hidden>
-          <div id="reader-device" tabindex="0" role="group" aria-label="prototype reading demo" data-aria-zh="prototype 阅读交互演示">
-            <div class="reader-display"><div class="reader-screen"></div></div>
-            <button class="reader-hardware" type="button" data-reader-action="power" aria-label="Power"><span aria-hidden="true">⏻</span></button>
-            <button class="reader-hardware" type="button" data-reader-action="prev" aria-label="Previous page"><span aria-hidden="true">↑</span></button>
-            <button class="reader-hardware" type="button" data-reader-action="next" aria-label="Next page"><span aria-hidden="true">↓</span></button>
-            <button class="reader-hardware" type="button" data-reader-action="menu" aria-label="Reading menu"><span aria-hidden="true">···</span></button>
-            <span class="reader-announcement" role="status" aria-live="polite"></span>
-          </div>
-          <p class="reader-hint" data-zh="交互演示 · 点击屏幕或机身按键体验">Interactive demo · Use the screen or physical keys</p>
-        </div>
         <button class="load-model" id="load-model" type="button" hidden data-zh="加载 3D 模型">Load 3D model</button>
         <button id="save-image" class="save-image" type="button" disabled aria-label="Save image" data-aria-zh="保存图片" title="PNG · 8K"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg></button>
         <a id="pattern-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" hidden>© OpenStreetMap contributors</a>
@@ -136,6 +120,16 @@
     <section id="user-photos" class="user-photos section-space" aria-labelledby="user-photos-title">
       <h2 id="user-photos-title" data-zh="用户实拍">From the community.</h2>
       <p class="user-photos-empty" data-zh="暂无用户实拍。">No community photos yet.</p>
+    </section>
+    <section id="prototype-v1-film" class="prototype-v1-film" aria-labelledby="v1-film-title">
+      <h2 id="v1-film-title">prototype v1</h2>
+      <figure>
+        <video controls playsinline preload="metadata" poster="../prototype-v1/media/poster.png" aria-label="prototype v1 promotional video" data-aria-zh="prototype v1 宣传视频">
+          <source src="../prototype-v1/media/prototype-intro-1080p.mp4" type="video/mp4">
+          <a href="../prototype-v1/media/prototype-intro-1080p.mp4" data-zh="观看 prototype v1 宣传视频">Watch the prototype v1 promotional video</a>
+        </video>
+        <figcaption data-zh="ChatGPT 通过旋转 v1 模拟器中的模型、剪辑并配乐，制作了这支宣传视频。相比 v2，v1 配有 3.5 mm 耳机接口，机身也更厚。">ChatGPT made this promotional video by rotating the v1 simulator model, editing the footage, and adding music. Compared with v2, v1 has a 3.5 mm headphone jack and a thicker body.</figcaption>
+      </figure>
     </section>
 
   </main>

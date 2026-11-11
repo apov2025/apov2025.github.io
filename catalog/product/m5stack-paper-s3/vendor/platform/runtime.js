@@ -1,0 +1,1043 @@
+import {hasFlight,FLIGHT_MODEL,parseFlightSnapshot} from './flight-state.js';
+import {parseHardwareDiagnostics} from './hardware-diagnostics.js';
+import {validServoSnapshot} from './servo-state.js';
+import {hasMotorOutput,parseMotorSnapshot,STAMPFLY_MOTORS} from './motor-state.js';
+import {selectBleProfile,loadBleProfile,verifyBleStoredPages} from './ble-profile.js';
+import {validFirmwareArchive,extractFirmwareZip,firmwareArchiveCacheKey,MAX_FIRMWARE_ZIP_BYTES} from './firmware-archive.js';
+import {createNetworkSession} from './network-session.js';
+import {createAudioStream} from './audio-stream.js';
+import {motionParameter} from './motion-input.js';
+import {hasSdCard,persistentBoard,firmwareBoardMatches} from './board-compatibility.js';
+import {validIlluminance,illuminanceParameter} from './illuminance-input.js';
+import {validEnvironment,environmentParameters} from './environment-input.js';
+import {routedAccessories,accessoryPoweredPath} from './accessory-routing.js';
+import {MAX_FIRMWARE_FILE_BYTES as MAX_FILE, MAX_FIRMWARE_BUNDLE_BYTES as MAX_TOTAL} from './firmware-limits.js';
+import {createFat32Image,validateSdImage,MAX_SD_BYTES} from './sd-card-image.js';
+import {createSdCardStorage} from './sd-card-storage.js';
+// Browser-only adapter for the upstream ESP32 WASM worker. No server or mock device state.
+import { loadCatalog, validateScene } from './catalog.js';
+import { buildFirmwareIssueUrl } from './watchlist.js';
+import {imuModelForBoard, orientationSample} from './imu.js';
+import { validateLoRaPacket } from './lora-input.js';
+import { firmwareCache } from './firmware-cache.js';
+import {firmwareDownloadUrl} from './firmware-relay.js';
+import {checkFirmwareDownloadResponse} from './firmware-download-access.js';
+import { assembleLocalFirmware } from './local-firmware.js';
+import {firmwareMetadata} from './firmware-metadata.js';
+import {chipIdForBoard,validateAppImage,validateBoardRevision,isC5Board,isC61Board,C5_SRAM_RANGES} from './app-image.js';
+import { createDeviceStorage, deviceStorageScope } from './device-storage.js';
+import {UIFLOW2_PARTITION,virtualConfigurationPlan,encodeVirtualConfiguration,replaceConfigurationPages} from './virtual-firmware-configuration.js';
+
+export const API_VERSION = '1.0.0';
+const MIB = 1024 * 1024;
+const KINDS = { rom: 0, bootloader: 1, ptable: 2, app: 3, elf: 4, flash: 5, script: 6, picture: 7 };
+const SERIAL_LIMIT = 64 * 1024;
+const clone = value => value == null ? value : structuredClone(value);
+const error = (code, message, details) => Object.assign(new Error(message), { code, details });
+const requireValue = (condition, code, message, details) => { if (!condition) throw error(code, message, details); };
+const failure = e => ({ code: e.code || 'RUNTIME_ERROR', message: e.message || String(e), ...(e.details ? { details: e.details } : {}) });
+const bytesOf = data => data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+
+export function resolveFirmwareUrl(value, baseUrl) {
+  let url;
+  try { url = new URL(value, baseUrl); } catch { throw error('INVALID_URL', 'Firmware URL is invalid.'); }
+  requireValue(['https:', 'http:'].includes(url.protocol), 'INVALID_URL', 'Firmware URLs must use HTTP or HTTPS.');
+  requireValue(!url.username && !url.password, 'INVALID_URL', 'Firmware URLs must not contain credentials.');
+  if (new URL(baseUrl).protocol === 'https:') requireValue(url.protocol === 'https:', 'MIXED_CONTENT', 'An HTTPS page cannot load HTTP firmware.');
+  return url.href;
+}
+
+export async function sha256(data) {
+  requireValue(globalThis.crypto?.subtle, 'CRYPTO_UNAVAILABLE', 'SHA-256 requires HTTPS or localhost.');
+  return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', data)), b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkedHash(data, expected) {
+  if (expected != null) requireValue(/^[a-f0-9]{64}$/i.test(expected), 'INVALID_HASH', 'SHA-256 must contain 64 hexadecimal characters.');
+  const actual = await sha256(data);
+  requireValue(!expected || actual === expected.toLowerCase(), 'HASH_MISMATCH', 'Firmware SHA-256 does not match.', { expected, actual });
+  return actual;
+}
+
+export async function fetchBytes(url, { fetchImpl = globalThis.fetch, maxBytes = MAX_FILE, signal, onProgress, sha256: expectedHash, relayUrl } = {}) {
+  const downloadUrl=firmwareDownloadUrl(url,expectedHash,relayUrl);
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const checkAbort = () => requireValue(!controller.signal.aborted, 'FETCH_ABORTED', 'Firmware download was cancelled or timed out.', { url });
+  signal?.addEventListener('abort', abort, { once: true });
+  if (signal?.aborted) controller.abort();
+  const timeout = setTimeout(abort, 60000);
+  try {
+    checkAbort();
+    const response = await fetchImpl(downloadUrl, { mode: 'cors', cache: 'no-store', credentials: 'omit', signal: controller.signal });
+    checkAbort();
+    await checkFirmwareDownloadResponse(response,url,{signal:controller.signal});
+    if(!response.ok&&downloadUrl!==url&&response.headers.get('x-firmware-relay-error')!=='UPSTREAM_HTTP')throw error('FIRMWARE_RELAY_FAILED',`Firmware relay returned HTTP ${response.status}.`,{url,status:response.status});
+    requireValue(response.ok, 'HTTP_ERROR', `Firmware request failed: HTTP ${response.status}. Please report this source using the issue link.`, { url, status: response.status, issueUrl: buildFirmwareIssueUrl({ url, status: response.status, reason: 'Firmware request failed.' }) });
+    const length = Number(response.headers.get('content-length'));
+    if (length > maxBytes) {
+      await response.body?.cancel();
+      throw error('FILE_TOO_LARGE', `File exceeds ${maxBytes / MIB} MiB limit.`, {url, maxBytes});
+    }
+    // Fetch exposes decoded bytes. A compressed Content-Length is not a usable
+    // denominator for those bytes, and absent/invalid lengths remain unknown.
+    const encoding = response.headers.get('content-encoding');
+    let totalBytes = Number.isSafeInteger(length) && length > 0 && (!encoding || encoding.toLowerCase() === 'identity') ? length : null;
+    const progress = (loadedBytes, done = false) => {
+      checkAbort();
+      if (totalBytes !== null && (loadedBytes > totalBytes || done && loadedBytes !== totalBytes)) totalBytes = null;
+      onProgress?.({ url, loadedBytes, totalBytes, done });
+      checkAbort();
+    };
+    progress(0);
+    if (!response.body?.getReader) {
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      checkAbort();
+      requireValue(bytes.byteLength <= maxBytes, 'FILE_TOO_LARGE', `File exceeds ${maxBytes / MIB} MiB limit.`, {url, maxBytes});
+      progress(bytes.byteLength, true);
+      return bytes;
+    }
+    const reader = response.body.getReader(), chunks = [];
+    const cancelReader = () => { void reader.cancel().catch(() => {}); };
+    controller.signal.addEventListener('abort', cancelReader, { once: true });
+    let total = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        checkAbort();
+        if (done) break;
+        total += value.byteLength;
+        requireValue(total <= maxBytes, 'FILE_TOO_LARGE', `File exceeds ${maxBytes / MIB} MiB limit.`, {url, maxBytes});
+        chunks.push(value); progress(total);
+      }
+      progress(total, true);
+    } catch (e) { await reader.cancel().catch(() => {}); throw e; }
+    finally { controller.signal.removeEventListener('abort', cancelReader); reader.releaseLock(); }
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    return bytes;
+  } catch (e) {
+    if (e.code) throw e;
+    if (e.name === 'AbortError') throw error('FETCH_ABORTED', 'Firmware download was cancelled or timed out.', { url });
+    throw error('FETCH_FAILED', 'Firmware download failed. Check the URL, network and Access-Control-Allow-Origin header; a static site cannot bypass CORS.', { url, issueUrl: buildFirmwareIssueUrl({ url, reason: 'Network or CORS failure; source availability is not confirmed.' }) });
+  } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
+}
+
+export function decodeFramebuffer(data) {
+  const bytes = bytesOf(data);
+  requireValue(bytes.length >= 5 && bytes[0] === 1, 'INVALID_FRAME', 'Expected a display framebuffer.');
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const width = view.getUint16(1, true), height = view.getUint16(3, true), count = width * height;
+  requireValue(width > 0 && height > 0 && count <= 2048 * 2048 && bytes.length === 5 + count * 2, 'INVALID_FRAME', 'Invalid framebuffer dimensions or payload length.');
+  const pixels = new Uint8ClampedArray(count * 4);
+  for (let i = 0; i < count; i++) {
+    const color = view.getUint16(5 + i * 2, true), at = i * 4;
+    pixels[at] = Math.round(((color >> 11) & 31) * 255 / 31);
+    pixels[at + 1] = Math.round(((color >> 5) & 63) * 255 / 63);
+    pixels[at + 2] = Math.round((color & 31) * 255 / 31);
+    pixels[at + 3] = 255;
+  }
+  return { width, height, pixels };
+}
+
+// A URL ending in .bin does not establish that it contains a bootable flash image.
+export function validateMergedImage(data, board, flashBytes, {partitionTableOffset = 0x8000} = {}) {
+  const bytes = bytesOf(data), bootOffset = /^(esp32|ttgo-tdisplay|atom-lite|atom-matrix|atom-voice|atom-matrix-v11|stamppico|lilygo-t-beam-v1-2)$/.test(board) ? 0x1000 : chipIdForBoard(board) === 18 ? 0x2000 : 0;
+  requireValue(Number.isSafeInteger(partitionTableOffset) && partitionTableOffset >= 0x8000 && partitionTableOffset % 0x1000 === 0 && partitionTableOffset + 0x1000 <= flashBytes, 'INVALID_PARTITION_TABLE', 'Partition-table offset is outside flash or not sector aligned.');
+  requireValue(bytes.length <= flashBytes, 'FLASH_OVERFLOW', 'Merged firmware exceeds the selected product flash size.');
+  requireValue(bytes.length > partitionTableOffset + 32 && bytes[bootOffset] === 0xe9 && bytes[partitionTableOffset] === 0xaa && bytes[partitionTableOffset + 1] === 0x50,
+    'INCOMPLETE_IMAGE', 'A raw BIN must be a merged flash image starting at offset 0, containing a bootloader and partition table at 0x8000. Use a manifest for separate app, bootloader and partition images.');
+  // ESP-IDF image header chip IDs: ESP32=0, S3=9, C3=5, C6=13, P4=18.
+  const chipId = bytes[bootOffset + 12] | bytes[bootOffset + 13] << 8;
+  const expected = chipIdForBoard(board);
+  requireValue(chipId === expected, 'CHIP_MISMATCH', 'Firmware image targets a different ESP32 chip.', { expected, actual: chipId });
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const completeImage = (at, end) => {
+    // Same 24-byte header and 8-byte segment headers as esp-soc/src/image.rs.
+    requireValue(at + 24 <= end && bytes[at] === 0xe9 && bytes[at + 1] > 0 && bytes[at + 1] <= 16, 'INCOMPLETE_IMAGE', 'Merged firmware contains an invalid image header.');
+    requireValue(view.getUint16(at + 12, true) === expected, 'CHIP_MISMATCH', 'An image inside the merged firmware targets a different chip.');
+    validateBoardRevision(bytes.subarray(at, at + 24), board);
+    let offset = at + 24;
+    for (let i = 0; i < bytes[at + 1]; i++) {
+      requireValue(offset + 8 <= end, 'INCOMPLETE_IMAGE', 'Merged firmware contains a truncated segment header.');
+      offset += 8 + view.getUint32(offset + 4, true);
+      requireValue(offset <= end, 'INCOMPLETE_IMAGE', 'Merged firmware contains a truncated image segment.');
+    }
+  };
+  completeImage(bootOffset, Math.min(bytes.length, partitionTableOffset));
+  let apps = 0;
+  for (let offset = partitionTableOffset; offset + 32 <= Math.min(bytes.length, partitionTableOffset + 0x1000); offset += 32) {
+    if (view.getUint16(offset, true) !== 0x50aa) break;
+    const at = view.getUint32(offset + 4, true), size = view.getUint32(offset + 8, true);
+    requireValue(size > 0 && at >= partitionTableOffset + 0x1000 && at + size <= flashBytes, 'FLASH_OVERFLOW', 'Partition table contains a partition outside product flash.');
+    if (bytes[offset + 2] === 0 && at < bytes.length && bytes[at] === 0xe9) { completeImage(at, Math.min(bytes.length, at + size)); apps++; }
+  }
+  requireValue(apps > 0, 'INCOMPLETE_IMAGE', 'Merged firmware contains no complete app image at a declared partition offset.');
+  return true;
+}
+
+const romFor = board => isC61Board(board) ? 'esp32c61_rev100_rom.elf' : isC5Board(board) ? null : ['esp32c3','stampc3','stampc3u'].includes(board) ? 'esp32c3_rev3_rom.elf' : ['esp32p4','stamp-p4'].includes(board) ? 'esp32p4_rev0_rom.elf' : (board==='nesso-n1'||board.includes('c6')) ? 'esp32c6_rev0_rom.elf' : /^(esp32|ttgo-tdisplay|atom-lite|atom-matrix|atom-voice|atom-matrix-v11|stamppico|lilygo-t-beam-v1-2)$/.test(board) ? 'esp32_rev300_rom.elf' : 'esp32s3_rev0_rom.elf';
+
+export function createPlatformRuntime({ catalog: initialCatalog, onEvent, fetchImpl = globalThis.fetch, workerFactory = url => new Worker(url, { type: 'module' }), baseUrl = globalThis.location?.href || new URL('./', import.meta.url).href, assetBaseUrl = new URL('../', import.meta.url).href, requestTimeout = 30000, deviceStorage = createDeviceStorage(), sdStorage = createSdCardStorage() } = {}) {
+  let catalog = initialCatalog, scene = null, product = null, status = 'idle', worker = null, aborter = null;
+  let lastError = null, firmware = null, loaded = null, frame = null, frameNumber = 0, serial = '', serialByPort = {}, stats = {}, hostPace = {}, queue = Promise.resolve();
+  const emptyStorage = () => ({status:'unloaded', scope:null, backend:null, restored:false, pristine:true, revision:0, epoch:0, lastSavedAt:null, changedPages:0, error:null});
+  const emptySd=()=>({supported:false,present:false,bytes:0,format:null,status:'unloaded',backend:null,restored:false,pristine:true,changedPages:0,error:null});
+  let sdCard=emptySd(),sdSession=null,leds=[],servos=[],servoSupply=null,motors=[],motorOutput=null,hardwareDiagnostics=null;
+  let flight=null,flightEpoch=0;
+  let bleNearby=[];
+  const flightEnabled=()=>scene?.flight?.enabled===true;
+  let accessoryInputs = [], accessoryOutputs = [];
+  const resetAccessoryInputs=()=>{accessoryInputs=routedAccessories(scene,product,catalog).map(route=>({...route,connected:true,...(route.viaAccessoryId?{effectiveConnected:true}:{}),...(route.control==='button'?{pressed:false}:route.control==='knob'?{value:scene.accessories.find(item=>item.id===route.accessoryId)?.parameters?.position??0.5}:route.control==='motion'?{motion:motionParameter(scene.accessories.find(item=>item.id===route.accessoryId)?.parameters)}:route.control==='environment'?environmentParameters(scene.accessories.find(item=>item.id===route.accessoryId)?.parameters):route.control==='illuminance'?{lux:illuminanceParameter(scene.accessories.find(item=>item.id===route.accessoryId)?.parameters)}:{})}));accessoryOutputs=accessoryInputs.filter(route=>route.output).map(({accessoryId,model,port})=>({accessoryId,model,port,leds:[[0,0,0],[0,0,0],[0,0,0]]}));};
+  let storage = emptyStorage(), storageSession = null, storageSequence = 0;
+  const configurationSessionPrefix=globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`;
+  let configurationSequence=0;
+  const configurationReceipts=new Map(),configurationReceipt=()=>clone(configurationReceipts.get(storage.scope?.key)||null);
+  let booted = false, inputSequence = 0, loadCancelled = false, progressGeneration = 0, disposing = false;
+  const imuModel = () => imuModelForBoard(product?.runtime?.board);
+  const gpsSupported = () => product?.id === 'm5stack-stopwatch' && product.runtime?.board === 'stopwatch';
+  const defaultImu = () => ({enabled: true, source: 'agent', ...orientationSample([0,0,0,1]), delivery: 'configured', guestTime: null});
+  let imu = defaultImu(), imuPreviousAt = null, imuGeneration = 0;
+  const observedImu=()=>!imuModel()?null:!flightEnabled()?clone(imu):{enabled:true,source:'flight',quaternion:null,accelG:flight?clone(flight.sensors.rawAccelG):null,gyroDps:flight?clone(flight.sensors.rawGyroDps):null,delivery:flight?'register-state':'configured',guestTime:flight?.guestTime??null};
+  const pending = new Map(), listeners = new Set(onEvent ? [onEvent] : []);
+  const snapshot = () => ({ version: API_VERSION, status, audio:audio.snapshot(), network:network.snapshot(), scene: clone(scene), accessoryInputs: clone(accessoryInputs), accessoryOutputs: clone(accessoryOutputs), product: clone(product), firmware: clone(firmware), serial, serialByPort: { ...serialByPort }, stats: clone(stats), storage: clone(storage), firmwareConfiguration:configurationReceipt(), sdCard:clone(sdCard),leds:clone(leds),servos:clone(servos),servoSupply,motors:clone(motors),motorOutput:clone(motorOutput),flight:clone(flight),hardwareDiagnostics:clone(hardwareDiagnostics), imu: observedImu(), frame: frame ? { width: frame.width, height: frame.height, frameNumber } : null, lastError: clone(lastError) });
+  const emit = event => { for (const listener of listeners) { try { listener(['hardware-diagnostics','motors','flight'].includes(event.type)?clone(event):event); } catch (e) { console.error('ESP tester event handler:', e); } } };
+  const loadReporter = (loadId, signal) => {
+    let fileIndex = 0;
+    const send = event => {
+      if (loadId === progressGeneration && status === 'loading' && !signal.aborted) emit({ type: 'load-progress', loadId, ...event });
+    };
+    return {
+      file(kind, url) {
+        const index = ++fileIndex;
+        return progress => send({ phase: 'download', kind, fileIndex: index, ...progress, url });
+      },
+      prepare(stage, kind = null, url = null) { send({ phase: 'prepare', stage, kind, url, fileIndex: null, loadedBytes: null, totalBytes: null, done: false }); },
+      cache(kind, url, bytes, storage) { send({ phase: 'cache', kind, url, storage, fileIndex: ++fileIndex, loadedBytes: bytes, totalBytes: bytes, done: true }); },
+    };
+  };
+  const setStatus = value => { status = value; emit({ type: 'state', state: snapshot() }); };
+  const report = e => { lastError = failure(e); emit({ type: 'error', error: clone(lastError) }); };
+  const alive = () => requireValue(!disposing && status !== 'disposed', 'DISPOSED', 'This emulator session has been disposed.');
+  const exclusive = fn => {
+    const next = queue.then(() => { alive(); return fn(); });
+    queue = next.catch(() => {});
+    return next.catch(e => { report(e); throw e; });
+  };
+  const resolve = (key, value) => { const item = pending.get(key); if (!item) return; pending.delete(key); clearTimeout(item.timeout); item.resolve(value); };
+  const rejectPending = e => { for (const item of pending.values()) { clearTimeout(item.timeout); item.reject(e); } pending.clear(); };
+  const clearHardwareDiagnostics = () => { if(hardwareDiagnostics!==null){hardwareDiagnostics=null;emit({type:'hardware-diagnostics',hardwareDiagnostics:null});} };
+  const clearMotors = () => {motors=[];motorOutput=null;emit({type:'motors',motors:[],motorOutput:null});};
+  const clearFlight=()=>{flight=null;emit({type:'flight',flight:null});};
+  const stopWorker = () => { clearFlight();clearMotors(); clearHardwareDiagnostics();network.detach(); audio.reset(); worker?.terminate(); worker = null; rejectPending(error('SESSION_REPLACED', 'The emulator session was replaced.')); booted = false; imuPreviousAt = null; imu.gyroDps = [0,0,0]; imu.delivery = 'configured'; imu.guestTime = null; };
+  const ask = (key, message, transfer = []) => new Promise((resolveRequest, reject) => {
+    requireValue(worker, 'NOT_READY', 'The emulator worker is not ready.');
+    requireValue(!pending.has(key), 'BUSY', 'A worker command is already pending.');
+    const timeout = setTimeout(() => { pending.delete(key); reject(error('WORKER_TIMEOUT', `Emulator did not acknowledge ${message.op}.`)); }, requestTimeout);
+    pending.set(key, { resolve: resolveRequest, reject, timeout });
+    worker.postMessage(message, transfer);
+  });
+  const audio=createAudioStream({emit,isRunning:()=>status==='running',request:async(action,options,transfer=[])=>{
+    const requestId=++inputSequence,reply=await ask(`audio:${requestId}`,{op:`audio-${action}`,requestId,...options},transfer);
+    requireValue(reply.ok,'AUDIO_COMMAND_FAILED',reply.error||'The emulator rejected this audio operation.');return reply;
+  }});
+  const network=createNetworkSession({emit,command:async(action,options)=>{
+    const requestId=++inputSequence,reply=await ask(`network:${requestId}`,{op:`network-${action}`,requestId,...options});
+    requireValue(reply.ok,'NETWORK_COMMAND_FAILED',reply.error||'The emulator rejected this network operation.');return reply;
+  },sendFrame:(interfaceId,data)=>worker?.postMessage({op:'network-receive',interface:interfaceId,data},[data])});
+  const appendSerial = (source, data) => {
+    serial = (serial + data).slice(-SERIAL_LIMIT);
+    serialByPort[source] = ((serialByPort[source] || '') + data).slice(-SERIAL_LIMIT);
+    emit({ type: 'serial', source, data });
+  };
+  const receive = message => {
+    if(message.flight&&flightEnabled()&&hasFlight(product?.runtime?.board)){
+      const next=parseFlightSnapshot(message.flight);
+      if(next&&next.epoch===flightEpoch&&(!flight||next.cycle>=flight.cycle)){flight=next;emit({type:'flight',flight:clone(flight)});}
+    }
+    if(message.flightError){const e=error('FLIGHT_FAILED',message.flightError);report(e);setStatus('error');}
+
+    if(message.networkFrame||message.softAp||message.networkError)network.receive(message);
+    if(message.networkReply!==undefined)resolve(`network:${message.networkReply}`,message);
+    if (message.text !== undefined) {
+      let text;
+      try { text = JSON.parse(message.text); } catch { appendSerial('emulator', String(message.text)); return; }
+      if (text.t === 'serial') appendSerial(text.src || 'usb', text.data || '');
+      else if (text.t === 'emu') appendSerial('emulator', `${text.msg}\n`);
+      else if (text.t === 'stat') { stats = { ...stats, ...text, ...hostPace };  emit({ type: 'stats', stats: clone(stats) }); }
+      else if (text.t === 'ring') {leds=clone(text.leds);emit({type:'leds',leds:clone(leds)});}
+      else if (text.t === 'motion' && product?.runtime?.board==='stackchan' && validServoSnapshot(text)) {servos=clone(text.axes);servoSupply=text.supply;emit({type:'servos',servos:clone(servos),supply:servoSupply});}
+      else if (text.t === 'motion' && hasMotorOutput(product?.runtime?.board)) {
+        const next=parseMotorSnapshot(text);
+        if(next && (!motorOutput || next.motorOutput.cycle>=motorOutput.cycle && next.motorOutput.version>=motorOutput.version) &&
+          JSON.stringify(next)!==JSON.stringify({motors,motorOutput})) {
+          motors=next.motors;motorOutput=next.motorOutput;emit({type:'motors',motors:clone(motors),motorOutput:clone(motorOutput)});
+        }
+      }
+      else if (text.t === 'hardware-diagnostics' && ['stopwatch','corematrix'].includes(product?.runtime?.board)) {
+        const next=parseHardwareDiagnostics(text);
+        if(next?.board===product.runtime.board && JSON.stringify(next)!==JSON.stringify(hardwareDiagnostics)) {hardwareDiagnostics=next;emit({type:'hardware-diagnostics',hardwareDiagnostics:clone(next)});}
+      }
+      else if (text.t === 'grid') {
+        const route=accessoryInputs.find(item=>item.output===text.id);
+        if(route && Array.isArray(text.leds) && text.leds.length===3 && text.leds.every(rgb=>Array.isArray(rgb)&&rgb.length===3&&rgb.every(v=>Number.isInteger(v)&&v>=0&&v<=255))) {
+          accessoryOutputs=accessoryOutputs.map(item=>item.accessoryId===route.accessoryId?{...item,leds:clone(text.leds)}:item);
+          emit({type:'accessory-outputs',accessoryOutputs:clone(accessoryOutputs)});
+        }
+      }
+      else if (text.t === 'board') emit({ type: 'board', board: text });
+    }
+    if (message.bin !== undefined) {
+      try {
+        if (new Uint8Array(message.bin)[0] === 1) {
+          frame = decodeFramebuffer(message.bin); frameNumber++;
+          emit({ type: 'frame', ...frame, frameNumber, source: 'emulator' });
+        } else if(new Uint8Array(message.bin)[0]===2)audio.receive(message.bin,message.guestTime??stats.time??null);
+      } catch (e) { report(e); }
+      finally { if (message.ack) worker?.postMessage({ op: 'frame-ack' }); }
+    }
+    if (message.log !== undefined) appendSerial('emulator', `${message.log}\n`);
+    if (message.pace) { hostPace = { ...message.pace }; stats = { ...stats, ...hostPace }; emit({ type: 'stats', stats: clone(stats) }); }
+    if (message.audioReply !== undefined)resolve(`audio:${message.audioReply}`,message);
+    if (message.flashReply !== undefined) resolve(`flash:${message.flashReply}`, message);
+    if (message.flashDelta) { try { receiveFlash(message.flashDelta); } catch(e) { storageFailure(storageSession,e); } }
+    if (message.ready) resolve('ready', message);
+    if (message.sdDelta) {try{receiveSd(message.sdDelta);}catch(e){sdFailure(e);}}
+    if (message.sdReply !== undefined) resolve(`sd:${message.sdReply}`,message);
+    if (message.bleReply !== undefined) resolve(`ble:${message.bleReply}`,message);
+    if (message.created !== undefined) resolve('created', message);
+    if (message.loaded !== undefined) resolve(`loaded:${message.loaded}`, message);
+    if (message.started !== undefined) resolve('started', message);
+    if (message.resumed !== undefined) resolve('resumed', message);
+    if (message.inputQueued !== undefined) resolve(`input:${message.inputQueued}`, message);
+    if (message.imuApplied !== undefined) resolve(`imu:${message.imuApplied}`, message);
+    if (message.loraResult !== undefined) resolve(`lora:${message.loraResult}`, message);
+    if (message.stopped !== undefined) {
+      const requested = pending.has('stopped');
+      resolve('stopped', message);
+      if (!requested) {
+        if (message.stopped !== 0) { const e = error('EMULATOR_STOPPED', `Emulator stopped with code ${message.stopped}.`); rejectPending(e); report(e); setStatus('error'); }
+        else if (status === 'running') setStatus('paused');
+      }
+    }
+  };
+  const storageEvent = () => emit({type:'storage', storage:clone(storage)});
+  const detachStorage = () => { if (storageSession) storageSession.closed = true; storageSession = null; storage = emptyStorage(); storageEvent(); };
+  const flashAsk = async (op, fields = {}, transfer = []) => {
+    const requestId = ++storageSequence, result = await ask(`flash:${requestId}`, {op, requestId, ...fields}, transfer);
+    requireValue(result.ok !== false, 'STORAGE_WORKER_ERROR', result.error || 'Cannot access emulator Flash.');
+    return {...result, requestId};
+  };
+  const storageFailure = (session, e) => {
+    if (session !== storageSession || session.closed) return;
+    storage.status = e.code === 'STORAGE_CONFLICT' ? 'conflict' : 'error'; storage.error = failure(e); storageEvent(); report(e);
+    if (['STORAGE_CONFLICT','STORAGE_WORKER_ERROR'].includes(e.code)) { session.closed=true; stopWorker(); setStatus('error'); }
+  };
+  const persistFlash = session => {
+    if (session.saving) return session.saving;
+    session.saving = (async () => {
+      while (!session.closed && session.savedVersion < session.version) {
+        const version = session.version;
+        storage.status = 'saving'; storageEvent();
+        const result = await deviceStorage.save(session.scope, {epoch:storage.epoch, revision:storage.revision, pages:[...session.pages].map(([offset,data])=>({offset,data}))});
+        if (session.closed || session !== storageSession) return;
+        session.savedVersion = version;
+        Object.assign(storage, {status:result.persistent?'saved':'memory-only', backend:result.backend, epoch:result.row.epoch, revision:result.row.revision, lastSavedAt:result.row.savedAt, error:result.warning?{code:'STORAGE_MEMORY_ONLY',message:result.warning}:null});
+        storageEvent();
+      }
+    })().catch(e=>{storageFailure(session,e); throw e;}).finally(()=>{session.saving=null;});
+    // Automatic saves are observable through storage/error events; callers of flush
+    // also receive the rejection. No unhandled promise hides a failed transaction.
+    session.saving.catch(()=>{});
+    return session.saving;
+  };
+  const receiveFlash = ({watchId,pages}) => {
+    const session = storageSession;
+    if (!session || session.closed || session.watchId !== watchId) return;
+    for (const {offset,data} of pages) {
+      requireValue(Number.isInteger(offset) && offset>=0 && offset%4096===0 && offset+4096<=session.baseline.length && data instanceof ArrayBuffer && data.byteLength===4096, 'STORAGE_WORKER_ERROR', 'Worker sent invalid Flash page bounds.');
+      const bytes = new Uint8Array(data); let differs = false;
+      for (let i=0;i<4096;i++) if (bytes[i]!==session.baseline[offset+i]) {differs=true;break;}
+      if (differs) session.pages.set(offset,data); else session.pages.delete(offset);
+    }
+    session.version++;
+    storage.pristine = session.pages.size===0; storage.changedPages = session.pages.size;
+    void persistFlash(session);
+  };
+  const flushStorage = async () => {
+    const session = storageSession;
+    requireValue(session && storage.scope, 'STORAGE_NOT_LOADED', 'Load firmware before accessing its device storage.');
+    requireValue(storage.status !== 'conflict', 'STORAGE_CONFLICT', storage.error?.message || 'Device storage changed in another tab.');
+    if (worker) await flashAsk('flash-flush');
+    await persistFlash(session);
+    return clone(storage);
+  };
+  const preserveStorage = async () => {
+    await Promise.all([storageSession&&storage.status!=='conflict'?flushStorage():null,sdSession&&!sdSession.closed&&sdCard.status!=='conflict'?flushSd():null]);
+  };
+  const initializeStorage = async (bundle, supported, progress) => {
+    detachStorage();
+    if(isC5Board(bundle.cfg.board)) {storage.status='unsupported';storage.pristine=null;storageEvent();return;}
+    if (!supported) { storage.status='error'; storage.pristine=null; storage.error={code:'STORAGE_UNSUPPORTED',message:'This emulator build does not expose writable Flash snapshots.'}; storageEvent(); return; }
+    storage.status='loading'; storageEvent(); progress.prepare('device-storage');
+    const snapshot = await flashAsk('flash-snapshot'), baseline = new Uint8Array(snapshot.data);
+    requireValue(baseline.length===bundle.cfg.flash_mb*MIB, 'STORAGE_WORKER_ERROR', 'Emulator Flash capacity does not match the device.');
+    const scope = deviceStorageScope({productId:product.id, board:persistentBoard(product.id,bundle.cfg.board), chip:product.chip || 'esp32s3', flashBytes:baseline.length, firmwareSha256:await sha256(baseline)});
+    const result = await deviceStorage.read(scope);
+    requireValue(!aborter.signal.aborted, 'FETCH_ABORTED', 'Firmware load was cancelled.');
+    const pages = new Map(result.row.pages.map(page=>[page.offset,page.data]));
+    const session = {id:`${configurationSessionPrefix}:${++configurationSequence}`,scope,baseline,pages,version:0,savedVersion:0,saving:null,closed:false,watchId:null};
+    storageSession=session;
+    storage={status:result.persistent?'clean':'memory-only', scope, backend:result.backend, restored:pages.size>0, pristine:pages.size===0, revision:result.row.revision, epoch:result.row.epoch, lastSavedAt:result.row.savedAt, changedPages:pages.size, error:result.warning?{code:'STORAGE_MEMORY_ONLY',message:result.warning}:null};
+    if (pages.size) {
+      const restore=[...pages].map(([offset,data])=>({offset,data:data.slice(0)}));
+      await flashAsk('flash-restore',{pages:restore},restore.map(page=>page.data));
+    }
+    const watching=await flashAsk('flash-watch'); session.watchId=watching.requestId;
+    storageEvent();
+  };
+  const unsubscribeStorage = deviceStorage.subscribe(change => {
+    const session=storageSession;
+    if (!session || session.closed || change.key!==session.scope.key || change.epoch<storage.epoch || change.epoch===storage.epoch && change.revision<=storage.revision) return;
+    storageFailure(session,error('STORAGE_CONFLICT','Another tab saved or cleared this device storage. Reload the same firmware to restore its latest state.'));
+  });
+  const sdEvent=()=>emit({type:'sd-card',sdCard:clone(sdCard)});
+  const sdAsk=async(op,fields={},transfer=[])=>{const requestId=++storageSequence;const result=await ask(`sd:${requestId}`,{op,requestId,...fields},transfer);requireValue(result.ok!==false,'STORAGE_WORKER_ERROR',result.error||'Cannot access virtual SD card.');return {...result,requestId};};
+  const sdFailure=(e,session=sdSession)=>{if(!session||session.closed||session!==sdSession||disposing||status==='disposed')return;sdCard.status=e.code==='STORAGE_CONFLICT'?'conflict':'error';sdCard.error=failure(e);sdEvent();report(e);if(e.code==='STORAGE_CONFLICT'){if(sdSession)sdSession.closed=true;stopWorker();setStatus('error');}};
+  const persistSd=session=>{
+    if(session.saving)return session.saving;
+    session.saving=(async()=>{while(!session.closed&&session.savedVersion<session.version){const version=session.version;
+      const r=await sdStorage.save(session.key,{epoch:session.epoch,revision:session.revision,pages:[...session.pages].map(([offset,data])=>({offset,data}))});
+      if(session.closed||session!==sdSession)return;session.epoch=r.row.epoch;session.revision=r.row.revision;session.savedVersion=version;
+      sdCard.backend=r.backend;sdCard.status=r.persistent?'saved':'memory-only';sdEvent();}
+    })().catch(e=>{sdFailure(e,session);throw e;}).finally(()=>{session.saving=null;});session.saving.catch(()=>{});return session.saving;
+  };
+  const receiveSd=({watchId,pages})=>{const session=sdSession;if(!session||session.closed||session.watchId!==watchId)return;
+    for(const {offset,data} of pages){requireValue(Number.isSafeInteger(offset)&&offset>=0&&offset%4096===0&&offset+4096<=session.baseline.length&&data instanceof ArrayBuffer&&data.byteLength===4096,'STORAGE_WORKER_ERROR','Invalid SD page bounds.');
+      const bytes=new Uint8Array(data);if(bytes.some((b,i)=>b!==session.baseline[offset+i]))session.pages.set(offset,data);else session.pages.delete(offset);}
+    session.version++;sdCard.changedPages=session.pages.size;sdCard.pristine=session.isDefault&&!session.pages.size;void persistSd(session);
+  };
+  const flushSd=async()=>{requireValue(sdSession&&!sdSession.closed,'SD_NOT_LOADED','Load a firmware for a device with SD support before using its SD card.');if(worker)await sdAsk('sd-flush');await persistSd(sdSession);return clone(sdCard);};
+  const initializeSd=async bundle=>{
+    alive();
+    if(sdSession)sdSession.closed=true;sdSession=null;sdCard=emptySd();leds=[];servos=[];servoSupply=null;
+    if(!hasSdCard(bundle.cfg.board)){sdEvent();return;}
+    requireValue(storage.scope,'SD_STORAGE_SCOPE','SD requires a loaded firmware identity.');
+    const key=`v1:${product.id}:${persistentBoard(product.id,bundle.cfg.board)}:${storage.scope.firmwareSha256}`;
+    // Subscribe to this identity before reading or hashing its base image. A clear
+    // from another tab must invalidate even a read-only firmware's pending mount.
+    const session={key,baseline:null,pages:new Map(),epoch:-1,revision:-1,version:0,savedVersion:0,saving:null,closed:false,isDefault:true};sdSession=session;
+    const current=worker,signal=aborter.signal;
+    const active=()=>{alive();requireValue(!signal.aborted,'FETCH_ABORTED','Firmware load was cancelled.');requireValue(session===sdSession&&!session.closed&&worker===current,'STORAGE_CONFLICT','The SD card changed while it was being loaded. Reload the firmware.');};
+    sdCard={...emptySd(),supported:true,status:'loading'};sdEvent();
+    const r=await sdStorage.read(key);active();requireValue(!!r.image===!!r.row.media,'STORAGE_CORRUPT','Saved SD base image is missing.');
+    session.epoch=r.row.epoch;session.revision=r.row.revision;session.isDefault=!r.row.media;
+    const baseline=r.image?validateSdImage(r.image):createFat32Image(),pages=session.pages,bytes=baseline.slice();session.baseline=baseline;
+    if(r.image){const hash=await sha256(baseline);active();requireValue(r.row.media.bytes===baseline.length&&r.row.media.sha256===hash,'STORAGE_CORRUPT','Saved SD base image failed its checksum.');}
+    for(const {offset,data} of r.row.pages){requireValue(Number.isSafeInteger(offset)&&offset>=0&&offset%4096===0&&offset+4096<=bytes.length&&data instanceof ArrayBuffer&&data.byteLength===4096&&!pages.has(offset),'STORAGE_CORRUPT','Saved SD image has invalid page bounds.');pages.set(offset,data);bytes.set(new Uint8Array(data),offset);}
+    await sdAsk('sd-attach',{data:bytes.buffer},[bytes.buffer]);active();
+    const watching=await sdAsk('sd-watch');active();session.watchId=watching.requestId;
+    sdCard={supported:true,present:true,bytes:baseline.length,format:r.row.media?.format||'fat32',status:r.persistent?'clean':'memory-only',backend:r.backend,restored:pages.size>0||!!r.row.media,pristine:session.isDefault&&!pages.size,changedPages:pages.size,error:null};sdEvent();
+  };
+  const unsubscribeSd=sdStorage.subscribe(change=>{const session=sdSession;if(!session||session.closed||change.key!==session.key||change.epoch<session.epoch||change.epoch===session.epoch&&change.revision<=session.revision)return;sdFailure(error('STORAGE_CONFLICT','Another tab replaced or saved this SD card. Reload the firmware.'));});
+  const replaceSd=async bytes=>{
+    requireValue(loaded&&sdSession&&!sdSession.closed,'SD_NOT_LOADED','Load a firmware for a device with SD support before replacing its SD card.');
+    const session=sdSession,bundle=loaded,signal=aborter.signal;
+    const active=()=>{alive();requireValue(!signal.aborted,'FETCH_ABORTED','SD replacement was cancelled.');requireValue(session===sdSession&&!session.closed,'STORAGE_CONFLICT','The SD card changed while it was being replaced. Reload the firmware.');};
+    if(worker&&status==='running'){await ask('stopped',{op:'stop'});active();setStatus('paused');}
+    await preserveStorage();active();
+    const image=bytes?.slice().buffer||null,hash=image?await sha256(new Uint8Array(image)):null;active();
+    await sdStorage.replace(session.key,{image,media:image?{format:'image',sha256:hash,bytes:image.byteLength}:null});active();session.closed=true;
+    loadCancelled=false;aborter=new AbortController();serial='';serialByPort={};stats={};hostPace={};frame=null;frameNumber=0;lastError=null;setStatus('loading');
+    try{await initialize(bundle,loadReporter(++progressGeneration,aborter.signal));alive();setStatus('ready');return snapshot();}catch(e){stopWorker();if(!disposing&&status!=='disposed')setStatus('error');throw e;}
+  };
+  const pageHide=()=>{if(worker)void preserveStorage().catch(report);};
+  globalThis.addEventListener?.('pagehide',pageHide);
+  const visibilitySave=()=>{if(globalThis.document?.visibilityState==='hidden')pageHide();};
+  globalThis.document?.addEventListener('visibilitychange',visibilitySave);
+  const runtimeConfig = () => {
+    const runtime = product?.runtime || {};
+    requireValue(runtime.board, 'UNSUPPORTED_PRODUCT', 'This product has catalog metadata but no executable board model yet.');
+    // Official StopWatch V0.5 enters a non-responsive JIT path in its IMU page.
+    // The same unmodified firmware passes through the WASM CPU interpreter.
+    const c5=isC5Board(runtime.board);
+    const cfg={ board: runtime.board, flash_mb: runtime.flashMb ?? (c5?4:8), psram_mb: runtime.psramMb ?? (c5?0:2), ...(runtime.board === 'stopwatch'||c5 ? {jit: false} : {}) };
+    requireValue(!c5||cfg.flash_mb===4&&cfg.psram_mb===0,'MEMORY_MISMATCH','Stamp-C5 SRAM runtime uses 4 MiB Flash staging and no PSRAM.');return cfg;
+  };
+  const readArtifact = async (entry, root, progress, kind, maxBytes = MAX_FILE) => {
+    const item = typeof entry === 'string' ? { url: entry } : entry;
+    requireValue(item && typeof item.url === 'string', 'INVALID_MANIFEST', 'Each firmware file needs a URL.');
+    const url = resolveFirmwareUrl(item.url, root);
+    const cacheUrl=firmwareArchiveCacheKey(item,url);
+    let cached = await firmwareCache.get(cacheUrl, item.sha256, maxBytes);
+    requireValue(!aborter.signal.aborted, 'FETCH_ABORTED', 'Firmware load was cancelled.');
+    if (cached) {
+      try { await checkedHash(cached.data, item.sha256); }
+      catch { await firmwareCache.remove(cacheUrl, item.sha256); cached = null; }
+    }
+    let data = cached?.data || await fetchBytes(url, { fetchImpl, maxBytes:item.archive?MAX_FIRMWARE_ZIP_BYTES:maxBytes, signal: aborter.signal, onProgress: progress.file(kind, url), sha256:item.sha256 });
+    if(item.archive&&!cached){progress.prepare('extract',kind,url);data=await extractFirmwareZip(data,item,{maxBytes,signal:aborter.signal});}
+    if (cached) progress.cache(kind, url, data.byteLength, cached.storage);
+    progress.prepare('verify', kind, url);
+    requireValue(data.length > 0, 'EMPTY_FILE', 'Firmware file is empty.', { url });
+    const digest = await checkedHash(data, item.sha256);
+    requireValue(!aborter.signal.aborted, 'FETCH_ABORTED', 'Firmware load was cancelled.');
+    // Store computed hashes too; reuse still requires a pinned hash. A newly
+    // discovered Burner version can then be restored from its history receipt.
+    if (!cached) await firmwareCache.putVerified(cacheUrl, digest, data);
+    return { data, url, sha256: digest };
+  };
+  const prepare = async (source, progress) => {
+    requireValue(source && typeof source === 'object', 'FIRMWARE_REQUIRED', 'Select a firmware manifest or merged flash image first.');
+    const cfg = runtimeConfig(), c5=isC5Board(cfg.board), files = [], receipts = [];
+    requireValue(source.bootMode===undefined||['rom','app-direct'].includes(source.bootMode),'INVALID_BOOT_MODE','Unknown firmware boot mode.');
+    requireValue(!source.bootMode||!source.manifestUrl&&!source.files&&(source.url&&!source.file||c5&&source.file&&!source.url),'INVALID_BOOT_MODE','Explicit boot mode needs a remote raw image, or a local C5 SRAM application.');
+    requireValue(source.archive===undefined||validFirmwareArchive(source)&&!source.file&&!source.files,'INVALID_FIRMWARE_ARCHIVE','ZIP 固件必须指定唯一 BIN 文件名及其 SHA-256。');
+    requireValue(!c5||source.bootMode!=='rom'&&!['build','segments','merged'].includes(source.format),'C5_SRAM_REQUIRED','C5 currently accepts one SRAM application with app-direct startup. Merged ROM/IDF builds are unsupported.');
+    let total = 0;
+    const add = (kind, artifact, at) => {
+      total += artifact.data.length;
+      requireValue(total <= MAX_TOTAL, 'BUNDLE_TOO_LARGE', 'Firmware bundle exceeds 256 MiB.');
+      files.push({ kind, data: artifact.data, ...(at === undefined ? {} : { at }) });
+      receipts.push({ kind, url: artifact.url, sha256: artifact.sha256, bytes: artifact.data.length, ...(at === undefined ? {} : { at }) });
+    };
+    let manifest = null, manifestUrl = null, manifestHash = null, localLayout = null, sramApp = null;
+    if (source.manifestUrl) {
+      manifestUrl = resolveFirmwareUrl(source.manifestUrl, baseUrl);
+      const artifact = await readArtifact({ url: manifestUrl, sha256: source.sha256 }, baseUrl, progress, 'manifest');
+      manifestHash = artifact.sha256;
+      try { manifest = JSON.parse(new TextDecoder().decode(artifact.data)); } catch { throw error('INVALID_MANIFEST', 'Firmware manifest is not valid JSON.'); }
+      requireValue(manifest && !Array.isArray(manifest) && typeof manifest === 'object', 'INVALID_MANIFEST', 'Firmware manifest must be an object.');
+      requireValue(!manifest.nodes, 'UNSUPPORTED_MANIFEST', 'Multi-node network manifests are not supported by this product session.');
+      requireValue(!manifest.board || firmwareBoardMatches(manifest.board,cfg.board), 'BOARD_MISMATCH', 'Manifest board does not match the selected product.', { selected: cfg.board, manifest: manifest.board });
+      for (const [key, expected] of [['flash_mb', cfg.flash_mb], ['psram_mb', cfg.psram_mb]]) if (manifest[key] != null) requireValue(manifest[key] === expected, 'MEMORY_MISMATCH', `Manifest ${key} does not match this product.`, { expected, actual: manifest[key] });
+      requireValue(manifest.files && typeof manifest.files === 'object' && !Array.isArray(manifest.files), 'INVALID_MANIFEST', 'Manifest must list its firmware files.');
+      if(c5) {
+        requireValue(manifest.app_direct===true&&Object.keys(manifest.files).length===1&&[].concat(manifest.files.app||[]).length===1&&!Object.keys(manifest.flash_at||{}).length,'C5_SRAM_REQUIRED','A C5 manifest must declare app_direct:true and exactly one files.app SRAM image; no ROM or flash layout.');
+        requireValue(!manifest.wifi&&(!manifest.stubs||Array.isArray(manifest.stubs)&&manifest.stubs.length===0),'C5_FEATURE_UNSUPPORTED','C5 SRAM runtime does not support WiFi configuration or ROM stubs.');
+      }
+      const pinned = entry => typeof entry === 'string' ? { url: entry, sha256: manifest.artifact_sha256?.[entry] } : entry;
+      for (const [kind, entries] of Object.entries(manifest.files)) {
+        requireValue(Object.hasOwn(KINDS, kind), 'INVALID_MANIFEST', `Unsupported firmware file kind: ${kind}.`);
+        for (const entry of [].concat(entries)) {
+          requireValue(files.length < 32, 'INVALID_MANIFEST', 'A manifest may contain at most 32 files.');
+          add(kind, await readArtifact(pinned(entry), manifestUrl, progress, kind));
+        }
+      }
+      for (const [offset, entry] of Object.entries(manifest.flash_at || {})) {
+        requireValue(/^0x[0-9a-f]+$/i.test(offset), 'INVALID_MANIFEST', 'flash_at offsets must be hexadecimal strings beginning with 0x.');
+        const at = Number(offset), artifact = await readArtifact(pinned(entry), manifestUrl, progress, 'flash_at');
+        requireValue(Number.isSafeInteger(at) && at >= 0 && at + artifact.data.length <= cfg.flash_mb * MIB, 'FLASH_OVERFLOW', 'Flash segment is outside product flash.');
+        requireValue(files.length < 32, 'INVALID_MANIFEST', 'A manifest may contain at most 32 files.');
+        add('flash', artifact, at);
+      }
+      requireValue(files.some(f => f.kind === 'app' || f.kind === 'flash'), 'INCOMPLETE_IMAGE', 'Manifest contains no app or flash image.');
+      cfg.appDirect = manifest.app_direct === true;
+      if(c5)sramApp=await validateAppImage(files[0].data,cfg.board,cfg.flash_mb*MIB);
+      if (!cfg.appDirect && !files.some(f => f.kind === 'flash')) requireValue(files.some(f => f.kind === 'bootloader') && files.some(f => f.kind === 'ptable'), 'INCOMPLETE_IMAGE', 'ROM boot needs both a bootloader and a partition table.');
+      cfg.stubs = manifest.stubs || [];
+      requireValue(Array.isArray(cfg.stubs) && cfg.stubs.length <= 64 && cfg.stubs.every(s => typeof s === 'string' && s.length < 256), 'INVALID_MANIFEST', 'Invalid manifest stub list.');
+      cfg.stubs = cfg.stubs.map(spec => { const [name] = spec.split('='); return String(manifest.symbols?.[name] || name) + spec.slice(name.length); });
+      cfg.wifi = manifest.wifi || '';
+      requireValue(typeof cfg.wifi === 'string' && cfg.wifi.length <= 1024, 'INVALID_MANIFEST', 'Invalid WiFi emulation configuration.');
+    } else if (['build','segments'].includes(source.format)) {
+      const local = await assembleLocalFirmware(source, {board:cfg.board, flashBytes:cfg.flash_mb * MIB, signal:aborter.signal,
+        onRead:event => progress.prepare(event.stage, event.name)});
+      progress.prepare('verify', 'local-layout');
+      validateMergedImage(local.data, cfg.board, cfg.flash_mb * MIB, {partitionTableOffset:local.partitionTableOffset});
+      const segments = [];
+      for (const entry of local.segments) segments.push({name:entry.path.split('/').at(-1), offset:entry.offset, bytes:entry.data.length, sha256:await checkedHash(entry.data)});
+      requireValue(!aborter.signal.aborted, 'FETCH_ABORTED', 'Local firmware load was cancelled.');
+      localLayout = {format:source.format, partitionTableOffset:local.partitionTableOffset, segments};
+      add('flash', {data:local.data, url:null, sha256:await checkedHash(local.data, source.sha256)});
+    } else {
+      requireValue(!source.format || source.format === 'merged', 'UNSUPPORTED_FORMAT', 'Raw firmware must be a merged flash image.');
+      let artifact;
+      if (source.file) {
+        requireValue(typeof source.file.arrayBuffer === 'function' && source.file.size > 0 && source.file.size <= MAX_FILE, 'INVALID_FILE', 'Choose a nonempty local file no larger than 256 MiB.');
+        progress.prepare('local', 'flash');
+        const data = new Uint8Array(await source.file.arrayBuffer());
+        progress.prepare('verify', 'flash');
+        artifact = { data, url: null, sha256: await checkedHash(data, source.sha256) };
+      } else artifact = await readArtifact(source, baseUrl, progress, 'flash',source.archive?cfg.flash_mb*MIB:MAX_FILE);
+      if(c5) {
+        sramApp=await validateAppImage(artifact.data,cfg.board,cfg.flash_mb*MIB);
+        requireValue(source.file||source.bootMode==='app-direct'||sramApp.applicationDescriptor,'C5_APP_DIRECT_REQUIRED','For a bare-metal C5 URL, choose SRAM app-direct or set bootMode:"app-direct" explicitly.');
+        cfg.appDirect=true;
+      } else if(source.bootMode==='app-direct') {
+        await validateAppImage(artifact.data,cfg.board,cfg.flash_mb*MIB);cfg.appDirect=true;
+      } else {
+        try {validateMergedImage(artifact.data,cfg.board,cfg.flash_mb*MIB);}
+        catch(cause) {
+          if(cause.code!=='INCOMPLETE_IMAGE'||source.file||source.format==='merged'||source.bootMode==='rom')throw cause;
+          // Inspect the same downloaded bytes before initializing any worker.
+          // Never reinterpret a failed download/hash check or a bootloader as an app.
+          try {await validateAppImage(artifact.data,cfg.board,cfg.flash_mb*MIB);}
+          catch(appError){if(appError.code==='APP_IMAGE_INVALID')throw cause;throw appError;}
+          cfg.appDirect=true;
+        }
+      }
+      add(cfg.appDirect?'app':'flash', artifact);
+    }
+    if (!c5 && (!cfg.appDirect || !manifest) && !files.some(f => f.kind === 'rom')) add('rom', await readArtifact(new URL(`wasm/fw/${romFor(cfg.board)}`, assetBaseUrl).href, baseUrl, progress, 'rom'));
+    if(isC61Board(cfg.board))cfg.jit=false;
+    return { cfg, files, receipt: { manifestUrl, manifestHash, metadata:firmwareMetadata(files,manifest), source: source.file || localLayout ? 'local' : 'remote', ...(localLayout ? {localLayout} : {}), ...(sramApp?{sramApp,bootMode:'app-direct',resetMode:'reload-same-sram-image'}:{}), artifacts: receipts, appDirect: !!cfg.appDirect, stubs: cfg.stubs || [], executionMode: cfg.jit === false ? 'wasm-interpreter' : 'wasm-jit' } };
+  };
+  const initialize = async (bundle, progress) => {
+    stopWorker();
+    const wasmUrl = new URL('wasm/esp32sim.wasm', assetBaseUrl).href;
+    const wasm = await fetchBytes(wasmUrl, { fetchImpl, maxBytes: MAX_FILE, signal: aborter.signal, onProgress: progress.file('wasm', wasmUrl) });
+    progress.prepare('worker');
+    alive();
+    requireValue(!aborter.signal.aborted, 'FETCH_ABORTED', 'Firmware load was cancelled.');
+    const current = workerFactory(new URL('wasm/worker.js', assetBaseUrl)); worker = current;
+    current.onmessage = event => { if (worker === current) receive(event.data); };
+    current.onerror = event => { const e = error('WORKER_ERROR', event.message || 'WebAssembly worker failed.'); rejectPending(e); report(e); setStatus('error'); };
+    const wasmBuffer = wasm.buffer.slice(wasm.byteOffset, wasm.byteOffset + wasm.byteLength);
+    await ask('ready', { op: 'init', wasm: wasmBuffer, frameAck: true }, [wasmBuffer]);
+    const result = await ask('created', { op: 'create', ...bundle.cfg, audioStreaming:true, ...(flightEnabled()?{flight:scene.flight,flightEpoch:++flightEpoch}:{}) });
+    requireValue(result.created, 'CREATE_FAILED', 'Cannot create the selected emulator board.');
+    audio.reset(!isC5Board(bundle.cfg.board)&&result.audioAvailable===true);
+    // PaperS3 C139 V1.0 schematic: GPIO3 ADC_VBAT, R24/R25=22k/22k.
+    // A constant 4.0 V virtual battery supplies 2.0 V to the actual SAR input.
+    // Use the existing host analog script, never patch firmware/ADC return values.
+    // https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/517/sch_papers3_V1.0.pdf
+    const batteryScript = bundle.cfg.board === 'papers3' ? new TextEncoder().encode('0 adc 3 2.0\n') : null;
+    const bootFiles = batteryScript && !bundle.files.some(file => file.kind === 'script')
+      ? [...bundle.files, {kind:'script', data:new Uint8Array()}] : bundle.files;
+    for (const file of bootFiles) {
+      let data = file.data.slice().buffer;
+      if (batteryScript && file.kind === 'script') {
+        const combined = new Uint8Array(batteryScript.length + data.byteLength);
+        combined.set(batteryScript); combined.set(new Uint8Array(data), batteryScript.length); data = combined.buffer;
+      }
+      const result = await ask(`loaded:${file.at === undefined ? KINDS[file.kind] : `at${file.at}`}`, { op: 'load', ...(file.at === undefined ? { kind: KINDS[file.kind] } : { at: file.at }), data }, [data]);
+      requireValue(result.ok, 'LOAD_FAILED', `Emulator rejected ${file.kind}.`);
+    }
+    await initializeStorage(bundle, result.flashStorage, progress);
+    await initializeSd(bundle);
+    const selectedBle = selectBleProfile(bundle.cfg.board, bundle.files, bundle.receipt.artifacts);
+    if (selectedBle) {
+      progress.prepare('ble-controller');
+      const adapter = await loadBleProfile(selectedBle, {digest:sha256, read:(url,maxBytes)=>fetchBytes(url,{fetchImpl,maxBytes,signal:aborter.signal})});
+      requireValue(worker === current && !aborter.signal.aborted, 'FETCH_ABORTED', 'Firmware load was cancelled.');
+      requireValue(storageSession?.baseline, 'BLE_PROFILE_MISMATCH', 'BLE profile validation requires the restored Flash snapshot.');
+      verifyBleStoredPages(adapter.profile, storageSession.baseline, storageSession.pages);
+      const requestId = ++inputSequence, data = adapter.symbols.slice().buffer;
+      const reply = await ask(`ble:${requestId}`, {op:'ble-hci',requestId,data}, [data]);
+      requireValue(reply.ok, 'BLE_CONTROLLER_UNAVAILABLE', reply.error || 'Cannot enable the virtual BLE controller.');
+      bundle.receipt.ble = adapter.receipt;
+    }
+    for (const spec of bundle.cfg.stubs || []) worker.postMessage({ op: 'stub', spec });
+    if(isC5Board(bundle.cfg.board))await network.attach({available:false});
+    else if(result.networkAvailable&&romFor(bundle.cfg.board)!=='esp32p4_rev0_rom.elf')await network.attach({available:true,manifestWifi:bundle.cfg.wifi});
+    else if(bundle.cfg.wifi)worker.postMessage({op:'wifi',spec:bundle.cfg.wifi});
+    if (imuModel()&&!flightEnabled()) await applyImu();
+    if (isC61Board(bundle.cfg.board)&&bleNearby.length) await applyBleNearby(bleNearby);
+    resetAccessoryInputs();
+    for(const route of accessoryInputs.filter(route=>!route.hub)) await sendAccessory(route);
+    emit({type:'accessories',accessoryInputs:clone(accessoryInputs)});
+  };
+  const applyBleNearby=async nearby=>{
+    const requestId=++inputSequence,reply=await ask(`ble:${requestId}`,{op:'ble-nearby',requestId,spec:nearby.join('\n')});
+    requireValue(reply.ok,'BLE_CONFIG_REJECTED',reply.error||'Nearby BLE configuration rejected.');
+  };
+  const applyImu = async () => {
+    if (!worker) return;
+    const inputId = ++inputSequence;
+    const receipt = await ask(`imu:${inputId}`, {op: 'imu', inputId, accelG: imu.accelG, gyroDps: imu.gyroDps});
+    requireValue(receipt.ok && Number.isFinite(receipt.time), 'IMU_UNSUPPORTED', 'The loaded emulator does not support this IMU input.');
+    imu.delivery = 'register-state'; imu.guestTime = receipt.time;
+  };
+  const accessoryMessage=route=>({t:route.control==='button'?'accessory-button':route.control==='knob'?'accessory-angle':route.control==='motion'?'accessory-motion':route.control==='environment'?'accessory-environment':route.control==='illuminance'?'accessory-illuminance':'accessory-connection',model:route.model,port:route.port,connected:accessoryPoweredPath(route)?1:0,...(route.control==='button'?{pressed:route.pressed?1:0}:route.control==='knob'?{value:route.value}:route.control==='motion'?{motion:route.motion?1:0}:route.control==='environment'?environmentParameters(route):route.control==='illuminance'?{lux:route.lux}:{})});
+  const sendAccessory=async route=>{const inputId=++inputSequence;return ask(`input:${inputId}`,{op:'text',inputId,data:JSON.stringify(accessoryMessage(route))});};
+  const start = async () => {
+    requireValue(loaded && ['ready', 'paused', 'running'].includes(status), 'NOT_READY', 'Load firmware before starting the emulator.');
+    if (status === 'running') return snapshot();
+    const resume = booted, result = await ask(resume ? 'resumed' : 'started', { op: resume ? 'resume' : 'start', appDirect: !!loaded.cfg.appDirect });
+    requireValue(resume ? result.resumed : result.started, 'BOOT_FAILED', result.error || 'The emulator could not boot this firmware.');
+    booted = true; setStatus('running'); return snapshot();
+  };
+  const controls = () => Array.isArray(product?.controls) ? product.controls : product?.controls?.buttons || [];
+  const boardButton = control => control?.transport==='board' && ({'metalio-ink4':['volume-up','volume-down','home','previous','next'],'nesso-n1':['btnA','btnB'],'lilygo-t-beam-v1-2':['power'],'stamps3bat':['power'],'stamplc':['button-a','button-b','button-c'],'corematrix':['button-a','button-b','button-c','power'],'stackchan':['touch-pad-front','touch-pad-middle','touch-pad-back']}[product?.runtime?.board] || []).includes(control.id);
+  const input = async event => {
+    const releaseWhilePaused = status === 'paused' && ((['button','matrix-key','accessory-button'].includes(event?.type) && event.pressed === false) || (event?.type==='accessory-connection' && event.connected===false) || (event?.type === 'touch' && event.down === false));
+    requireValue(status === 'running' || releaseWhilePaused, 'NOT_RUNNING', 'Start the emulator before sending input.');
+    requireValue(event && typeof event === 'object', 'INVALID_INPUT', 'Input must be an object.');
+    let message, accessoryUpdate, accessoryBatch;
+    if (event.type === 'button') {
+      const control = controls().find(c => c.id === event.id);
+      const pin = control?.pin ?? control?.gpio;
+      const semanticButton=boardButton(control);
+      requireValue(semanticButton || (Number.isInteger(pin) && pin >= 0 && pin < 64), 'UNSUPPORTED_CONTROL', 'This product does not expose that button.');
+      requireValue(typeof event.pressed === 'boolean', 'INVALID_INPUT', 'Button pressed must be a boolean.');
+      message = semanticButton?{t:'board-button',id:control.id,pressed:event.pressed?1:0}:{t:'btn',pin,v:event.pressed?1:0};
+    } else if (event.type === 'encoder') {
+      requireValue(product.runtime?.encoder === true && controls().some(c => c.id === event.id && c.type === 'encoder'), 'UNSUPPORTED_CONTROL', 'This product does not expose that rotary encoder.');
+      requireValue(Number.isInteger(event.steps) && event.steps !== 0 && Math.abs(event.steps) <= 64, 'INVALID_INPUT', 'Encoder steps must be a nonzero integer from -64 to 64.');
+      message = {t:'knob', d:event.steps};
+    } else if (['accessory-button','accessory-angle','accessory-motion','accessory-environment','accessory-illuminance','accessory-connection'].includes(event.type)) {
+      const route=accessoryInputs.find(item=>item.accessoryId===event.accessoryId);
+      requireValue(route,'ACCESSORY_ROUTE_UNSUPPORTED','This accessory has no supported physical route on the current product.');
+      if(event.type==='accessory-button') {
+        requireValue(route.control==='button' && event.id==='button' && typeof event.pressed==='boolean','INVALID_INPUT','Unit Button requires id button and a boolean pressed state.');
+        requireValue(accessoryPoweredPath(route) || event.pressed===false,'ACCESSORY_DISCONNECTED','Connect this accessory before pressing it.');
+        accessoryUpdate={...route,pressed:accessoryPoweredPath(route) && event.pressed};
+      } else if(event.type==='accessory-illuminance') {
+        requireValue(route.control==='illuminance'&&validIlluminance(event.lux),'INVALID_INPUT','Unit DLight requires illuminance lux from 0 to 100000.');
+        accessoryUpdate={...route,lux:event.lux};
+      } else if(event.type==='accessory-environment') {
+        requireValue(route.control==='environment'&&validEnvironment(event),'INVALID_INPUT','ENV-IV requires temperatureC -40..85, humidityPercent 0..100 and pressureHpa 300..1100.');
+        accessoryUpdate={...route,...environmentParameters(event)};
+      } else if(event.type==='accessory-motion') {
+        requireValue(route.control==='motion'&&typeof event.motion==='boolean','INVALID_INPUT','Unit PIR motion must be boolean.');
+        accessoryUpdate={...route,motion:event.motion};
+      } else if(event.type==='accessory-angle') {
+        requireValue(route.control==='knob' && event.id==='knob' && Number.isFinite(event.value) && event.value>=0 && event.value<=1,'INVALID_INPUT','Unit Angle requires id knob and a finite value from 0 to 1.');
+        accessoryUpdate={...route,value:event.value};
+      } else {
+        requireValue(typeof event.connected==='boolean','INVALID_INPUT','Connection state must be boolean.');
+        accessoryUpdate={...route,connected:event.connected,...(route.control==='button'?{pressed:false}:{})};
+      }
+      if(route.hub) {
+        const children=accessoryInputs.filter(item=>item.viaAccessoryId===route.accessoryId).map(item=>({...item,effectiveConnected:item.connected&&accessoryUpdate.connected,...(item.control==='button'?{pressed:false}:{})}));
+        accessoryBatch=[accessoryUpdate,...children];
+        message=children.map(accessoryMessage);
+      } else {
+        if(route.viaAccessoryId)accessoryUpdate.effectiveConnected=accessoryUpdate.connected&&accessoryInputs.find(item=>item.accessoryId===route.viaAccessoryId)?.connected===true;
+        message=accessoryMessage(accessoryUpdate);
+      }
+    } else if (event.type === 'matrix-key') {
+      requireValue(['cardputer','cardputer-adv','tdeck'].includes(product.runtime?.board), 'UNSUPPORTED_CONTROL', 'This product does not expose a matrix keyboard.');
+      const columns=product.runtime.board==='tdeck'?10:14;
+      requireValue(Number.isInteger(event.row) && event.row >= 0 && event.row < 4 && Number.isInteger(event.column) && event.column >= 0 && event.column < columns && typeof event.pressed === 'boolean', 'INVALID_INPUT', `Keyboard row/column must be within the physical 4×${columns} layout and pressed must be a boolean.`);
+      requireValue(product.runtime.board !== 'tdeck' || controls().some(control=>control.type==='matrix-key'&&control.row===event.row&&control.column===event.column), 'INVALID_INPUT', 'This T-Deck position has no physical key.');
+      message = { t:'matrix-key', row:event.row, column:event.column, pressed:event.pressed?1:0 };
+    } else if (event.type === 'touch') {
+      const display = product.display || product.hardware?.display;
+      requireValue(product.runtime?.touch === true || display?.touch === true || display?.touch?.supported === true, 'UNSUPPORTED_CONTROL', 'Touch input is not supported for this product.');
+      const width = frame?.width || display?.framebufferWidth || display?.width, height = frame?.height || display?.framebufferHeight || display?.height;
+      requireValue(Number.isInteger(event.x) && Number.isInteger(event.y) && event.x >= 0 && event.y >= 0 && event.x < width && event.y < height && typeof event.down === 'boolean', 'INVALID_INPUT', 'Touch coordinates must be integer native display pixels within the panel.');
+      message = { t: 'touch', x: event.x, y: event.y, down: event.down ? 1 : 0 };
+    } else if (event.type === 'serial') {
+      requireValue(!isC5Board(product?.runtime?.board)||event.port==='uart0','UNSUPPORTED_PORT','C5 SRAM runtime currently exposes UART0 input only.');
+      requireValue(['usb', 'uart0', 'uart1'].includes(event.port), 'UNSUPPORTED_PORT', 'Supported input ports are usb, uart0 and uart1; UART2 input is not exposed by upstream.');
+      const maxBytes = event.port === 'usb' ? 4096 : 128;
+      requireValue(typeof event.data === 'string' && new TextEncoder().encode(event.data).length <= maxBytes, 'INVALID_INPUT', `Serial input must be a string of at most ${maxBytes} UTF-8 bytes; UART RX has a 128-byte FIFO.`);
+      message = { t: 'key', src: event.port, data: event.data };
+    } else throw error('UNSUPPORTED_INPUT', 'Unsupported input type.');
+    const inputId = ++inputSequence;
+    const receipt = await ask(`input:${inputId}`, Array.isArray(message)?{op:'text-batch',inputId,data:message.map(item=>JSON.stringify(item))}:{op:'text',inputId,data:JSON.stringify(message)});
+    requireValue(Number.isFinite(receipt.time) && receipt.time >= 0, 'INVALID_INPUT_RECEIPT', 'Worker did not return a valid guest input clock.');
+    if(accessoryUpdate){accessoryInputs=accessoryInputs.map(route=>(accessoryBatch||[accessoryUpdate]).find(item=>item.accessoryId===route.accessoryId)||route);if(['accessory-connection','accessory-motion','accessory-environment','accessory-illuminance'].includes(event.type))emit({type:'accessories',accessoryInputs:clone(accessoryInputs)});else if(event.type==='accessory-angle')emit({type:'accessory-positions',accessoryInputs:clone(accessoryInputs)});}
+    emit({ type: 'input', event: clone(event), receipt: { delivery: 'queued', guestTime: receipt.time, frame: { width: frame?.width, height: frame?.height } } });
+    return { accepted: true, delivery: 'queued', message, guestTime: receipt.time };
+  };
+  const advance = fromTime => new Promise((resolveAdvance, reject) => {
+    // Let the guest drain its 128-byte RX FIFO before the next NMEA chunk. This is
+    // deliberately separate from electrical baud timing: upstream injects bytes directly.
+    // Use the matching worker receipt, never a possibly stale main-thread stat.
+    const targetTime = fromTime + 0.04;
+    const finish = e => { clearTimeout(timer); listeners.delete(listener); e ? reject(e) : resolveAdvance(); };
+    const listener = event => {
+      if (event.type === 'stats' && Number(event.stats.time) >= targetTime) finish();
+      if (event.type === 'state' && event.state.status !== 'running') finish(error('NOT_RUNNING', 'GPS injection was interrupted.'));
+    };
+    const timer = setTimeout(() => finish(error('INPUT_TIMEOUT', 'The emulator did not advance while sending GPS data.')), 10000);
+    listeners.add(listener);
+    if (Number(stats.time) >= targetTime) finish();
+  });
+  const api = {
+    version: API_VERSION,
+    readLoRa() {return exclusive(async()=>{
+      requireValue(['papermono','lilygo-t-beam-v1-2','stamp-c6lora'].includes(product?.runtime?.board)&&worker,'LORA_UNSUPPORTED','Load firmware on a board with a digital LoRa model before inspecting its radio.');
+      const requestId=++inputSequence,result=await ask(`lora:${requestId}`,{op:'lora-read',requestId});
+      requireValue(result.ok,'LORA_UNSUPPORTED','This runtime does not expose a LoRa radio.');return {...result.state,guestTime:result.time};
+    });},
+    receiveLoRa(packet) {return exclusive(async()=>{
+      requireValue(['papermono','lilygo-t-beam-v1-2','stamp-c6lora'].includes(product?.runtime?.board)&&worker,'LORA_UNSUPPORTED','This device does not have a digital LoRa model.');
+      requireValue(['running','paused'].includes(status),'NOT_RUNNING','Start the firmware before supplying a LoRa peer packet.');
+      const input=validateLoRaPacket(packet),requestId=++inputSequence,result=await ask(`lora:${requestId}`,{op:'lora-receive',requestId,packet:input});
+      requireValue(result.ok,'LORA_PACKET_REJECTED','Radio power, receive state or channel configuration rejected this packet.');
+      const receipt={accepted:true,delivery:'scheduled-digital-packet',guestTime:result.time,physicalRf:false};emit({type:'lora-input',packet:input,receipt});return receipt;
+    });},
+    attachSdCard({bytes,format='fat32'}={}) {return exclusive(async()=>{requireValue(bytes!==undefined||format==='fat32','INVALID_SD_IMAGE','Only FAT32 formatting is available.');return replaceSd(bytes===undefined?null:validateSdImage(bytes));});},
+    clearSdCard() {return exclusive(()=>replaceSd(null));},
+    exportSdCard() {return exclusive(async()=>{await flushSd();const result=await sdAsk('sd-export');return {bytes:new Uint8Array(result.data),filename:`${product.id}-sd.img`};});},
+    flushSdCard() {return exclusive(flushSd);},
+    inspectFirmwareConfiguration() {const requested=storageSession,generation=progressGeneration;return exclusive(async()=>{
+      const unavailable=reason=>({available:false,type:'uiflow2',partition:clone(UIFLOW2_PARTITION),replacesPartition:true,sessionId:storageSession?.id||null,reason});
+      if(!loaded || !worker || !storageSession || storageSession.closed)return unavailable({code:'STORAGE_NOT_LOADED',message:'请先加载完整固件。'});
+      if(requested!==storageSession||generation!==progressGeneration)return unavailable({code:'SESSION_REPLACED',message:'检查前设备已更换，请重新检查。'});
+      const session=storageSession;
+      try {
+        const result=await flashAsk('flash-snapshot');
+        requireValue(session===storageSession&&!session.closed,'SESSION_REPLACED','The device changed while inspecting its Flash.');
+        const bytes=new Uint8Array(result.data),options={flashBytes:loaded.cfg.flash_mb*MIB,partitionTableOffset:loaded.receipt.localLayout?.partitionTableOffset??0x8000,appDirect:loaded.cfg.appDirect};
+        virtualConfigurationPlan(bytes,options);
+        validateMergedImage(bytes,loaded.cfg.board,options.flashBytes,options);
+        return {available:true,type:'uiflow2',partition:clone(UIFLOW2_PARTITION),replacesPartition:true,sessionId:session.id,lastWrite:configurationReceipt()};
+      } catch(e) {return unavailable(failure(e));}
+    });},
+    writeFirmwareConfiguration(profile,{sessionId}={}) {
+      // Capture before entering the queue: an already queued configure/load must
+      // never redirect this write to a different device, even without a UI token.
+      const session=storageSession,bundle=loaded,generation=progressGeneration,value=clone(profile);
+      return exclusive(async()=>{
+        const active=()=>{alive();requireValue(session&&bundle,'STORAGE_NOT_LOADED','Load firmware before writing its configuration.');requireValue(session===storageSession&&!session.closed&&bundle===loaded&&generation===progressGeneration&&(sessionId===undefined||sessionId===session.id),'SESSION_REPLACED','The device changed before its configuration was written.');};
+        active();requireValue(['ready','running','paused'].includes(status),'NOT_READY','Load firmware before writing its configuration.');
+        if(status==='running'){await ask('stopped',{op:'stop'});active();setStatus('paused');}
+        await preserveStorage();active();
+        const result=await flashAsk('flash-snapshot');active();
+        const bytes=new Uint8Array(result.data),options={flashBytes:bundle.cfg.flash_mb*MIB,partitionTableOffset:bundle.receipt.localLayout?.partitionTableOffset??0x8000,appDirect:bundle.cfg.appDirect};
+        const plan=virtualConfigurationPlan(bytes,options);validateMergedImage(bytes,bundle.cfg.board,options.flashBytes,options);
+        const configuration=encodeVirtualConfiguration(plan,value),pages=replaceConfigurationPages(session.baseline,session.pages,configuration);
+        active();
+        // One CAS transaction commits exactly six NVS pages plus the untouched
+        // existing dirty pages. The scope is the immutable original-image hash.
+        let saved;
+        try {saved=await deviceStorage.save(session.scope,{epoch:storage.epoch,revision:storage.revision,pages:[...pages].map(([offset,data])=>({offset,data}))});}
+        catch(e){storageFailure(session,e);throw e;}
+        configurationReceipts.set(session.scope.key,{type:'uiflow2',partition:clone(UIFLOW2_PARTITION),namespace:'uiflow',writtenAt:saved.row.savedAt});
+        // The commit is durable (or explicitly memory-only) before reloading.
+        // Closing the old session prevents a late worker delta overwriting it.
+        session.pages=pages;session.closed=true;
+        Object.assign(storage,{revision:saved.row.revision,epoch:saved.row.epoch,pristine:pages.size===0,changedPages:pages.size,lastSavedAt:saved.row.savedAt});
+        if(disposing || generation!==progressGeneration){stopWorker();throw error('SESSION_REPLACED','Firmware configuration was saved; the requested session changed.',{configurationCommitted:true});}
+        const loadId=++progressGeneration;loadCancelled=false;aborter=new AbortController();const signal=aborter.signal;
+        serial='';serialByPort={};stats={};hostPace={};frame=null;frameNumber=0;lastError=null;leds=[];servos=[];servoSupply=null;setStatus('loading');
+        try {await initialize(bundle,loadReporter(loadId,signal));alive();requireValue(!signal.aborted&&!loadCancelled,'FETCH_ABORTED','Firmware configuration was saved; restarting was cancelled.');requireValue(loadId===progressGeneration,'SESSION_REPLACED','Firmware configuration was saved; the requested session changed.');setStatus('ready');return snapshot();}
+        catch(e){stopWorker();if(status!=='disposed')setStatus(loadCancelled?'configured':'error');throw error(loadCancelled?'FETCH_ABORTED':e.code||'RUNTIME_ERROR',loadCancelled?'Firmware configuration was saved; restarting was cancelled.':e.message,{configurationCommitted:true});}
+      });
+    },
+    async clearFirmwareCache() { return firmwareCache.clear(); },
+    flushDeviceStorage() { return exclusive(flushStorage); },
+    clearDeviceStorage() { const loadId=++progressGeneration; return exclusive(async () => {
+      requireValue(loaded && storageSession, 'STORAGE_NOT_LOADED', 'Load firmware before clearing its device storage.');
+      const bundle=loaded, session=storageSession, scope=session.scope;
+      // Freeze first; pending writes finish before the tombstone transaction. A new
+      // epoch invalidates every other tab, including tabs suspended during this clear.
+      if(sdSession&&!sdSession.closed)await flushSd();
+      stopWorker(); session.closed=true;
+      await session.saving?.catch(()=>{});
+      try { await deviceStorage.clear(scope); configurationReceipts.delete(scope.key); }
+      catch(e) { session.closed=false; storageFailure(session,e); setStatus('error'); throw e; }
+      loadCancelled=false; aborter=new AbortController(); serial=''; serialByPort={}; stats={}; hostPace={}; frame=null; frameNumber=0; lastError=null; setStatus('loading');
+      try { await initialize(bundle,loadReporter(loadId,aborter.signal)); setStatus('ready'); return snapshot(); }
+      catch(e) { stopWorker(); if(status!=='disposed')setStatus('error'); throw e; }
+    }); },
+    subscribe(listener) { requireValue(typeof listener === 'function', 'INVALID_LISTENER', 'Event listener must be a function.'); listeners.add(listener); return () => listeners.delete(listener); },
+    async observe() { return snapshot(); },
+    configureBle(options){return exclusive(async()=>{
+      requireValue(isC61Board(product?.runtime?.board),'BLE_UNSUPPORTED','Digital legacy BLE input currently requires ESP32-C61.');
+      requireValue(loaded&&worker,'NOT_LOADED','Load firmware before configuring nearby BLE advertisers.');
+      requireValue(options&&typeof options==='object'&&!Array.isArray(options)&&Object.keys(options).length===1&&Array.isArray(options.nearby)&&options.nearby.length<=32&&options.nearby.every(spec=>typeof spec==='string'&&spec.length>0&&new TextEncoder().encode(spec).length<=512&&!/[\r\n]/.test(spec)),'INVALID_BLE','Supply nearby as at most 32 single-line advertiser specifications of at most 512 bytes.');
+      await applyBleNearby(options.nearby);bleNearby=[...options.nearby];return {nearbyCount:bleNearby.length,physicalRf:false};
+    });},
+    readBle(){return exclusive(async()=>{
+      requireValue(isC61Board(product?.runtime?.board),'BLE_UNSUPPORTED','Digital legacy BLE observations currently require ESP32-C61.');
+      requireValue(loaded&&worker,'NOT_LOADED','Load firmware before reading BLE output.');
+      const requestId=++inputSequence,reply=await ask(`ble:${requestId}`,{op:'ble-read',requestId});
+      requireValue(reply.ok,'BLE_READ_FAILED',reply.error||'BLE output unavailable.');
+      return {packets:reply.packets,nearbyCount:bleNearby.length,source:'guest-controller-DMA',physicalRf:false};
+    });},
+    configureNetwork(options){return exclusive(()=>network.configure(options));},
+    async readNetwork(){alive();return network.snapshot();},
+    connectNetwork(){return exclusive(()=>network.connect());},
+    async mapNetworkPort(options){alive();return network.mapPort(options);},
+    async unmapNetworkPort(options){alive();return network.unmap(options);},
+    async requestNetworkHttp(options){alive();return network.http(options);},
+    async provisionNetwork(){alive();return network.provision();},
+    async addNetworkService(options){alive();return network.addService(options);},
+    audioConfigure(options){return exclusive(()=>audio.configure(options));},
+    pushAudio(options){return exclusive(()=>audio.push(options));},
+    readAudio(options){return exclusive(async()=>{await audio.refresh();return audio.read(options);});},
+    async capabilities() {
+      const c5=isC5Board(product?.runtime?.board),c61=isC61Board(product?.runtime?.board);
+      return { version: API_VERSION, backend: 'esp32sim-wasm', static: true, executable: !!product?.runtime?.board,
+        execution: {mode: product?.runtime?.board === 'stopwatch'||c5||c61 ? 'wasm-interpreter' : 'wasm-jit', reason: c5?'C5 SRAM app-direct only; no ROM/IDF startup or JIT.':c61?'C61 uses the RV32 interpreter.':product?.runtime?.board === 'stopwatch' ? 'Official V0.5 IMU JIT non-response; interpreter verified.' : null,...(c5?{bootModes:['app-direct'],romBoot:false,resetMode:'reload-same-sram-image',counterSemantics:'interpreter-slots-including-wfi-idle',sramRanges:clone(C5_SRAM_RANGES)}:{})},
+        sdCard:{available:hasSdCard(product?.runtime?.board),defaultBytes:64*MIB,maxBytes:MAX_SD_BYTES,formats:['fat32','raw-image'],scope:'product-board-canonical-flash-sha256',autoSaveIntervalMs:1500,crashSafe:false},
+        ble:{available:c61,model:c61?'c61-legacy-digital-radio':null,physicalRf:false,connections:false,recording:false,shares:false,maxNearby:32,maxQueuedPackets:256,methods:c61?['configureBle','readBle']:[]},
+        network:c5?{available:false,transport:null,modes:[],softAp:false,automaticProvisioning:[],methods:[]}:{available:!!product?.runtime?.board&&romFor(product.runtime.board)!=='esp32p4_rev0_rom.elf',transport:'browser-softap+ethernet-websocket',helperRequired:false,externalConnectionRequired:true,modes:['public-relay','local-helper'],portMappingRequiresHelper:true,softAp:!!product?.runtime?.board&&(c61||romFor(product.runtime.board)==='esp32s3_rev0_rom.elf'),automaticProvisioning:c61?[]:['xiaozhi-web'],methods:['configureNetwork','readNetwork','connectNetwork','mapNetworkPort','unmapNetworkPort','requestNetworkHttp','provisionNetwork','addNetworkService']},
+        audio:c5?{input:{available:false,ports:[]},output:{available:false},methods:[]}:{input:{available:!!product?.runtime?.board&&!isC61Board(product.runtime.board)&&romFor(product.runtime.board)!=='esp32p4_rev0_rom.elf',mode:'logical-i2s-port',sampleRates:[8000,96000],ports:isC61Board(product?.runtime?.board)?[]:product?.runtime?.board&&['esp32c3_rev3_rom.elf','esp32c6_rev0_rom.elf'].includes(romFor(product.runtime.board))?[0]:[0,1]},output:{available:!!product?.runtime?.board&&(product.runtime.board==='corematrix'||romFor(product.runtime.board)==='esp32s3_rev0_rom.elf'),channels:1,format:'s16le'},methods:['audioConfigure','pushAudio','readAudio']},
+        lifecycle: ['configure', 'loadFirmware', 'start', 'pause', 'reset', 'dispose'],
+        deviceStorage: {available:!!storage.scope, backend:storage.backend, persistent:storage.backend==='indexeddb', scope:'product-board-chip-canonical-flash-sha256', autoSaveIntervalMs:500, crashSafe:false},
+        firmware: { manifest: true, mergedImage: !c5, localFile: true, localSegments: !c5, localBuild: !c5, sha256: true, maxFileBytes: MAX_FILE, maxBundleBytes: MAX_TOTAL, corsRequired: true,...(c5?{sramAppDirect:true,ota:false,targetRevision:100}:{}) },
+        input: { accessories: accessoryInputs.map(({accessoryId,model,port,pin,pins,addresses,control,hub,viaAccessoryId,portId})=>({accessoryId,model,port,...(pin===undefined?{}:{pin}),...(pins?{pins,addresses}:{}),controls:control?[control]:[],...(hub?{hub:true}:{}),...(viaAccessoryId?{viaAccessoryId,portId}:{})})), encoders: product?.runtime?.encoder ? controls().filter(c => c.type === 'encoder').map(c => ({id:c.id,detents:c.detents,stepsPerMessage:64,phaseMs:2,direction:'positive-clk-first'})) : [], buttons: product?.runtime?.board ? controls().filter(c => Number.isInteger(c.pin ?? c.gpio) || boardButton(c)).map(c => c.id) : [], touch: !!(product?.runtime?.board && (product?.runtime?.touch || product?.display?.touch)), keyboard:['cardputer','cardputer-adv','tdeck'].includes(product?.runtime?.board)?{rows:4,columns:product.runtime.board==='tdeck'?10:14,model:product.runtime.board==='tdeck'?'esp32c3-i2c-raw':product.runtime.board==='cardputer'?'gpio-matrix-74hc138':'tca8418',layout:product.runtime.board}:null, serialPorts: c5?['uart0']:['usb', 'uart0', 'uart1'] },
+        servos:{available:product?.runtime?.board==='stackchan',axes:product?.runtime?.board==='stackchan'?['pan','tilt']:[],source:'guest-uart-feedback',unit:'degrees',hardwareValidated:false},
+        motors:{available:hasMotorOutput(product?.runtime?.board),axes:hasMotorOutput(product?.runtime?.board)?STAMPFLY_MOTORS.map(({id})=>id):[],source:'guest-routed-pwm',unit:'normalized-duty',rpmAvailable:false,flightSimulated:false,hardwareValidated:false},
+        flight:{available:hasFlight(product?.runtime?.board),enabled:flightEnabled(),model:FLIGHT_MODEL,calibrated:false,source:'guest-pwm-rigid-body',methods:['configureFlight','readFlight'],recording:false,shares:'configuration-only',worldFrame:'NED',bodyFrame:'FRD'},
+        hardwareDiagnostics:{available:['stopwatch','corematrix'].includes(product?.runtime?.board),source:'guest-registers',hardwareValidated:false},
+        framebuffer: { available: !!frame, formats: ['rgba', 'png'], source: 'emulator' },
+        gps: { available:gpsSupported(),mode: gpsSupported()?'logical-uart1-nmea':null, physicalRouting: false, baudTiming: false, hardwareValidated: false },
+        lora:{available:['papermono','lilygo-t-beam-v1-2','stamp-c6lora'].includes(product?.runtime?.board),model:product?.runtime?.board==='lilygo-t-beam-v1-2'?'sx1276-lora-digital':'sx1262-lora-digital',physicalRf:false,maxPayloadBytes:255,methods:['readLoRa','receiveLoRa'],recording:false},
+        imu: { available: !!imuModel(), model: imuModel(), sceneOrientation: !!imuModel(), sceneMapping: 'virtual-model-xyz', sceneLinkDefault: false, orientation: 'quaternion-xyzw', accelerationUnit: 'g', angularVelocityUnit: 'deg/s', maxSceneHz: 30, hardwareValidated: false, sampleTiming: flightEnabled()?'guest-cycles':'host-input', inputOwner:flightEnabled()?'flight':'host', physicalMountingVerified: false },
+        unsupported: ['arbitrary-dynamic-peripheral-attachment', 'uart2-input', 'physical-gps-radio', 'arbitrary-firmware-compatibility', 'cycle-exact-host-input'] };
+    },
+    configure(nextScene) { progressGeneration++; imuGeneration++; return exclusive(async () => {
+      catalog ||= await loadCatalog();
+      const validation = validateScene(nextScene, catalog);
+      requireValue(validation.valid, 'INVALID_SCENE', 'Scene configuration is invalid.', validation);
+      bleNearby=[];
+      if (worker && status==='running') await ask('stopped',{op:'stop'});
+      await preserveStorage(); alive(); aborter?.abort(); stopWorker(); detachStorage(); loaded = null; firmware = null; frame = null; frameNumber = 0; serial = ''; serialByPort = {}; stats = {}; hostPace = {}; lastError = null;
+      if(sdSession)sdSession.closed=true;sdSession=null;sdCard=emptySd();leds=[];servos=[];servoSupply=null;
+      scene = clone(nextScene); product = catalog.products.find(item => item.id === scene.productId);sdCard.supported=hasSdCard(product.runtime?.board);sdEvent();emit({type:'leds',leds:[]});emit({type:'servos',servos:[],supply:null});
+      resetAccessoryInputs(); imu = defaultImu(); imuPreviousAt = null;
+      setStatus('configured'); return { ...snapshot(), warnings: validation.warnings };
+    }); },
+    configureFlight(options) { return exclusive(async () => {
+      requireValue(scene&&hasFlight(product?.runtime?.board),'FLIGHT_UNSUPPORTED','Flight mode requires StampFly or StampFly v1.1.');
+      requireValue(options&&typeof options==='object'&&!Array.isArray(options)&&Object.keys(options).length===1&&typeof options.enabled==='boolean','INVALID_FLIGHT','Specify only enabled: true or false.');
+      requireValue(!['running','loading'].includes(status),'FLIGHT_PAUSE_REQUIRED','Pause the device before changing flight mode.');
+      if(options.enabled===flightEnabled())return snapshot();
+      await preserveStorage();
+      if(options.enabled)scene.flight={enabled:true,model:FLIGHT_MODEL};else delete scene.flight;
+      imuGeneration++;imu=defaultImu();imuPreviousAt=null;
+      if(loaded){
+        const loadId=++progressGeneration;loadCancelled=false;aborter=new AbortController();
+        serial='';serialByPort={};stats={};hostPace={};frame=null;frameNumber=0;lastError=null;leds=[];servos=[];servoSupply=null;setStatus('loading');
+        try{await initialize(loaded,loadReporter(loadId,aborter.signal));setStatus('ready');}
+        catch(e){stopWorker();if(status!=='disposed')setStatus('error');throw e;}
+      }else{clearFlight();emit({type:'state',state:snapshot()});}
+      return snapshot();
+    }); },
+    async readFlight(){alive();return clone(flight);},
+    updateSceneMetadata(changes) { return exclusive(async () => {
+      requireValue(scene, 'NOT_CONFIGURED', 'Configure a scene before updating its presentation.');
+      requireValue(changes && typeof changes === 'object' && Object.keys(changes).every(key => ['keyMapping', 'view'].includes(key)), 'INVALID_SCENE', 'Only keyMapping and view can be changed without reconfiguring the emulator.');
+      const next = { ...scene, ...clone(changes) }, validation = validateScene(next, catalog);
+      requireValue(validation.valid, 'INVALID_SCENE', 'Scene configuration is invalid.', validation);
+      scene = next; emit({ type: 'state', state: snapshot() }); return snapshot();
+    }); },
+    loadFirmware(source) { const loadId = ++progressGeneration; return exclusive(async () => {
+      requireValue(scene, 'NOT_CONFIGURED', 'Configure a product before loading firmware.');
+      if (worker && status==='running') await ask('stopped',{op:'stop'});
+      await preserveStorage(); alive(); stopWorker(); detachStorage();if(sdSession)sdSession.closed=true;sdSession=null;sdCard={...emptySd(),supported:hasSdCard(product?.runtime?.board)};leds=[];servos=[];servoSupply=null; loaded = null; firmware = null; frame = null; frameNumber = 0; serial = ''; serialByPort = {}; stats = {}; hostPace = {}; lastError = null;
+      loadCancelled = false; aborter = new AbortController(); setStatus('loading');
+      const progress = loadReporter(loadId, aborter.signal);
+      try {
+        const selected = source || scene.firmware, bundle = await prepare(selected, progress);
+        await initialize(bundle, progress); loaded = bundle; firmware = bundle.receipt;
+        if (bundle.receipt.source === 'remote') scene.firmware = bundle.receipt.manifestUrl
+          ? { manifestUrl: bundle.receipt.manifestUrl, sha256: bundle.receipt.manifestHash }
+          : { url: bundle.receipt.artifacts[0].url, sha256: bundle.receipt.artifacts[0].sha256, ...(selected.archive?{archive:clone(selected.archive)}:{}), ...(bundle.receipt.appDirect?{bootMode:'app-direct'}:selected.bootMode?{bootMode:'rom'}:{}) };
+        setStatus('ready'); return snapshot();
+      }
+      catch (e) { stopWorker(); if (status !== 'disposed') setStatus(loadCancelled ? 'configured' : 'error'); if (loadCancelled) throw error('FETCH_ABORTED', 'Firmware load was cancelled.'); throw e; }
+    }); },
+    async cancelPendingLoad() {
+      if (status !== 'loading') return snapshot();
+      progressGeneration++;
+      loadCancelled = true; aborter?.abort(); stopWorker(); detachStorage(); loaded = null; firmware = null;
+      await queue;
+      if (status !== 'disposed') setStatus('configured');
+      return snapshot();
+    },
+    start() { return exclusive(start); },
+    pause() { return exclusive(async () => {
+      requireValue(['running', 'paused'].includes(status), 'NOT_RUNNING', 'Only a running emulator can be paused.');
+      if (imuModel()&&!flightEnabled()) { imu.gyroDps = [0,0,0]; imuPreviousAt = null; await applyImu(); }
+      if (status === 'running') await ask('stopped', { op: 'stop' });
+      await preserveStorage(); setStatus('paused'); return snapshot();
+    }); },
+    reset() { const loadId = ++progressGeneration; return exclusive(async () => {
+      requireValue(loaded, 'NOT_READY', 'Load firmware before resetting.');
+      if (worker && status==='running') await ask('stopped',{op:'stop'});
+      await preserveStorage();
+      clearMotors(); clearHardwareDiagnostics(); loadCancelled = false; aborter = new AbortController(); serial = ''; serialByPort = {}; stats = {}; hostPace = {}; frame = null; frameNumber = 0; lastError = null;leds=[];servos=[];servoSupply=null; setStatus('loading');
+      try { await initialize(loaded, loadReporter(loadId, aborter.signal)); setStatus('ready'); return await start(); }
+      catch (e) { stopWorker(); if (status !== 'disposed') setStatus(loadCancelled ? 'configured' : 'error'); if (loadCancelled) throw error('FETCH_ABORTED', 'Firmware load was cancelled.'); throw e; }
+    }); },
+    input(event) { return exclusive(() => input(event)); },
+    setImu(options = {}) { const generation = imuGeneration, requestedAt = performance.now(); return exclusive(async () => {
+      requireValue(!flightEnabled(), 'FLIGHT_OWNS_IMU', 'Disable flight mode before supplying independent IMU samples.');
+      requireValue(imuModel(), 'IMU_UNSUPPORTED', 'This product does not have a host-fed IMU model.');
+      requireValue(generation === imuGeneration, 'SESSION_REPLACED', 'The device changed before its orientation was applied.');
+      requireValue(options && typeof options === 'object' && !Array.isArray(options) && Object.keys(options).every(key => ['enabled','quaternion','source','angularVelocityDps'].includes(key)), 'INVALID_IMU', 'IMU options contain unknown fields.');
+      requireValue(options.enabled === undefined || typeof options.enabled === 'boolean', 'INVALID_IMU', 'IMU enabled must be a boolean.');
+      const source = options.source || 'agent';
+      requireValue(['agent', 'scene'].includes(source), 'INVALID_IMU', 'IMU source must be agent or scene.');
+      if (source === 'scene' && !imu.enabled && options.enabled !== true) return clone(imu);
+      const now = requestedAt;
+      const sample = orientationSample(options.quaternion || imu.quaternion, {previous: imu.quaternion,
+        elapsedSeconds: imuPreviousAt === null ? 0 : (now - imuPreviousAt) / 1000,
+        angularVelocityDps: options.enabled === false || status !== 'running' || source === 'agent' && options.angularVelocityDps === undefined ? [0,0,0] : options.angularVelocityDps});
+      imu = {...imu, ...sample, enabled: options.enabled ?? imu.enabled, source}; imuPreviousAt = now;
+      await applyImu(); emit({type: 'imu', imu: clone(imu)}); return clone(imu);
+    }); },
+    setGpsFix(options) { return exclusive(async () => {
+      requireValue(options && typeof options === 'object' && Object.keys(options).every(key => ['accessoryId','latitude','longitude','altitude','speedKnots','course','satellites','positionSource'].includes(key)), 'INVALID_INPUT', 'GPS fix contains unknown fields.');
+      const attached = scene?.accessories.find(item => item.id === options?.accessoryId);
+      const definition = scene?.localAccessories?.find(item => item.id === attached?.catalogId) || catalog?.accessories.find(item => item.id === attached?.catalogId);
+      requireValue(attached && definition?.model?.id === 'uart-nmea', 'ACCESSORY_NOT_ATTACHED', 'Attach a GPS accessory before setting its fix.');
+      const parameters = { ...definition.parameters, ...attached.parameters };
+      for (const key of ['latitude', 'longitude', 'altitude', 'speedKnots', 'course', 'satellites']) if (options[key] !== undefined) parameters[key] = options[key];
+      createGpsNmea(parameters);
+      requireValue(parameters.altitude === undefined || parameters.altitude >= -10000 && parameters.altitude <= 100000, 'INVALID_GPS_FIX', 'Altitude must be -10000…100000 meters.');
+      requireValue(parameters.speedKnots === undefined || parameters.speedKnots <= 10000, 'INVALID_GPS_FIX', 'Speed must be 0…10000 knots.');
+      if (options.positionSource !== undefined) {
+        const source = options.positionSource;
+        requireValue(source && ['manual', 'ip-estimate'].includes(source.kind), 'INVALID_INPUT', 'Position source must be manual or ip-estimate.');
+        requireValue(Object.keys(source).every(key => ['kind','provider','fetchedAt','city','region','country'].includes(key)), 'INVALID_INPUT', 'Position source contains unknown fields; IP addresses are not stored.');
+        parameters.positionSource = { kind: source.kind };
+        for (const key of ['provider', 'fetchedAt', 'city', 'region', 'country']) if (source[key] !== undefined) {
+          requireValue(typeof source[key] === 'string' && source[key].length <= 160, 'INVALID_INPUT', `Position source ${key} must be a short string.`);
+          parameters.positionSource[key] = source[key];
+        }
+        requireValue(source.fetchedAt === undefined || /^\d{4}-\d{2}-\d{2}T.*Z$/.test(source.fetchedAt) && Number.isFinite(Date.parse(source.fetchedAt)), 'INVALID_INPUT', 'Position source fetchedAt must be an ISO UTC date-time ending in Z.');
+      }
+      const next = clone(scene); next.accessories.find(item => item.id === attached.id).parameters = parameters;
+      const validation = validateScene(next, catalog);
+      requireValue(validation.valid, 'INVALID_GPS_FIX', 'GPS fix would create an invalid scene.', validation); scene = next;
+      emit({ type: 'state', state: snapshot() });
+      return { accessoryId: attached.id, parameters: clone(parameters) };
+    }); },
+    injectGps(options) { return exclusive(async () => {
+      const attached = scene?.accessories.find(item => item.id === options?.accessoryId);
+      const definition = scene?.localAccessories?.find(item => item.id === attached?.catalogId) || catalog?.accessories.find(item => item.id === attached?.catalogId);
+      requireValue(attached && definition?.model?.id === 'uart-nmea', 'ACCESSORY_NOT_ATTACHED', 'Attach a GPS accessory using the UART NMEA model before injecting a fix.');
+      requireValue(gpsSupported(), 'UNSUPPORTED_WIRING', 'This release provides the documented GPS test path only for StopWatch.');
+      requireValue(attached.wiring?.mode === 'logical' && attached.wiring?.port === 'uart1', 'UNSUPPORTED_WIRING', 'GPS injection requires explicit logical UART1 wiring; physical routing is not simulated.');
+      const sentences = createGpsNmea({ ...definition.parameters, ...attached.parameters, ...options });
+      for (let offset = 0; offset < sentences.length; offset += 64) {
+        const receipt = await input({ type: 'serial', port: 'uart1', data: sentences.slice(offset, offset + 64) });
+        if (offset + 64 < sentences.length) await advance(receipt.guestTime);
+      }
+      return { accepted: true, port: 'uart1', data: sentences, delivery: 'logical-uart-rx', limitations: ['GPIO routing and baud rate are bypassed.', 'Firmware must read UART1; output has not been compared with physical GPS hardware.'] };
+    }); },
+    async capture({ format = 'png' } = {}) {
+      alive(); requireValue(frame, 'NO_FRAME', 'No real framebuffer has been received from the firmware.');
+      const captured = frame, number = frameNumber;
+      if (format === 'rgba') return { format, ...captured, pixels: captured.pixels.slice(), frameNumber: number };
+      requireValue(format === 'png', 'UNSUPPORTED_FORMAT', 'Capture format must be png or rgba.');
+      requireValue(globalThis.document, 'CANVAS_UNAVAILABLE', 'PNG capture requires a browser canvas.');
+      const canvas = document.createElement('canvas'); canvas.width = captured.width; canvas.height = captured.height;
+      canvas.getContext('2d').putImageData(new ImageData(captured.pixels, captured.width, captured.height), 0, 0);
+      return { format, width: captured.width, height: captured.height, frameNumber: number, dataUrl: canvas.toDataURL('image/png') };
+    },
+    async dispose() {
+      if (status !== 'disposed') {
+        disposing=true; progressGeneration++; imuGeneration++; aborter?.abort();
+        try { if (storageSession && status!=='loading') { if (worker && status==='running') await ask('stopped',{op:'stop'}); await preserveStorage(); } }
+        catch(e) { report(e); }
+        finally { stopWorker(); if(storageSession)storageSession.closed=true; loaded=null; unsubscribeStorage(); deviceStorage.close();if(sdSession)sdSession.closed=true;unsubscribeSd();sdStorage.close(); globalThis.removeEventListener?.('pagehide',pageHide);globalThis.document?.removeEventListener('visibilitychange',visibilitySave); setStatus('disposed'); listeners.clear(); }
+      }
+      return snapshot();
+    },
+  };
+  return api;
+}
+
+export function createGpsNmea({ latitude, longitude, altitude = 0, speedKnots = 0, course = 0, satellites = 8, timestamp = new Date().toISOString() } = {}) {
+  requireValue(Number.isFinite(latitude) && Math.abs(latitude) <= 90 && Number.isFinite(longitude) && Math.abs(longitude) <= 180, 'INVALID_GPS_FIX', 'Latitude must be -90…90 and longitude -180…180.');
+  requireValue([altitude, speedKnots, course].every(Number.isFinite) && speedKnots >= 0 && course >= 0 && course < 360 && Number.isInteger(satellites) && satellites >= 1 && satellites <= 99, 'INVALID_GPS_FIX', 'Invalid GPS altitude, speed, course or satellite count.');
+  const date = new Date(timestamp); requireValue(Number.isFinite(date.getTime()), 'INVALID_GPS_FIX', 'Invalid GPS timestamp.');
+  const pad = n => String(n).padStart(2, '0'), time = `${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}${pad(date.getUTCSeconds())}.00`;
+  const day = `${pad(date.getUTCDate())}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCFullYear() % 100)}`;
+  const coordinate = (value, digits) => { const units = Math.round(Math.abs(value) * 60 * 1e5), degrees = Math.floor(units / 6e6), minutes = units % 6e6 / 1e5; return `${String(degrees).padStart(digits, '0')}${minutes.toFixed(5).padStart(8, '0')}`; };
+  const lat = `${coordinate(latitude, 2)},${latitude < 0 ? 'S' : 'N'}`, lon = `${coordinate(longitude, 3)},${longitude < 0 ? 'W' : 'E'}`;
+  const sentence = value => { let checksum = 0; for (const char of value) checksum ^= char.charCodeAt(0); return `$${value}*${checksum.toString(16).toUpperCase().padStart(2, '0')}\r\n`; };
+  return sentence(`GPRMC,${time},A,${lat},${lon},${speedKnots.toFixed(2)},${course.toFixed(2)},${day},,,A`) + sentence(`GPGGA,${time},${lat},${lon},1,${pad(satellites)},1.0,${altitude.toFixed(1)},M,0.0,M,,`);
+}

@@ -1,40 +1,78 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#ffffff" />
-  <meta name="description" content="Discover independent e-paper products and the people who make them. Real devices, thoughtful details, and a direct connection to the maker." />
-  <meta property="og:title" content="PaperS3 by M5Stack — Catalog by apov" />
-  <meta property="og:description" content="An independent epaper product catalog." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://apov.sg/catalog/product/m5stack-paper-s3/" />
-  <meta property="og:image" content="https://apov.sg/catalog/images/tickey-cutout.png" />
-  <link rel="canonical" href="https://apov.sg/catalog/product/m5stack-paper-s3/" />
-  <link rel="icon" href="/catalog/favicon.svg" type="image/svg+xml" />
-  <title>PaperS3 by M5Stack — Catalog by apov</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Virtual Paper S3 — Catalog by apov</title>
+  <meta name="description" content="Explore PaperS3 in 3D, run its firmware, or load your own firmware into a virtual device.">
+  <link rel="canonical" href="https://apov.sg/catalog/product/m5stack-paper-s3/">
+  <link rel="icon" href="/catalog/favicon.svg">
+  <link rel="stylesheet" href="/catalog/assets/index-CuUu9no1.css?v=pkd-visible-5">
+  <link rel="stylesheet" href="../prototype/style.css?v=button-align-1">
+  <link rel="stylesheet" href="/catalog/assets/apov-custom.css">
+  <link rel="stylesheet" href="./style.css">
   <script defer src="https://cloud.umami.is/script.js" data-website-id="2a4f1c7c-1ed3-4780-81dc-a93d8bd3355a" data-domains="apov.sg"></script>
-  <script type="module" crossorigin src="/catalog/assets/index-CZ9_AzTW.js?v=concept-label-3"></script>
-  <link rel="stylesheet" crossorigin href="/catalog/assets/index-CuUu9no1.css?v=pkd-visible-5">
+  <script type="module" src="./page.js?v=internals-1"></script>
 </head>
 <body>
-  <a class="skip-link" href="#collection">Skip to products</a>
+  <a class="skip-link" href="#product" data-zh="跳转到产品">Skip to product</a>
   <header class="site-header">
-    <h1 class="site-title"><a href="/catalog/"><strong>Catalog</strong> <span>by apov</span></a></h1>
+    <a class="site-title" href="/catalog/"><strong>Catalog</strong> <span>by apov</span></a>
     <div class="language-switch" role="group" aria-label="Language"><button type="button" lang="zh-CN" data-language="zh-CN" aria-pressed="false">中文</button><span aria-hidden="true">/</span><button type="button" lang="en" data-language="en" aria-pressed="true">English</button></div>
-
   </header>
-  <main>
-    <section id="collection" class="collection" aria-labelledby="collection-title">
-      <h2 id="collection-title" class="sr-only">Products</h2>
-      <div class="catalog-results">
-        <span id="product-count" class="sr-only" role="status"></span>
-        <div id="product-grid" class="product-grid"></div>
+  <main id="product" class="prototype-page apov-custom-page papers3-page">
+    <section id="explore" class="explore section-space" aria-label="PaperS3">
+      <div id="viewer" class="viewer" data-screen-orbit="true" data-interaction-mode="firmware" data-viewer-state="loading" data-frames="0">
+        <img id="viewer-poster" src="/catalog/images/papers3-front.png" width="1200" height="900" alt="M5Stack PaperS3">
+        <div id="model-canvas"></div>
+        <div class="single-view-tools">
+          <div role="group" aria-label="View mode"><button id="firmware-mode" type="button" aria-pressed="true" disabled data-zh="固件交互">Firmware</button></div>
+          <div><button id="rotate-device" type="button" disabled aria-label="Rotate device" title="Rotate device">↻</button><button id="reset-view" type="button" disabled data-zh="正面归位">Front view</button><button id="zoom-out" type="button" disabled aria-label="Zoom out">−</button><button id="zoom-in" type="button" disabled aria-label="Zoom in">+</button></div>
+        </div>
+        <p id="viewer-status" class="viewer-status" role="status"></p>
       </div>
+      <div class="product-intro"><h1><strong data-zh="虚拟 Paper S3">Virtual Paper S3</strong> <span data-zh="（概念产品）">(concept)</span></h1></div>
+      <div id="firmware-controls" class="firmware-controls">
+        <div class="firmware-actions">
+          <button id="boot-firmware" class="random-colorway" type="button" data-zh="运行 EDCBook">Run EDCBook</button>
+          <button id="boot-official" class="viewer-action" type="button" data-zh="官方 Demo">Official demo</button>
+          <label class="viewer-action firmware-file-label" for="firmware-file"><span data-zh="载入固件">Load firmware</span><input id="firmware-file" type="file" accept=".bin,application/octet-stream" aria-describedby="firmware-file-hint"></label>
+          <button id="pause-firmware" class="viewer-action" type="button" disabled>Pause</button>
+          <button id="restart-firmware" class="viewer-action" type="button" disabled data-zh="重启">Restart</button>
+          <label class="viewer-action firmware-file-label" for="book-files"><span data-zh="导入书籍">Import books</span><input id="book-files" type="file" accept=".txt,text/plain" multiple disabled aria-describedby="book-import-status"></label>
+        </div>
+        <p id="firmware-file-hint" class="firmware-caption" data-zh="PaperS3 完整 .bin 镜像 · 在虚拟设备中运行">PaperS3 merged .bin image · Runs in the virtual device</p>
+        <p class="firmware-caption"><span id="firmware-name">EDCBook 3.1.2</span><span aria-hidden="true"> · </span><span id="runtime-status" role="status">Ready to start</span></p>
+        <p id="firmware-error" class="firmware-error" role="alert"></p>
+        <p id="book-import-status" class="firmware-caption" role="status" data-zh="EDCBook 预置《西游记》 · 导入 TXT 后选择“打开书库”">EDCBook includes Journey to the West · Import TXT, then choose “Open library”</p>
+      </div>
+      <div class="customization-actions">
+        <button id="random-colorway" class="random-colorway" type="button" disabled data-zh="随机搭配">Randomize</button>
+        <button id="design-own" class="viewer-action" type="button" aria-expanded="false" aria-controls="customization-panel" data-zh="自己设计">Design my own</button>
+      </div>
+      <div id="customization-panel" class="color-controls" hidden>
+        <label><span data-zh="外壳">Case</span><input id="shell-color" type="color" value="#b8bcba" disabled></label>
+        <label><span data-zh="前面板">Front</span><input id="front-color" type="color" value="#c5c7c6" disabled></label>
+        <label><span data-zh="按键">Button</span><input id="button-color" type="color" value="#7d8785" disabled></label>
+        <label class="hook-option"><input id="hook-visible" type="checkbox" checked disabled><span data-zh="吊环">Loop</span></label>
+      </div>
+      <details id="firmware-details" class="firmware-details"><summary data-zh="串口输出">Serial output</summary><pre id="serial-output" tabindex="0" aria-label="Serial output"></pre></details>
     </section>
+    <section class="spec-section section-space" aria-labelledby="spec-title">
+      <div class="spec-intro"><h2 id="spec-title" data-zh="规格">Specifications</h2></div>
+      <dl class="design-specs">
+        <div><dt data-zh="屏幕">Display</dt><dd data-zh="4.7 英寸电子纸触摸屏 · 540 × 960">4.7-inch touch e-paper · 540 × 960</dd></div>
+        <div><dt data-zh="处理器">Processor</dt><dd>ESP32-S3R8</dd></div>
+        <div><dt data-zh="内存">Memory</dt><dd>16 MB Flash · 8 MB PSRAM</dd></div>
+        <div><dt data-zh="电池">Battery</dt><dd>1,800 mAh</dd></div>
+        <div><dt data-zh="扩展">Expansion</dt><dd>microSD · USB-C</dd></div>
+        <div><dt data-zh="产品资料">Product</dt><dd><a href="https://docs.m5stack.com/en/core/PaperS3" target="_blank" rel="noopener" data-zh="M5Stack 官方文档">M5Stack documentation</a></dd></div>
+      </dl>
+    </section>
+    <p class="simulator-credit"><span data-zh="基于 ">Built on the emulator from </span><a href="https://github.com/mikroverk/esp32sim#credits-and-license" target="_blank" rel="noopener" data-zh="esp32sim 原作者与社区">esp32sim's original authors and contributors</a><span data-zh="的模拟器，结合 ">, with device support from </span><a href="https://github.com/zhuzhe1983/esp-online-tester" target="_blank" rel="noopener">Zhu Zhe</a><span data-zh=" 的设备适配与 "> and models from </span><a href="https://github.com/m5stack/M5_Hardware" target="_blank" rel="noopener">M5Stack</a><span data-zh=" 模型，由 apov 整合。">; integrated by apov.</span></p>
+    <noscript><p>Enable JavaScript to explore the model and run firmware.</p></noscript>
   </main>
-  <footer class="site-footer"><span>© 2026 Catalog by apov</span></footer>
-  <dialog id="product-dialog" aria-labelledby="product-title"></dialog>
-  <noscript><p class="noscript">This collection uses JavaScript to show product cards. You can also visit <a href="https://www.eniacelec.com/pages/ticket">TICKEY’s official product page</a>.</p></noscript>
+  <footer class="site-footer"><span>© 2026 Catalog by apov</span><a href="/catalog/" data-zh="全部产品">All products</a></footer>
 </body>
 </html>

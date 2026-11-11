@@ -1,0 +1,159 @@
+diff --git a/esp-soc/src/board.rs b/esp-soc/src/board.rs
+index 5cecdaa..8098c7f 100644
+--- a/esp-soc/src/board.rs
++++ b/esp-soc/src/board.rs
+@@ -28,6 +28,11 @@ pub struct SpiPins {
+ #[derive(Clone, Copy, Debug, Default)]
+ pub struct LcdI80Pins { pub data: [u64; 16], pub clock: u64, pub select: u64, pub width: u8, pub dc: u64, pub dc_high: bool }
+ 
++/// Physical LCD RGB routes; data is the unconverted DMA byte stream. In S3's
++/// 8-bit RGB mode it drives DATA8..15, unlike i80 DATA0..7. Sync pulses delimit rows.
++#[derive(Clone, Copy, Debug, Default)]
++pub struct LcdRgbPins { pub data:[u64;16], pub clock:u64, pub enable:u64, pub hsync:u64, pub vsync:u64, pub width:u8 }
++
+ /// Cold optional board supply, e.g. a PMIC independently powering the MCU.
+ #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+ pub struct BoardPowerState { pub controller_powered: bool }
+@@ -85,6 +90,10 @@ pub trait BoardModel {
+     fn camera_preview(&self, _w: u32, _h: u32) -> Option<Vec<u8>> { None }
+     /// A complete frame from the LCD_CAM RGB interface (RGB565 little-endian, `w`x`h`).
+     fn lcd_frame(&mut self, _w: u32, _h: u32, _rgb565: &[u8]) {}
++    /// Completed RGB transfer at the LCD pixel rate. Legacy RGB565 boards retain
++    /// their existing callback; physical boards may consume raw drive symbols.
++    fn lcd_rgb_frame(&mut self, _pins:LcdRgbPins, w:u32, h:u32, data:&[u8]) {self.lcd_frame(w,h,data);}
++
+     /// The board's display for the UI/PNG: (width, height, RGB565 pixels, change counter).
+     fn display(&self) -> Option<(u32, u32, Vec<u16>, u64)> { None }
+     /// Completed display frames (for the UI's statistics line).
+diff --git a/esp32s3/src/board/papers3.rs b/esp32s3/src/board/papers3.rs
+index f0b632b..89e3a9c 100644
+--- a/esp32s3/src/board/papers3.rs
++++ b/esp32s3/src/board/papers3.rs
+@@ -2,7 +2,7 @@
+ //! ET047TC1 physical i80 routes; GT911 one-contact scans; BMI270 explicit samples.
+ use std::sync::{Arc,Mutex};
+ use esp_periph::i2c::{I2cDevice,gt911::{Gt911,Gt911State},bmi270::{Bmi270,Bmi270Sample}};
+-use esp_soc::board::{BoardModel,BoardEdge,VirtualCycle,LcdI80Pins,SpiPins};
++use esp_soc::board::{BoardModel,BoardEdge,VirtualCycle,LcdI80Pins,LcdRgbPins,SpiPins};
+ use esp_soc::devices::{i2c_bitbang::I2cBitBang,et047tc1::Et047tc1};
+ pub struct PaperS3 {sd:Option<Box<esp_periph::sdmmc::card::spi::SpiSdCard>>,i2c:I2cBitBang,levels:[bool;2],edges:Vec<BoardEdge>,output:u64,enabled:u64,panel:Et047tc1,touch:Arc<Mutex<Gt911State>>,touch_irq:bool,imu:Arc<Mutex<Bmi270Sample>>,gpio_events:u64,cycle:u64}
+ impl PaperS3 {
+@@ -41,6 +41,30 @@ impl BoardModel for PaperS3 {
+         let data=[6,14,7,12,9,11,8,10];
+         if data_phase && pins.width==8 && pins.clock&(1<<16)!=0 && pins.select&(1<<13)!=0 && data.iter().enumerate().all(|(i,p)|pins.data[i]&(1<<p)!=0) && self.powered() && self.panel.scanning && self.output&(1<<15)==0 && self.output&(1<<18)!=0 {self.panel.line(words);}
+     }
++    fn lcd_rgb_frame(&mut self,pins:LcdRgbPins,w:u32,h:u32,data:&[u8]) {
++        // C139 V1.0: D0..7=6,14,7,12,9,11,8,10; SPH13, LEH15, CL16.
++        // EPDiy lcd_driver.c init_bus_gpio / epd_lcd_start_frame: 8-bit RGB
++        // drives DATA8..15, DE shifts source data, HSYNC latches each row.
++        // Like the existing i80 model this is a digital endpoint, not analog
++        // waveform integration or per-edge CKV/RMT timing. CKV18 is an RMT
++        // clock, not OE; OE45/BST46 are checked by powered() below.
++        if pins.width!=8 || pins.clock&(1<<16)==0 || pins.enable&(1<<13)==0 || pins.hsync&(1<<15)==0 || !self.powered() || !self.panel.scanning {return;}
++        let (w,h)=(w as usize,h as usize);
++        if w<240 || w.checked_mul(h).is_none_or(|n|n>data.len()) {return;}
++        let physical=[6,14,7,12,9,11,8,10];let mut source=[0usize;8];
++        for (bit,pin) in physical.into_iter().enumerate() {
++            let Some(i)=(8..16).find(|&i|pins.data[i]&(1<<pin)!=0) else {return;};source[bit]=i-8;
++        }
++        let lut:[u16;256]=std::array::from_fn(|byte|source.iter().enumerate().fold(0,|word,(bit,i)|word|(((byte>>i)&1) as u16)<<bit));
++        for line in data[..w*h].chunks_exact(w) {
++            if self.panel.row>=540 {break;}
++            // The physical 960-source shift register retains its final 240
++            // bytes. EPDiy's leading dummy cycle shifts out; DMA pad rows stop
++            // at the end of the 540-gate scan rather than wrapping the panel.
++            let words:Vec<u16>=line[w-240..].iter().map(|b|lut[*b as usize]).collect();
++            self.panel.line(&words);self.panel.latch();
++        }
++    }
+     fn display(&self)->Option<(u32,u32,Vec<u16>,u64)> {Some((540,960,self.panel.portrait(),self.panel.version))}
+     fn display_version(&self)->u64 {self.panel.version}
+     fn display_frames(&self)->u64 {self.panel.frames}
+@@ -66,6 +90,31 @@ mod tests {
+         b.spi_transfer_pins(3,pins,&[0x40,0,0,0,0,0x95],0);assert_eq!(b.spi_transfer_pins(3,pins,&[],2),[255,1]);
+         b.i2c_devices();assert!(b.sd.is_some());assert!(b.sd_card_slot().is_none(),"SPI must not be routed to native SDMMC");
+     }
++    fn rgb_pins()->LcdRgbPins {LcdRgbPins{data:std::array::from_fn(|i|if i>=8 {1<<[8,10,9,11,7,12,6,14][i-8]} else {0}),clock:1<<16,enable:1<<13,hsync:1<<15,width:8,..Default::default()}}
++    fn scanning_board()->PaperS3 {let mut b=PaperS3::new();let mask=(1<<45)|(1<<46)|(1<<18)|(1<<17);b.gpio_output_at(1,&[],mask,mask);b.gpio_output_at(2,&[],mask,mask&!(1<<17));b}
++    #[test]
++    fn rgb_drive_uses_physical_pins_shift_register_and_540_scanlines() {
++        let mut b=scanning_board();let pins=rgb_pins();let mut bytes=vec![0;241*544];
++        // GPIO18 is CKV (RMT driven in EPDiy), not OE. A completed RGB frame
++        // must not depend on the unrelated GPIO output latch for that pad.
++        b.gpio_output_at(3,&[],b.enabled,b.output&!(1<<18));
++        for row in 0..544 {bytes[row*241]=0xff;bytes[row*241+1]=0b11_00_10_01;}
++        b.lcd_rgb_frame(pins,241,544,&bytes);
++        assert_eq!(b.panel.frames,1);assert_eq!(b.panel.row,540);
++        // Physical D pairs are reversed relative to the EPDiy byte. Leading
++        // dummy bits shift out of the 960-source register; trailing pad rows do not wrap.
++        assert_eq!(&b.panel.frame[..5],&[0,0xffff,0xffff,0xffff,0xffff]);
++        assert_eq!(b.panel.frame[539*960],0);assert_eq!(b.panel.frame[960],0);
++        b.lcd_rgb_frame(pins,241,544,&vec![0x55;241*544]);assert_eq!(b.panel.frames,1,"STV must start the next scan");
++    }
++    #[test]
++    fn rgb_rejects_unpowered_unstarted_short_or_misrouted_transfers() {
++        let pins=rgb_pins();let data=vec![0x55;241*544];
++        let mut no_power=PaperS3::new();no_power.lcd_rgb_frame(pins,241,544,&data);assert_eq!(no_power.panel.frames,0);
++        for bad in [LcdRgbPins{clock:0,..pins},LcdRgbPins{enable:0,..pins},LcdRgbPins{hsync:0,..pins},LcdRgbPins{width:16,..pins},LcdRgbPins{data:[0;16],..pins}] {let mut b=scanning_board();b.lcd_rgb_frame(bad,241,544,&data);assert_eq!(b.panel.frames,0);assert_eq!(b.panel.row,0);}
++        let mut b=scanning_board();b.lcd_rgb_frame(pins,241,544,&data[..100]);assert_eq!(b.panel.row,0);
++        b.panel.stop_scan();b.lcd_rgb_frame(pins,241,544,&data);assert_eq!(b.panel.row,0);
++    }
+     #[test]
+     fn routes_power_and_touch_are_distinct_from_paperdiy() {
+         let mut b=PaperS3::new();assert_eq!(b.name(),"papers3");assert_eq!(b.named_pin("power"),None);let mask=(1<<45)|(1<<46)|(1<<18)|(1<<17)|(1<<15);
+diff --git a/esp32s3/src/bus/dma.rs b/esp32s3/src/bus/dma.rs
+index 997691b..d955ace 100644
+--- a/esp32s3/src/bus/dma.rs
++++ b/esp32s3/src/bus/dma.rs
+@@ -740,7 +740,12 @@ impl SocBus {
+         for _ in 0..n { let b = self.periph.lcd_cam.lcd_fifo.pop_front().unwrap(); self.periph.lcd_cam.lcd_line.push(b); }
+         while self.periph.lcd_cam.lcd_line.len() >= frame_bytes {
+             let frame = std::mem::take(&mut self.periph.lcd_cam.lcd_line);
+-            self.board.lcd_frame(ha, va, &frame[..frame_bytes]);
++            // IDF v4.4.4 / v5.5.1 gpio_sig_map.h: DATA0..15=133..148,
++            // DE=150, HSYNC=151, VSYNC=152, PCLK=154. Preserve actual pad routing.
++            let routes=esp_soc::pins::ChipPins::S3.routes(&self.periph.gpio,&self.periph.io_mux);
++            let mask=|signal|routes.output_pins(signal).fold(0u64,|m,p|m|(1<<p));
++            let pins=esp_soc::board::LcdRgbPins{data:std::array::from_fn(|i|mask(133+i as u32)),clock:mask(154),enable:mask(150),hsync:mask(151),vsync:mask(152),width:(bpp*8) as u8};
++            self.board.lcd_rgb_frame(pins,ha,va,&frame[..frame_bytes]);
+             if frame.len() > frame_bytes { self.periph.lcd_cam.lcd_line.extend_from_slice(&frame[frame_bytes..]); }
+             self.periph.lcd_cam.lcd_frames += 1;
+             self.periph.lcd_cam.int_raw |= 1 << 0;                                    // LCD_VSYNC_INT
+diff --git a/esp32s3/src/bus/tests.rs b/esp32s3/src/bus/tests.rs
+index 368eedd..f7d6622 100644
+--- a/esp32s3/src/bus/tests.rs
++++ b/esp32s3/src/bus/tests.rs
+@@ -2017,3 +2017,33 @@ fn wifi_softap_rx_selects_ap_without_changing_station_metadata() {
+         assert_eq!(bus.read32_unpriced(FIRST_DESC).unwrap() & (1 << 30), 1 << 30);
+     }
+ }
++
++#[test]
++fn lcd_rgb_routes_raw_dma_bytes_and_preserves_legacy_rgb_callback() {
++    use esp_soc::board::LcdRgbPins;
++    type Capture=Arc<Mutex<Vec<(LcdRgbPins,u32,u32,Vec<u8>)>>>;
++    struct RgbProbe(Capture);
++    impl crate::board::BoardModel for RgbProbe {
++        fn name(&self)->&'static str {"rgb-probe"}
++        fn lcd_rgb_frame(&mut self,pins:LcdRgbPins,w:u32,h:u32,data:&[u8]) {self.0.lock().unwrap().push((pins,w,h,data.to_vec()));}
++    }
++    let capture:Capture=Default::default();let mut bus=dma_bus();bus.board=Box::new(RgbProbe(capture.clone()));
++    let bytes:Vec<u8>=(0..512).map(|i|i as u8).collect();
++    bus.load_bytes(M2M_SRC,&bytes).unwrap();
++    for (offset,value) in [(0,(1<<31)|(1<<30)|(512<<12)|512),(4,M2M_SRC),(8,0)] {bus.write32(FIRST_DESC+offset,value).unwrap();}
++    bus.periph.gdma.out[0].peri_sel=5;
++    // IDF v4.4.4 gpio_reg.h FUNC_OUT_SEL +0x554; IO_MUX MCU_SEL=1.
++    for (pin,signal) in [(8,141),(10,142),(13,150),(15,151),(16,154)] {
++        bus.periph.io_mux.write(4+4*pin,1<<12);bus.periph.gpio.write(0x554+4*pin,signal);
++    }
++    bus.periph.gpio.write(0x24,(1<<8)|(1<<10)|(1<<13)|(1<<15)|(1<<16));
++    bus.periph.lcd_cam.lcd_user=1<<27;bus.periph.lcd_cam.lcd_ctrl=1<<31;bus.periph.lcd_cam.lcd_ctrl1=511<<8|511<<20;
++    let (_,_,_,cycles)=bus.periph.lcd_cam.lcd_geometry();bus.dma_lcd_step(cycles);
++    let frames=capture.lock().unwrap();assert_eq!(frames.len(),1);
++    let (pins,w,h,data)=&frames[0];assert_eq!((*w,*h,pins.width),(512,1,8));assert_eq!(*data,bytes);
++    assert_eq!((pins.data[8],pins.data[9],pins.enable,pins.hsync,pins.clock),(1<<8,1<<10,1<<13,1<<15,1<<16));
++    assert_eq!(bus.periph.lcd_cam.lcd_frames,1);assert_ne!(bus.periph.lcd_cam.int_raw&1,0);
++    struct Legacy(usize);
++    impl crate::board::BoardModel for Legacy {fn name(&self)->&'static str {"legacy"} fn lcd_frame(&mut self,w:u32,h:u32,data:&[u8]) {assert_eq!((w,h),(512,1));self.0+=data.len();}}
++    let mut old=Legacy(0);esp_soc::board::BoardModel::lcd_rgb_frame(&mut old,*pins,512,1,data);assert_eq!(old.0,512);
++}

@@ -70,7 +70,7 @@
   "display": "Neutral static e-paper surface; no firmware simulation",
   "addedDetails": [
     "Recessed USB-C metal shell, insulator, tongue and two contact rows",
-    "Closed color-matched microSD cover, seam, finger relief, seat and card"
+    "Color-matched rounded microSD tray with circular eject pinhole at the end nearest USB-C (metalio3.jpeg)"
   ],
   "detailProvenance": "Presentation geometry added inside source STEP openings; not an engineering reproduction of internals",
   "orientationStatus": "Source screen and capacitive-key orientation"

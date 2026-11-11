@@ -1,0 +1,110 @@
+{
+  "artifact": "device.glb",
+  "sha256": "766253455137d1dc2f569100f69b0af96650c9fc9fa52d6d7fcde22e95720b5c",
+  "sourceRepository": "https://github.com/zhuzhe1983/esp-online-tester",
+  "sourceCommit": "4932dcd1803381fb64c0dd6252707c0176e8ac9e",
+  "sourcePath": "web/platform/assets/m5stack-c139",
+  "sourceFileSHA256": {
+    "geometry.bin": "e2e40387e93939cd40ec5327a6403a135d48e9954feee8bf4c949b73d690595f",
+    "model.json": "2d5eef698e2813818fadeb5d54d78bdd376fa84dfab54e28188d57c3decf2ce0",
+    "LICENSE-M5Stack.txt": "44611d917bece311f5c8eeffce83d8bf9e9ca3f815d262f694ff4a7996af50ea"
+  },
+  "manufacturerCAD": {
+    "repository": "https://github.com/m5stack/M5_Hardware",
+    "commit": "e29c139cbc7c80b5ccc5557e5ab8025a7a19a109",
+    "sourceUrl": "https://raw.githubusercontent.com/m5stack/M5_Hardware/e29c139cbc7c80b5ccc5557e5ab8025a7a19a109/Products/C139_PaperS3/Structures/PaperS3.stl",
+    "sourceSha256": "a4830c39619989113135098e29a9c08cc74bc29940d470b1deb31984a5f06223",
+    "sourceLicense": "MIT; Copyright (c) 2021 M5Stack; see LICENSE-M5Stack.txt"
+  },
+  "units": "metres",
+  "frontDirection": "+Z",
+  "conversion": "Preserved original triangles and normals; positions converted mm to m. Source assembly transform already baked into geometry.bin; no second transform applied.",
+  "nodes": [
+    "Shell",
+    "PowerButton",
+    "BottomHook",
+    "FrontBezel",
+    "Screen",
+    "DisplayBacking",
+    "MainPCB",
+    "BatteryPouch",
+    "BoardShield",
+    "DisplayRibbon",
+    "RearCarrier",
+    "USB_C_Shell",
+    "USB_C_Cavity",
+    "USB_C_Tongue",
+    "USB_C_Contact_01",
+    "USB_C_Contact_02",
+    "USB_C_Contact_03",
+    "USB_C_Contact_04",
+    "USB_C_Contact_05",
+    "USB_C_Contact_06",
+    "USB_C_Contact_07",
+    "USB_C_Contact_08",
+    "USB_C_Contact_09",
+    "USB_C_Contact_10",
+    "USB_C_Contact_11",
+    "USB_C_Contact_12",
+    "TF_Socket",
+    "TF_Cavity",
+    "SideSeat_-1",
+    "SideSeat_1",
+    "Battery_Socket",
+    "Battery_Cavity",
+    "Battery_Pin_0",
+    "Battery_Pin_1",
+    "Expansion_Socket",
+    "Expansion_Cavity",
+    "Expansion_Pin_0",
+    "Expansion_Pin_1",
+    "Expansion_Pin_2",
+    "Expansion_Pin_3",
+    "Rear_Header_Base",
+    "Rear_Header_Pad_0",
+    "Rear_Header_Pad_1",
+    "Rear_Header_Pad_2",
+    "Rear_Header_Pad_3",
+    "Rear_Header_Pad_4",
+    "Rear_Header_Pad_5",
+    "Rear_Header_Pad_6",
+    "Rear_Header_Pad_7",
+    "Rear_Header_Pad_8",
+    "Rear_Header_Pad_9",
+    "RearScrew_-28.48",
+    "RearScrew_-28.48_Recess",
+    "RearScrew_28.52",
+    "RearScrew_28.52_Recess",
+    "ThreadedInsert_-30.5",
+    "ThreadedInsert_-30.5_Recess",
+    "ThreadedInsert_30.5",
+    "ThreadedInsert_30.5_Recess",
+    "RearLabel"
+  ],
+  "internalVisuals": {
+    "basis": "Original apov simplified visual inserts, bounded by the unchanged manufacturer shell. Concealed board/battery/component shapes are estimates; connector mouths and fastener centres measured from CAD and checked against official product photos.",
+    "sticker": "Original vector design: ../media/virtual-paper-s3-label.svg; not the manufacturer photograph.",
+    "screws": "Two recessed metal hex-socket heads at rear lower mounts; two brass-coloured threaded inserts at upper mounts."
+  },
+  "derivedSurfaces": {
+    "FrontBezel": "Visible insert estimated from drawing/photo; thickness and exact placement not manufacturer component CAD. Perimeter rounded to follow the source CAD shell: 2.25 mm insert corner radius.",
+    "Screen": "Photo-informed estimated active window; exact active area not independently dimensioned for this SKU."
+  },
+  "screen": {
+    "sizeMetres": [
+      0.05832,
+      0.10368000000000001
+    ],
+    "centerMetres": [
+      0.0,
+      0.0038,
+      0.00372
+    ],
+    "uvOrigin": "top-left"
+  },
+  "excluded": [
+    "Photographs and source-photo decals",
+    "Translated CAD printing duplicates"
+  ],
+  "rebuild": "python3 scripts/build-papers3-model.py [--source-dir PATH_TO_M5STACK_C139]"
+}

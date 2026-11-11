@@ -1,0 +1,14 @@
+{
+  "artifact": "hardware.glb",
+  "sha256": "4cdc268155278b1c3ceb4a7f67b90570e3a364aca2746741ea952d527042ead8",
+  "units": "millimetres; attached inside existing CAD parent",
+  "sources": [
+    "https://docs.m5stack.com/en/core/PaperMono",
+    "https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/1267/C153_PaperMono_main_pictures_09.webp",
+    "https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/1267/C153_PaperMono_main_pictures_10.webp",
+    "https://github.com/m5stack/M5_Hardware/blob/e29c139cbc7c80b5ccc5557e5ab8025a7a19a109/Products/C153_PaperMono/Structures/PaperMono.stl"
+  ],
+  "basis": "Connector centers and opening extents measured from existing manufacturer CAD geometry. Socket walls, tongue and inactive LED lens are photo-informed simplified visual inserts; exact internal component dimensions are estimates.",
+  "internalBacking": "Plain case-bounded board estimate, not a reproduction of the actual PCB layout.",
+  "rebuild": "python3 scripts/build-paper-mono-hardware.py"
+}

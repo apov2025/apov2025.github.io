@@ -16,11 +16,12 @@ for(const id of ids){
   assert.equal(materials.get('Back').roughnessFactor,id==='mindreset-read-pico'?.14:.48);
  }
  const nodes=gltf.nodes.map(n=>n.name);
- const requiredPorts=id==='prototype-game'?['usb-c-metal-shell','usb-c-black-tongue','usb-c-dark-backing','microsd-flush-cover']:['USB_C_shell','USB_C_tongue','USB_C_cavity','MicroSD_cover_lid'];
+ const requiredPorts=id==='prototype-game'?['usb-c-metal-shell','usb-c-black-tongue','usb-c-dark-backing','microsd-flush-cover']:['USB_C_shell','USB_C_tongue','USB_C_cavity',...(id==='mindreset-read-pico'?['MicroSD_open_socket','MicroSD_open_cavity']:['MicroSD_cover_lid'])];
  for(const name of requiredPorts)assert(nodes.includes(name),`${id}: missing ${name}`);
  if(id==='mindreset-read-pico'){
   const bounds=name=>{const n=gltf.nodes.find(n=>n.name===name);return gltf.accessors[gltf.meshes[n.mesh].primitives[0].attributes.POSITION];};
-  const usb=bounds('USB_C_shell'),sd=bounds('MicroSD_cover_lid'),power=bounds('mindreset-read-pico_1_Buttons');
+  assert(!nodes.some(name=>name.startsWith('MicroSD_cover')),'Pico photo: TF socket has no cover');
+  const usb=bounds('USB_C_shell'),sd=bounds('MicroSD_open_socket'),power=bounds('mindreset-read-pico_1_Buttons');
   assert(usb.max[0]<0&&usb.max[1]<0,'Photo reference: Pico USB left/lower');
   assert(sd.min[0]>0&&sd.max[1]<0,'Photo reference: Pico card right/lower');
   assert(power.min[0]>0&&power.min[1]>0,'Photo reference: Pico power right/above center');

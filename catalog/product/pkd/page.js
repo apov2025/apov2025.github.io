@@ -1,4 +1,5 @@
 import {generateDuoLook} from './color-harmony.js';
+import {initViewerFullscreen} from '../../assets/viewer-fullscreen.js';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const translations=$$('[data-zh]').map(el=>({el,en:el.innerHTML,zh:el.dataset.zh}));
 let language='en',viewer,busy=false;
@@ -51,3 +52,4 @@ preview.addEventListener('click',closePreview);preview.addEventListener('keydown
 languageUI();
 const observer=new IntersectionObserver(([e])=>{if(e.isIntersecting){observer.disconnect();load();}},{rootMargin:'300px'});observer.observe(stage);
 addEventListener('pagehide',()=>viewer?.setPlaying(false));
+initViewerFullscreen();

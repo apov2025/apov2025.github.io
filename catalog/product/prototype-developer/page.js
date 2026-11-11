@@ -1,4 +1,5 @@
 import { initDeveloperEdition } from '../prototype/developer-edition.js?v=developer-5';
+import { initViewerFullscreen } from '../../assets/viewer-fullscreen.js';
 const translations = [...document.querySelectorAll('[data-zh]')].map(element => ({ element, en: element.textContent, zh: element.dataset.zh }));
 let language = 'en';
 try { if (localStorage.getItem('catalog-language') === 'zh-CN') language = 'zh-CN'; } catch {}
@@ -23,6 +24,7 @@ for (const button of document.querySelectorAll('[data-developer-layout]')) butto
 });
 document.querySelector('#developer-reset').addEventListener('click', () => viewer?.resetView());
 renderLanguage();
+initViewerFullscreen(document.querySelector('#developer-viewer'), '.developer-layouts');
 initDeveloperEdition(document.querySelector('#developer-viewer'), { language }).then(instance => {
   viewer = instance;
   viewer?.setLanguage(language);

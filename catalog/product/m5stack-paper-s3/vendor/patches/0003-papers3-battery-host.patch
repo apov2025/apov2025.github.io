@@ -1,0 +1,24 @@
+--- a/web/platform/runtime.js
++++ b/web/platform/runtime.js
+@@ -599,8 +599,19 @@
+     const result = await ask('created', { op: 'create', ...bundle.cfg, audioStreaming:true, ...(flightEnabled()?{flight:scene.flight,flightEpoch:++flightEpoch}:{}) });
+     requireValue(result.created, 'CREATE_FAILED', 'Cannot create the selected emulator board.');
+     audio.reset(!isC5Board(bundle.cfg.board)&&result.audioAvailable===true);
+-    for (const file of bundle.files) {
+-      const data = file.data.slice().buffer;
++    // PaperS3 C139 V1.0 schematic: GPIO3 ADC_VBAT, R24/R25=22k/22k.
++    // A constant 4.0 V virtual battery supplies 2.0 V to the actual SAR input.
++    // Use the existing host analog script, never patch firmware/ADC return values.
++    // https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/517/sch_papers3_V1.0.pdf
++    const batteryScript = bundle.cfg.board === 'papers3' ? new TextEncoder().encode('0 adc 3 2.0\n') : null;
++    const bootFiles = batteryScript && !bundle.files.some(file => file.kind === 'script')
++      ? [...bundle.files, {kind:'script', data:new Uint8Array()}] : bundle.files;
++    for (const file of bootFiles) {
++      let data = file.data.slice().buffer;
++      if (batteryScript && file.kind === 'script') {
++        const combined = new Uint8Array(batteryScript.length + data.byteLength);
++        combined.set(batteryScript); combined.set(new Uint8Array(data), batteryScript.length); data = combined.buffer;
++      }
+       const result = await ask(`loaded:${file.at === undefined ? KINDS[file.kind] : `at${file.at}`}`, { op: 'load', ...(file.at === undefined ? { kind: KINDS[file.kind] } : { at: file.at }), data }, [data]);
+       requireValue(result.ok, 'LOAD_FAILED', `Emulator rejected ${file.kind}.`);
+     }

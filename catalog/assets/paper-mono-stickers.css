@@ -1,0 +1,13 @@
+.sticker-editor { flex-basis:100%; width:100%; margin:20px auto 0; padding-top:22px; border-top:1px solid #e4e7e9; text-align:center; }
+.prototype-page .sticker-title { margin:0 0 16px; font-size:15px; font-weight:500; letter-spacing:0; }
+.sticker-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; }
+.sticker-hint, .sticker-status { margin:12px 0; color:#646b70; font-size:12px; line-height:1.6; }
+.sticker-status { min-height:20px; margin-bottom:0; }
+.sticker-options { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; max-width:620px; margin:18px auto 0; }
+.sticker-option { min-width:0; padding:6px; border:1px solid #e4e7e9; border-radius:6px; background:#fff; cursor:pointer; }
+.sticker-option canvas { display:block; width:100%; height:auto; border-radius:2px; }
+.sticker-option span { display:block; margin-top:7px; font-size:11px; line-height:1.5; }
+.sticker-option[aria-pressed="true"] { border-color:#171717; box-shadow:0 0 0 1px #171717; }
+.sticker-option:disabled { opacity:.4; cursor:default; }
+.sticker-option:focus-visible { outline:2px solid #526449; outline-offset:3px; }
+@media(max-width:500px) { .sticker-options { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; } }

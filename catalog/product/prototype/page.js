@@ -1,8 +1,7 @@
 import { generateHarmoniousLook } from './color-harmony.js';
-import { createReader } from './reader.js?v=reader-4';
+import { initViewerFullscreen } from '../../assets/viewer-fullscreen.js';
 const translations = [...document.querySelectorAll('[data-zh]')].map(element => ({ element, en: element.innerHTML, zh: element.dataset.zh }));
-let viewer, reader;
-let systemMode = false, changingMode = false;
+let viewer;
 const attributeTranslations = [...document.querySelectorAll('[data-alt-zh], [data-aria-zh]')].flatMap(element => ['alt', 'aria'].filter(key => element.dataset[key + 'Zh']).map(key => ({ element, attribute: key === 'alt' ? 'alt' : 'aria-label', en: element.getAttribute(key === 'alt' ? 'alt' : 'aria-label'), zh: element.dataset[key + 'Zh'] })));
 let language = 'en';
 try { if (localStorage.getItem('catalog-language') === 'zh-CN') language = 'zh-CN'; } catch {}
@@ -14,7 +13,6 @@ function renderLanguage() {
   for (const button of document.querySelectorAll('[data-language]')) button.setAttribute('aria-pressed', String(button.dataset.language === language));
   for (const item of attributeTranslations) item.element.setAttribute(item.attribute, language === 'en' ? item.en : item.zh);
   viewer?.setLanguage(language);
-  reader?.setLanguage(language);
   statusElement.textContent = status[language === 'en' ? 'en' : 'zh'];
 }
 function setStatus(en, zh) {
@@ -28,9 +26,6 @@ for (const button of document.querySelectorAll('[data-language]')) button.addEve
 });
 renderLanguage();
 
-reader = createReader(document.querySelector('#reading-demo'), language);
-const appearanceMode = document.querySelector('#appearance-mode');
-const experienceMode = document.querySelector('#experience-mode');
 const stage = document.querySelector('#viewer');
 const loadButton = document.querySelector('#load-model');
 const poster = document.querySelector('#viewer-poster');
@@ -83,8 +78,6 @@ function updateTextureControls() {
 let busy = false;
 function setBusy(value) {
   busy = value;
-  experienceMode.disabled = value || changingMode || stage.dataset.viewerState !== 'ready';
-  appearanceMode.disabled = changingMode;
   loadButton.disabled = value;
   randomButton.disabled = value;
   saveButton.disabled = value || stage.dataset.viewerState !== 'ready';
@@ -102,8 +95,8 @@ async function loadModel(finish = selectedFinish, texture = selectedTexture) {
   setStatus('Loading 3D model…', '正在加载 3D 模型…');
   try {
     if (!viewer) {
-      const { createViewer } = await import('./viewer.js?v=reader-2');
-      viewer = createViewer(document.querySelector('#model-canvas'), { onLayout: layout => reader.layout(layout) });
+      const { createViewer } = await import('./viewer.js?v=appearance-3');
+      viewer = createViewer(document.querySelector('#model-canvas'));
     }
     await viewer.load(new URL(`./models/prototype-${finish}.glb?v=profile-5`, import.meta.url).href);
     selectedFinish = finish;
@@ -235,29 +228,8 @@ collage.addEventListener('keydown', event => {
   }
 });
 
-async function changeMode(next) {
-  if (!viewer || busy || changingMode || systemMode === next) return;
-  changingMode = true;
-  appearanceMode.disabled = true; experienceMode.disabled = true;
-  reader.setActive(false);
-  stage.dataset.mode = next ? 'system' : 'appearance';
-  document.querySelector('#explore').dataset.mode = stage.dataset.mode;
-  try {
-    await viewer.setExperience(next);
-    systemMode = next;
-    reader.setActive(next);
-    appearanceMode.setAttribute('aria-pressed', String(!next));
-    experienceMode.setAttribute('aria-pressed', String(next));
-  } finally {
-    changingMode = false;
-    setBusy(false);
-    (next ? experienceMode : appearanceMode).focus({ preventScroll: true });
-  }
-}
-appearanceMode.addEventListener('click', () => changeMode(false));
-experienceMode.addEventListener('click', () => changeMode(true));
-
 // Begin loading immediately; the poster stays visible until the model is ready.
 loadModel();
+initViewerFullscreen();
 
 // Pre-order links navigate to the shared concept-product notice.

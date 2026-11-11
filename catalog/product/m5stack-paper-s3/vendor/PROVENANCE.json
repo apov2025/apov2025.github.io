@@ -1,0 +1,99 @@
+{
+  "repository": "https://github.com/zhuzhe1983/esp-online-tester",
+  "sourceCommit": "4932dcd1803381fb64c0dd6252707c0176e8ac9e",
+  "retrievedAt": "2026-11-11",
+  "javascript": "Transitive imports of web/platform/runtime.js and web/wasm/worker.js, with patches/0003-papers3-battery-host.patch initializing the PaperS3 battery ADC through the existing host analog script. Catalog reduced to PaperS3. No hardware flasher or Web Serial writer included.",
+  "wasm": {
+    "sha256": "15ad39d56dc7303d8632c3109d2c88c956e224427ebdc24c5bec9753d52aee8d",
+    "bytes": 5496997,
+    "sourceBuild": "Locally rebuilt from sourceCommit with patches/0001-xtensa-ldxq.patch and patches/0002-papers3-rgb.patch; Rust 1.99.1, wasm32-unknown-unknown, upstream tools/wasm-build.sh.",
+    "publishedBaseline": {
+      "url": "https://zhuzhe1983.github.io/esp-online-tester/wasm/esp32sim.wasm",
+      "sha256": "2a399f6347d719b2324336ff2e7807f3f43d735f72498b955506e8ab637e53c2",
+      "bytes": 5483021
+    },
+    "patches": [
+      {
+        "file": "patches/0001-xtensa-ldxq.patch",
+        "sha256": "d29bc26fc2f13fecd7a3c94c9b0e511817805ec49198c7c705c99a069419832c"
+      },
+      {
+        "file": "patches/0002-papers3-rgb.patch",
+        "sha256": "44f4981ceaa8115c2e538b564ccc42127094cfc2892ef9de5ce12c6a3d371c6a"
+      }
+    ]
+  },
+  "rom": {
+    "url": "https://zhuzhe1983.github.io/esp-online-tester/wasm/fw/esp32s3_rev0_rom.elf",
+    "upstream": "https://github.com/espressif/esp-rom-elfs/releases/tag/20260528",
+    "sha256": "c0ce0f338d1de1bdc6efbef1591779a2a42c1ab7d759d3c6ae8ae63a7dd34cfd",
+    "license": "Apache-2.0"
+  },
+  "firmware": {
+    "name": "EDCBook 3.1.2",
+    "url": "https://m5burner-cdn.m5stack.com/firmware/e9a34bd8a7095acf6a43dae2b1565a60.bin",
+    "sha256": "06eb3b595fc47bc5d35f760a16cdc5795ea8c0fad6295bcee8db5268cf906986",
+    "storage": "Downloaded directly by the user browser; not included in this repository."
+  },
+  "support": {
+    "runtime": "Actual ESP32-S3 ROM, bootloader and application execution; display from guest peripheral transactions; GT911 single-touch and virtual SPI SDHC.",
+    "limitations": [
+      "PaperS3 black/white digital display endpoints; 16-gray optical integration is incomplete.",
+      "RTC, buzzer audio and physical power button are not emulated.",
+      "Network connectivity and arbitrary firmware compatibility are not verified."
+    ],
+    "source": "https://github.com/zhuzhe1983/esp-online-tester/blob/4932dcd1803381fb64c0dd6252707c0176e8ac9e/docs/platform/papers3-runtime.md"
+  },
+  "verification": {
+    "EDCBook3.1.2": {
+      "firmwareSHA256": "06eb3b595fc47bc5d35f760a16cdc5795ea8c0fad6295bcee8db5268cf906986",
+      "result": "Actual welcome screen, built-in quick-start guide, and next-page touch verified in browser. Firmware unmodified.",
+      "guestSeconds": [
+        12.02,
+        18.26,
+        24.44
+      ],
+      "frames": [
+        10,
+        19,
+        29
+      ],
+      "virtualBattery": {
+        "guestSeconds": [
+          15.02,
+          60.04,
+          125.0
+        ],
+        "frames": [
+          10,
+          10,
+          10
+        ],
+        "result": "Original uploaded BIN retains an identical welcome display through 125 guest seconds with no low-battery shutdown. Existing manifest scripts remain intact after the default battery script.",
+        "displayPNG_SHA256": "a7d384655c6b267b0016442b6b1f335de43196ccc44f2f5538aae8331466c5ea",
+        "regression": "scripts/check-papers3-battery.mjs (requires original EDC_FIRMWARE BIN)"
+      }
+    },
+    "regressions": "57 Xtensa tests; 246 S3 library tests; official UserDemo browser boot, actual touches, pause/resume, local BIN validation and fullscreen."
+  },
+  "javascriptPatches": [
+    {
+      "file": "patches/0003-papers3-battery-host.patch",
+      "sha256": "9fc36ed2081a32260cdf36e801ae51dc983ccc6e1b1dc3ae7ec9945d8f3d5abe"
+    }
+  ],
+  "officialDemo": {
+    "url": "https://m5burner-cdn.m5stack.com/firmware/16287f6984f8ec7fe8058a6c3497b3b4.bin",
+    "sha256": "d6733a0ca378f95335fa5fba4d4d992fb1dd97c17557b20e9aebfca08ba6d624",
+    "storage": "Downloaded directly by the user browser; not included in this repository."
+  },
+  "virtualBattery": {
+    "volts": 4.0,
+    "adcPin": 3,
+    "adcVolts": 2.0,
+    "divider": "R24=22k, R25=22k; ADC_VBAT=VBAT/2",
+    "source": "https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/517/sch_papers3_V1.0.pdf",
+    "transport": "Existing WASM load kind6 host script: 0 adc 3 2.0. Actual SAR conversion and guest firmware battery logic remain active. Existing manifest scripts are prepended with the default and retain later overrides.",
+    "limitations": "Constant virtual supply; no discharge curve or charger model."
+  }
+}

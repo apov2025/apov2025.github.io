@@ -1,0 +1,50 @@
+.viewer-fullscreen-toggle {
+  position:absolute; bottom:14px; left:14px; z-index:5;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:44px; padding:10px 14px; border:1px solid #c8ced2;
+  border-radius:24px; background:#fffffff2; color:#252a2e;
+  font:500 12px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  cursor:pointer; touch-action:manipulation;
+}
+.viewer-fullscreen-toggle:hover { background:#fff; }
+.viewer-fullscreen-toggle:focus-visible { outline:2px solid #526449; outline-offset:3px; }
+.viewer-fullscreen-dialog {
+  position:fixed; inset:0; width:100%; height:100%; height:100dvh;
+  max-width:none; max-height:none; margin:0; padding:0; border:0;
+  overflow:hidden; overscroll-behavior:none; background:#edf0f2; color:#252a2e;
+}
+.viewer-fullscreen-dialog::backdrop { background:#edf0f2; }
+.viewer-fullscreen-frame {
+  display:flex; flex-direction:column; width:100%; height:100%;
+  box-sizing:border-box; overflow:hidden; background:#edf0f2;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+.viewer-fullscreen-frame:fullscreen { width:100%; height:100%; }
+.viewer-fullscreen-frame .viewer-fullscreen-stage,
+.viewer-fullscreen-frame #developer-viewer {
+  position:relative; flex:1 1 0; width:100%; height:auto; min-height:0;
+  margin:0; border-radius:0; overflow:hidden;
+}
+.viewer-fullscreen-stage #model-canvas,
+.viewer-fullscreen-stage canvas { touch-action:none !important; overscroll-behavior:none; }
+.viewer-fullscreen-settings {
+  flex:0 1 auto; max-height:42%; overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch; touch-action:pan-y;
+  padding:10px 18px max(16px, env(safe-area-inset-bottom));
+  background:#fff; border-top:1px solid #dce0e3;
+}
+.viewer-fullscreen-hint { margin:0; color:#646b70; text-align:center; font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.viewer-fullscreen-settings .customization-actions { margin-top:10px; }
+.viewer-fullscreen-settings .color-controls { margin-top:12px; padding-bottom:4px; }
+.viewer-fullscreen-settings .game-colorways { margin-top:10px; }
+.viewer-fullscreen-settings button,
+.viewer-fullscreen-settings .color-controls input { min-height:44px; }
+.viewer-fullscreen-settings .color-controls input { width:44px; }
+.viewer-fullscreen-dialog .developer-layouts button { color:#535a60; }
+.viewer-fullscreen-dialog .developer-layouts button[aria-pressed="true"] { color:#171717; border-color:#171717; }
+@media (max-height:500px) and (orientation:landscape) {
+  .viewer-fullscreen-frame { flex-direction:row; }
+  .viewer-fullscreen-settings { flex:0 0 34%; box-sizing:border-box; max-width:320px; max-height:100%; border-top:0; border-left:1px solid #dce0e3; }
+  .viewer-fullscreen-settings .customization-actions,
+  .viewer-fullscreen-settings .color-controls { gap:8px; }
+}

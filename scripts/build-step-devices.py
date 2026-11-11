@@ -71,13 +71,21 @@ def add_usb(scene,mats,transform,place,name,width=8.4,height=2.5):
    parts.append((f'contact-{row}-{k}',part,'Contacts'))
  for suffix,shape,mat in parts:add_shape(scene,place(shape),mats[mat],f'{name}_{suffix}',transform)
 
-def add_slot_cover(scene,mats,transform,place,name,width,height):
- # Closed dust cover: recessed seat and card inside, continuous visible seam,
- # color-matched lid with a small finger relief. It is an added visualization.
+def add_open_slot(scene,mats,transform,place,name,width,height):
+ # Pico photo pico3.jpeg: exposed socket, without a cover or flush card face.
+ outer=rect(width,height,1.8,height/2-.03).translate((0,0,-1.05))
+ inner=rect(width-.22,height-.22,2.2,(height-.22)/2-.03).translate((0,0,-1.05))
+ floor=rect(width-.22,height-.22,.2,(height-.22)/2-.03).translate((0,0,-2.0))
+ for suffix,part,mat in [('socket',outer.cut(inner),'ConnectorMetal'),('cavity',floor,'ConnectorBlack')]:
+  add_shape(scene,place(part),mats[mat],f'{name}_{suffix}',transform)
+
+def add_slot_tray(scene,mats,transform,place,name,width,height):
+ # Metalio photo metalio3.jpeg: rounded tray, with a circular eject pinhole
+ # at +local X, the end nearest USB-C (source USB X=0, slot X=-21.066).
  seat=rect(width,height,.3,min(height/2-.03,.45)).translate((0,0,-.23))
- lid=rect(width-.25,height-.24,.2,min((height-.24)/2-.03,.35)).translate((0,0,-.10))
- notch=cq.Solid.makeCylinder(.32,.7,cq.Vector(width/2-1.1,-height/2,-.45))
- lid=lid.cut(notch)
+ lid=rect(width-.25,height-.24,.2,(height-.24)/2-.03).translate((0,0,-.10))
+ eject_hole=cq.Solid.makeCylinder(.48,.7,cq.Vector(width/2-1.1,0,-.45))
+ lid=lid.cut(eject_hole)
  card=rect(width-.8,max(.3,height-.6),1.8,.1).translate((0,0,-1.25))
  for suffix,part,mat in [('seat',seat,'ConnectorBlack'),('lid',lid,'Case'),('card',card,'ConnectorBlack')]:
   add_shape(scene,place(part),mats[mat],f'{name}_{suffix}',transform)
@@ -97,6 +105,7 @@ def build(kind,filename):
   usb_place=lambda q:q.rotate((0,0,0),(1,0,0),-90).translate((49.26,32.89,-3.355))
   slot_place=lambda q:q.rotate((0,0,0),(1,0,0),90).translate((46.22,-33.015,-2.705))
   cavity=usb_place(rect(9.7,2.7,5,1.2).translate((0,0,-2.3)))
+  slot_cavity=slot_place(rect(12.1,1.30,3,.62).translate((0,0,-1.2)))
  else:
   usb_place=lambda q:q.translate((0,1.8053,63.42))
   slot_place=lambda q:q.translate((-21.066,1.718,64.25))
@@ -117,6 +126,8 @@ def build(kind,filename):
    # A simplified STEP core can plug the shell opening; cut only that core,
    # retaining the original frame's opening contours and face material mapping.
    pieces=face.cut(cavity).Faces() if (pico and i==1) or (not pico and i==10) else [face]
+   if pico and i==1:
+    pieces=[sub for piece in pieces for sub in piece.cut(slot_cavity).Faces()]
    if pico and i==1 and j==8:
     # Photo-calibrated screen opening on the actual front (-source Z).
     screen_cut=rect(102.5,58.0,1.0,.9).translate((-3.15,0,-7.3))
@@ -139,7 +150,8 @@ def build(kind,filename):
   circle=cq.Workplane('XY').circle(3.45).extrude(.018).val().translate((-24.0,-53.1,3.9))
   add_shape(scene,circle,mats['TouchLeft'],'Metalio_front_round_touch',identity)
  add_usb(scene,mats,transform,usb_place,'USB_C',9.45 if pico else 8.15,2.55 if pico else 2.35)
- add_slot_cover(scene,mats,transform,slot_place,'MicroSD_cover',12.1 if pico else 18.0,1.30 if pico else 1.90)
+ if pico:add_open_slot(scene,mats,transform,slot_place,'MicroSD_open',12.1,1.30)
+ else:add_slot_tray(scene,mats,transform,slot_place,'MicroSD_cover',18.0,1.90)
  if not pico:
   # Opaque acoustic liner behind the existing bottom speaker bore array.
   backing=rect(18,2.0,.35,.2).translate((20.05,2.2753,60.88))
@@ -147,7 +159,7 @@ def build(kind,filename):
   add_shape(scene,rect(33,2.0,.2,.2).translate((0,2.2753,-55.15)),mats['ConnectorBlack'],'Top_mic_acoustic_liner',transform)
  out=ROOT/'catalog/product'/kind/'models';out.mkdir(parents=True,exist_ok=True)
  (out/'device.glb').write_bytes(scene.export(file_type='glb'))
- metadata={'source':filename,'units':'meters','bounds':scene.bounds.tolist(),'materials':{k:{'metalness':m.metallicFactor,'roughness':m.roughnessFactor} for k,m in mats.items()},'display':'Neutral static e-paper surface; no firmware simulation','addedDetails':['Recessed USB-C metal shell, insulator, tongue and two contact rows','Closed color-matched microSD cover, seam, finger relief, seat and card'],'detailProvenance':'Presentation geometry added inside source STEP openings; not an engineering reproduction of internals','orientationStatus':'Pico calibrated against pico1-4.jpeg: USB left lower, microSD right lower, power right above center; source -Z is front' if pico else 'Source screen and capacitive-key orientation'}
+ metadata={'source':filename,'units':'meters','bounds':scene.bounds.tolist(),'materials':{k:{'metalness':m.metallicFactor,'roughness':m.roughnessFactor} for k,m in mats.items()},'display':'Neutral static e-paper surface; no firmware simulation','addedDetails':['Recessed USB-C metal shell, insulator, tongue and two contact rows','Open recessed microSD socket without a cover (pico3.jpeg)' if pico else 'Color-matched rounded microSD tray with circular eject pinhole at the end nearest USB-C (metalio3.jpeg)'],'detailProvenance':'Presentation geometry added inside source STEP openings; not an engineering reproduction of internals','orientationStatus':'Pico calibrated against pico1-4.jpeg: USB left lower, microSD right lower, power right above center; source -Z is front' if pico else 'Source screen and capacitive-key orientation'}
  (out/'device.json').write_text(json.dumps(metadata,indent=2)+'\n')
  print(kind,'meshes',len(scene.geometry),'bytes',(out/'device.glb').stat().st_size,flush=True)
 

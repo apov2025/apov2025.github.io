@@ -1,4 +1,5 @@
 import {Scene,Color,CanvasTexture,RepeatWrapping,PerspectiveCamera,WebGLRenderer,HemisphereLight,DirectionalLight,PMREMGenerator,Box3,Vector3,Spherical,ACESFilmicToneMapping,OrbitControls,GLTFLoader,RoomEnvironment} from '../product/prototype/vendor/three-runtime.js';
+import {addPaperMonoHardware} from './paper-mono-hardware.js';
 
 export async function createViewer(container,{kind,url,onState=()=>{}}){
  const paper=kind==='paper-mono-v2',cad=['mindreset-read-pico','metalio-eink4-plus-47'].includes(kind),game=kind==='prototype-game',layered=cad||game,scene=new Scene();scene.background=new Color('#edf0f2');
@@ -10,7 +11,8 @@ export async function createViewer(container,{kind,url,onState=()=>{}}){
  const controls=new OrbitControls(camera,renderer.domElement);controls.enablePan=false;controls.minDistance=.16;controls.maxDistance=.7;controls.rotateSpeed=.7;controls.autoRotateSpeed=.8;
  renderer.domElement.style.touchAction='pan-y';
  let root,disposed=false,frame=0,last=0,rotating=false,visible=false;
- let look=layered?{caseColor:game?'#229ac4':'#b5babc',frontColor:game?'#424642':'#eaebe5',buttonColor:game?'#60645f':kind==='mindreset-read-pico'?'#aeb4af':'#e07837',backColor:game?'#229ac4':'#e6e8e3',finish:'matte'}:paper?{caseColor:'#b8bdb9',finish:'matte'}:{caseColor:'#873b91',frontColor:'#ededeb',buttonColor:'#41454c',finish:'glossy'};
+ let labelMaterial,originalLabelMap,customLabelMap;
+ let look=layered?{caseColor:game?'#229ac4':'#b5babc',frontColor:game?'#424642':'#eaebe5',buttonColor:game?'#60645f':kind==='mindreset-read-pico'?'#aeb4af':'#e07837',backColor:game?'#229ac4':'#e6e8e3',finish:'matte'}:paper?{caseColor:'#b8bdb9',frontColor:'#b8bdb9',backColor:'#17191a',finish:'matte'}:{caseColor:'#873b91',frontColor:'#ededeb',buttonColor:'#41454c',finish:'glossy'};
  if(cad)Object.assign(look,{shellMaterial:'original',touchLeftColor:kind==='mindreset-read-pico'?'#aeb4af':'#e07837',touchCenterColor:'#a3acab',touchRightColor:'#a3acab'});
  const body=new Set(),front=new Set(),buttons=new Set(),back=new Set(),ink=new Set();
  const touchParts={touchLeftColor:new Set(),touchCenterColor:new Set(),touchRightColor:new Set()};
@@ -35,11 +37,25 @@ export async function createViewer(container,{kind,url,onState=()=>{}}){
   const angles={front:[0,0,1],back:[-.5,.18,-1],side:[1,.18,.12],perspective:[.4,.2,1]};
   camera.position.set(...(angles[view]||angles.perspective)).normalize().multiplyScalar(paper?.265:game?.36:.325);controls.target.set(0,0,0);controls.update();render();
  }
+ function setLabel(source){
+  if(!labelMaterial||!originalLabelMap)return;
+  const previous=customLabelMap;
+  customLabelMap=source?new CanvasTexture(source):undefined;
+  if(customLabelMap){
+   // The embedded label artwork is vertically pre-flipped for this mesh's UVs.
+   // Uploaded canvases are upright, so compensate without changing the geometry.
+   customLabelMap.flipY=!originalLabelMap.flipY;customLabelMap.colorSpace=originalLabelMap.colorSpace;
+   customLabelMap.wrapS=originalLabelMap.wrapS;customLabelMap.wrapT=originalLabelMap.wrapT;
+   customLabelMap.offset.copy(originalLabelMap.offset);customLabelMap.repeat.copy(originalLabelMap.repeat);customLabelMap.center.copy(originalLabelMap.center);customLabelMap.rotation=originalLabelMap.rotation;
+  }
+  labelMaterial.map=customLabelMap||originalLabelMap;labelMaterial.needsUpdate=true;previous?.dispose();render();
+ }
  function setLook(value){
   look={...look,...value,...(layered?{finish:'matte'}:{})};
   if(game)look.backColor=look.caseColor;
   for(const m of body){m.color.set(look.caseColor);if(!layered){m.metalness=0;m.roughness=look.finish==='matte'?.86:.25;if('clearcoat'in m)m.clearcoat=look.finish==='matte'?0:1;}}
   for(const m of front)m.color.set(look.frontColor);for(const m of buttons)m.color.set(look.buttonColor);for(const m of back)m.color.set(look.backColor);
+  if(paper)for(const m of front){m.roughness=look.finish==='matte'?.86:.25;if('clearcoat'in m)m.clearcoat=look.finish==='matte'?0:1;}
   if(cad){
    const plastic=look.shellMaterial==='polycarbonate';
    for(const m of body){const map=plastic?null:grain;if(m.roughnessMap!==map){m.roughnessMap=map;m.needsUpdate=true;}m.metalness=plastic?0:.9;m.roughness=plastic?.58:.48;}
@@ -57,19 +73,25 @@ export async function createViewer(container,{kind,url,onState=()=>{}}){
  };
  renderer.domElement.addEventListener('keydown',keydown);
  function dispose(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();observer.disconnect();document.removeEventListener('visibilitychange',schedule);controls.dispose();env.dispose();grain?.dispose();
-  const materials=new Set(),textures=new Set(),geometry=new Set();root?.traverse(o=>{if(o.geometry)geometry.add(o.geometry);for(const m of o.material?[].concat(o.material):[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});materials.forEach(m=>m.dispose());textures.forEach(t=>{t.source?.data?.close?.();t.dispose();});geometry.forEach(g=>g.dispose());renderer.dispose();renderer.domElement.remove();
+  const materials=new Set(),textures=new Set(),geometry=new Set();if(originalLabelMap)textures.add(originalLabelMap);root?.traverse(o=>{if(o.geometry)geometry.add(o.geometry);for(const m of o.material?[].concat(o.material):[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});materials.forEach(m=>m.dispose());textures.forEach(t=>{t.source?.data?.close?.();t.dispose();});geometry.forEach(g=>g.dispose());renderer.dispose();renderer.domElement.remove();
  }
  try{
   const gltf=await new GLTFLoader().loadAsync(url);root=gltf.scene;scene.add(root);
+  if(paper)await addPaperMonoHardware(root);
   root.position.sub(new Box3().setFromObject(root).getCenter(new Vector3()));
+  // The source GLB shares the chassis material with its separate front panel.
+  // Give that existing panel its own material; the NFC rear cover is already separate.
+  if(paper)root.traverse(o=>{if(o.name==='PaperMono_front_cover')o.material=o.material.clone();});
   root.traverse(o=>{for(const m of o.material?[].concat(o.material):[]){
    if(layered){const target={Case:body,Rim:body,Front:front,Buttons:buttons,Back:back,TouchLeft:touchParts.touchLeftColor,TouchCenter:touchParts.touchCenterColor,TouchRight:touchParts.touchRightColor}[m.name];target?.add(m);if(game&&m.name==='Wordmark')ink.add(m);}
-   else if(paper){if(/^PaperMono_(chassis|front_cover)$/.test(o.name))body.add(m);}
+   else if(paper){({PaperMono_chassis:body,PaperMono_front_cover:front,PaperMono_black_NFC_panel:back}[o.name])?.add(m);}
    else {if(/polycarbonate/i.test(m.name))body.add(m);if(/^Front plate/.test(m.name))front.add(m);if(/^Side buttons/.test(m.name))buttons.add(m);}
   }});
+  if(paper){const label=root.getObjectByName('PaperMono_custom_rear_label');labelMaterial=label?.material;originalLabelMap=labelMaterial?.map;}
   if(!body.size)throw new Error('Missing case material');setLook(look);setView();
  }catch(error){dispose();throw error;}
- return {setLook,setView,setRotate,dispose,get look(){return {...look};},get rotating(){return rotating;},
+ return {setLook,setView,setRotate,setLabel,dispose,get look(){return {...look};},get rotating(){return rotating;},
+  getLabelImage(){return originalLabelMap?.image;},
   setLanguage(lang){renderer.domElement.setAttribute('aria-label',lang==='zh-CN'?'交互三维模型。拖动或方向键旋转，加减号缩放。':'Interactive 3D model. Drag or use arrow keys to rotate; plus and minus to zoom.');},
   capturePose({direction=[.4,.2,1],distance=paper?.29:.34,background='#edf0f2',target=[0,0,0]}={}){setRotate(false);scene.background.set(background);controls.target.set(...target);camera.position.set(...direction).normalize().multiplyScalar(distance).add(controls.target);controls.update();render();},
   hasCustomLabel(){let found=false;root.traverse(o=>{if(o.name==='PaperMono_custom_rear_label'&&o.material?.map)found=true;});return found;},

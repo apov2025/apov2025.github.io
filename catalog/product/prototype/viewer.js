@@ -6,7 +6,7 @@ import {
 } from './vendor/three-runtime.js';
 
 // On-demand rendering keeps the static product page idle when the model is still.
-export function createViewer(container, { onLayout = () => {} } = {}) {
+export function createViewer(container) {
   const scene = new Scene();
   scene.background = new Color('#edf0f2');
   const camera = new PerspectiveCamera(32, 1, .025, 2);
@@ -38,12 +38,11 @@ export function createViewer(container, { onLayout = () => {} } = {}) {
   // Let touch users scroll the page vertically; horizontal drags rotate.
   renderer.domElement.style.touchAction = 'pan-y';
   let model, patternTexture;
-  let experience = false, transitioning = false, transitionFrame = 0, savedCamera;
   let autoRotate = false, frame = 0, previousTime = 0, exportingImage = false;
   controls.autoRotateSpeed = .8;
   function animate(time) {
     frame = 0;
-    if (!autoRotate || experience || transitioning || document.hidden || exportingImage) return;
+    if (!autoRotate || document.hidden || exportingImage) return;
     controls.update(previousTime ? Math.min((time - previousTime) / 1000, .1) : 0);
     previousTime = time;
     frame = requestAnimationFrame(animate);
@@ -51,31 +50,10 @@ export function createViewer(container, { onLayout = () => {} } = {}) {
   function scheduleRotation() {
     cancelAnimationFrame(frame);
     frame = 0; previousTime = 0;
-    if (autoRotate && !experience && !transitioning && !document.hidden && !exportingImage) frame = requestAnimationFrame(animate);
+    if (autoRotate && !document.hidden && !exportingImage) frame = requestAnimationFrame(animate);
   }
   document.addEventListener('visibilitychange', scheduleRotation);
-  function projectedRect(name) {
-    const object = model?.getObjectByName(name);
-    if (!object) return null;
-    const box = new Box3().setFromObject(object);
-    const top = new Vector3(box.min.x, box.max.y, box.max.z).project(camera);
-    const bottom = new Vector3(box.max.x, box.min.y, box.max.z).project(camera);
-    const { width, height } = container.getBoundingClientRect();
-    return { left: (top.x + 1) * width / 2, top: (1 - top.y) * height / 2, width: (bottom.x - top.x) * width / 2, height: (top.y - bottom.y) * height / 2 };
-  }
-  function fitDistance() {
-    const size = new Box3().setFromObject(model).getSize(new Vector3());
-    const tangent = Math.tan(camera.fov * Math.PI / 360);
-    return Math.max(size.y / (.84 * 2 * tangent), size.x / (.88 * 2 * tangent * camera.aspect));
-  }
-  const render = () => {
-    renderer.render(scene, camera);
-    if (experience && model && !transitioning) {
-      const rocker = projectedRect('Front_page_rocker');
-      const screen = projectedRect('E-ink_screen');
-      if (screen && rocker) onLayout({ screen, power: projectedRect('Top_power_key'), menu: projectedRect('Front_function_key'), prev: { ...rocker, height: rocker.height / 2 }, next: { ...rocker, top: rocker.top + rocker.height / 2, height: rocker.height / 2 } });
-    }
-  };
+  const render = () => renderer.render(scene, camera);
   controls.addEventListener('change', render);
   const resize = new ResizeObserver(() => {
     const { width, height } = container.getBoundingClientRect();
@@ -83,7 +61,6 @@ export function createViewer(container, { onLayout = () => {} } = {}) {
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    if (experience && model && !transitioning) { camera.position.set(0, 0, fitDistance()); controls.update(); }
     render();
   });
   resize.observe(container);
@@ -96,7 +73,6 @@ export function createViewer(container, { onLayout = () => {} } = {}) {
   }
   setView('reset');
   renderer.domElement.addEventListener('keydown', event => {
-    if (experience || transitioning) return;
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-', '_'].includes(event.key)) return;
     event.preventDefault();
     const spherical = new Spherical().setFromVector3(camera.position.clone().sub(controls.target));
@@ -146,35 +122,6 @@ export function createViewer(container, { onLayout = () => {} } = {}) {
     patternTexture = undefined;
   }
   return {
-    async setExperience(value) {
-      if (!model || value === experience || transitioning) return;
-      if (value) savedCamera = camera.position.clone();
-      const from = new Spherical().setFromVector3(camera.position);
-      from.theta = Math.atan2(Math.sin(from.theta), Math.cos(from.theta));
-      experience = value; transitioning = true;
-      controls.enabled = false; controls.autoRotate = false;
-      renderer.domElement.tabIndex = value ? -1 : 0;
-      renderer.domElement.setAttribute('aria-hidden', String(value));
-      scheduleRotation();
-      const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 550;
-      const start = performance.now();
-      await new Promise(resolve => {
-        const step = time => {
-          const target = value ? new Spherical(fitDistance(), Math.PI / 2, 0) : new Spherical().setFromVector3(savedCamera);
-          const thetaDelta = Math.atan2(Math.sin(target.theta - from.theta), Math.cos(target.theta - from.theta));
-          const linear = duration ? Math.min(1, (time - start) / duration) : 1;
-          const t = linear * linear * (3 - 2 * linear);
-          camera.position.setFromSpherical(new Spherical(from.radius + (target.radius - from.radius) * t, from.phi + (target.phi - from.phi) * t, from.theta + thetaDelta * t));
-          controls.update(); render();
-          if (linear < 1) transitionFrame = requestAnimationFrame(step); else resolve();
-        };
-        transitionFrame = requestAnimationFrame(step);
-      });
-      transitioning = false;
-      controls.enabled = !value;
-      controls.autoRotate = autoRotate && !value;
-      render(); scheduleRotation();
-    },
     clearPattern,
     setStreetPattern(data, color) {
       clearPattern();
@@ -193,7 +140,7 @@ export function createViewer(container, { onLayout = () => {} } = {}) {
     },
     setAutoRotate(value) {
       autoRotate = Boolean(value);
-      controls.autoRotate = autoRotate && !experience && !transitioning;
+      controls.autoRotate = autoRotate;
       scheduleRotation();
     },
     async exportPNG() {
@@ -277,7 +224,6 @@ export function createViewer(container, { onLayout = () => {} } = {}) {
     dispose() {
       autoRotate = false;
       cancelAnimationFrame(frame);
-      cancelAnimationFrame(transitionFrame);
       document.removeEventListener('visibilitychange', scheduleRotation);
       clearPattern();
       resize.disconnect();

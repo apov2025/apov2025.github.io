@@ -1,0 +1,31 @@
+.papers3-page .viewer { height:650px; }
+.papers3-page #model-canvas { top:56px; bottom:100px; }
+.papers3-page .viewer-status { bottom:68px; }
+.papers3-page .single-view-tools { z-index:2; pointer-events:none; }
+.papers3-page .single-view-tools button { pointer-events:auto; min-width:28px; min-height:44px; }
+.firmware-controls { margin:24px auto 0; text-align:center; }
+.firmware-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; }
+.firmware-file-label { position:relative; display:inline-flex; align-items:center; min-height:40px; overflow:hidden; }
+.firmware-file-label input { position:absolute; inset:0; opacity:0; width:100%; cursor:pointer; }
+.firmware-file-label:focus-within { outline:2px solid #526449; outline-offset:3px; }
+.firmware-caption { margin:12px 0 0; font-size:12px; line-height:1.6; color:#646b70; }
+.firmware-error { margin:12px 0 0; font-size:12px; line-height:1.6; color:#9b3f35; }
+.firmware-error:empty { display:none; }
+.firmware-details { margin:24px auto 0; max-width:760px; color:#646b70; font-size:12px; }
+.firmware-details summary { cursor:pointer; text-align:center; min-height:40px; padding:10px; }
+.firmware-details pre { max-height:200px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font:11px/1.6 monospace; background:#f5f6f7; color:#43494c; padding:16px; border-radius:4px; }
+.simulator-credit { margin:50px auto 0; text-align:center; font-size:11px; color:#646b70; line-height:1.8; }
+.simulator-credit a,.design-specs a { text-decoration:underline; text-underline-offset:3px; }
+.papers3-page #hook-visible,.viewer-fullscreen-settings #hook-visible { width:18px; height:18px; padding:0; border-radius:3px; accent-color:#384839; }
+.viewer-fullscreen-settings .firmware-controls { margin-top:12px; }
+.viewer-fullscreen-settings .firmware-details { margin-top:10px; }
+.viewer-fullscreen-settings .firmware-caption { margin-top:8px; }
+.viewer-fullscreen-settings .firmware-file-label { min-height:44px; }
+.viewer-fullscreen-settings .firmware-details pre { text-align:left; }
+@media(max-width:700px) {
+  .papers3-page .viewer { height:520px; }
+  .papers3-page .single-view-tools { gap:8px; }
+  .papers3-page .single-view-tools>div { gap:10px; }
+  .firmware-actions { gap:8px; }
+  .firmware-actions button,.firmware-file-label { min-height:44px; }
+}

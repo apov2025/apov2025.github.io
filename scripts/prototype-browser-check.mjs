@@ -36,6 +36,7 @@ try {
   assert.equal(await page.locator('#product-title').evaluate(element => getComputedStyle(element.querySelector('strong')).fontSize === getComputedStyle(element.querySelector('span')).fontSize), true);
   await page.locator('.hero').screenshot({ path: '/tmp/prototype-hero.png' });
   await page.locator('[data-viewer-state="ready"]').waitFor({ timeout: 30000 });
+  assert.equal(await page.locator('.viewer-modes, #appearance-mode, #experience-mode, #reading-demo').count(), 0, 'The viewer only offers the model appearance experience');
   assert.equal(await page.locator('#viewer').getAttribute('data-viewer-finish'), 'teal');
   assert.equal(await page.locator('#color-case').inputValue(), '#87b6ad');
   const previous = await page.locator('#color-case').inputValue();
@@ -94,7 +95,7 @@ try {
   assert.equal(await page.locator('#viewer').getAttribute('data-rare-texture'), null);
   assert.equal(await page.locator('#pattern-credit').isVisible(), false);
   assert.equal(await page.locator('#design').count(), 0);
-  assert.equal(await page.locator('main > section:last-child').getAttribute('id'), 'user-photos');
+  assert.equal(await page.locator('main > section:last-child').getAttribute('id'), 'prototype-v1-film');
   assert.equal(await page.locator('.design-specs > div:last-child a').getAttribute('href'), '../prototype-developer/');
   assert.equal(await page.locator('#user-photos').count(), 1);
   await page.locator('#user-photos').scrollIntoViewIfNeeded();
