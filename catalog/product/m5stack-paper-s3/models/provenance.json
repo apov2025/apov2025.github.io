@@ -1,6 +1,6 @@
 {
   "artifact": "device.glb",
-  "sha256": "766253455137d1dc2f569100f69b0af96650c9fc9fa52d6d7fcde22e95720b5c",
+  "sha256": "1fabc86f27e489508314b6f1bd2bf86aba4a26935f46bf6e44a5438bad8abc53",
   "sourceRepository": "https://github.com/zhuzhe1983/esp-online-tester",
   "sourceCommit": "4932dcd1803381fb64c0dd6252707c0176e8ac9e",
   "sourcePath": "web/platform/assets/m5stack-c139",
@@ -48,6 +48,8 @@
     "USB_C_Contact_12",
     "TF_Socket",
     "TF_Cavity",
+    "TF_Card",
+    "TF_Card_Grip",
     "SideSeat_-1",
     "SideSeat_1",
     "Battery_Socket",
@@ -79,12 +81,16 @@
     "ThreadedInsert_-30.5_Recess",
     "ThreadedInsert_30.5",
     "ThreadedInsert_30.5_Recess",
+    "HookScrew_L",
+    "HookScrew_L_Recess",
+    "HookScrew_R",
+    "HookScrew_R_Recess",
     "RearLabel"
   ],
   "internalVisuals": {
     "basis": "Original apov simplified visual inserts, bounded by the unchanged manufacturer shell. Concealed board/battery/component shapes are estimates; connector mouths and fastener centres measured from CAD and checked against official product photos.",
     "sticker": "Original vector design: ../media/virtual-paper-s3-label.svg; not the manufacturer photograph.",
-    "screws": "Two recessed metal hex-socket heads at rear lower mounts; two brass-coloured threaded inserts at upper mounts."
+    "screws": "Two recessed metal hex-socket heads at rear lower mounts; two brass-coloured threaded inserts at upper mounts; two removable hex-socket screw heads in the original bottom-hook countersinks."
   },
   "derivedSurfaces": {
     "FrontBezel": "Visible insert estimated from drawing/photo; thickness and exact placement not manufacturer component CAD. Perimeter rounded to follow the source CAD shell: 2.25 mm insert corner radius.",

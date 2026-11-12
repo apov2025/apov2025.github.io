@@ -54,6 +54,7 @@ try{
  assert(after.bounds.width>old.bounds.width,'two-finger gesture zooms');assert.equal(after.touches,old.touches,'pinch does not send an accidental book tap');assert.equal(after.scroll,old.scroll,'fullscreen gesture does not scroll page');
  await page.locator('#reset-view').click();
  for(let i=0;i<4;i++){await dragOutside(35,10);await checkTouch(180,500);await page.locator('#rotate-device').click();}
+ await page.getByRole('button',{name:'Controls & colors',exact:true}).click();
  await page.locator('#shell-color').fill('#ed576a');await page.locator('#front-color').fill('#353951');
  await page.screenshot({path:'/private/tmp/papers3-orbit-mobile.png'});
  assert.deepEqual(errors,[]);console.log('PASS orbit outside screen, perspective touch, screen drag isolation, hidden-back rejection, wheel/pinch zoom without guest input or page scroll, four orientations and fullscreen colors');

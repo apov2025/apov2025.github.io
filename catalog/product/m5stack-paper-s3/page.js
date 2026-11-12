@@ -1,6 +1,6 @@
-import {initViewerFullscreen} from '../../assets/viewer-fullscreen.js';
+import {initViewerFullscreen} from '../../assets/viewer-fullscreen.js?v=compact-1';
 import {generateHarmoniousLook} from '../pkd/color-harmony.js';
-import {createPaperViewer} from './viewer.js?v=internals-1';
+import {createPaperViewer} from './viewer.js?v=hook-screws-1';
 const $=selector=>document.querySelector(selector);
 const translations=[...document.querySelectorAll('[data-zh]')].map(el=>({el,en:el.textContent,zh:el.dataset.zh}));
 let language='en',viewer,runtime,runtimePromise,busy=false,mode='firmware',frameCount=0,serial='',actionError=null,lastState={status:'idle'};
@@ -17,11 +17,11 @@ function sync(){
   $('#boot-official').disabled=busy||!viewer;
   $('#firmware-file').disabled=busy||!viewer;
   $('#book-files').disabled=busy||!['running','paused','ready'].includes(state);
-  $('#book-import-status').textContent=importingBooks?text('Importing books…','正在导入书籍…'):importedCount?text(`Imported ${importedCount}: ${importedNames} · Choose “Open library”`,`已导入 ${importedCount} 本：${importedNames} · 选择“打开书库”`):text('EDCBook includes Journey to the West · Import TXT, then choose “Open library”','EDCBook 预置《西游记》 · 导入 TXT 后选择“打开书库”');
+  $('#book-import-status').textContent=importingBooks?text('Importing books…','正在导入书籍…'):importedCount?text(`Imported ${importedCount}: ${importedNames} · Choose “Open library”`,`已导入 ${importedCount} 本：${importedNames} · 选择“打开书库”`):text('Import TXT, then choose “Open library”','导入 TXT 后选择“打开书库”');
   $('#firmware-mode').disabled=!viewer||busy;
   $('#firmware-mode').setAttribute('aria-pressed',String(mode==='firmware'));
   const labels={idle:text('Ready to start','待启动'),configured:text('Ready to start','待启动'),loading:text('Loading firmware…','正在载入固件…'),ready:text('Starting…','正在启动…'),running:frameCount?text('Running','运行中'):text('Starting…','正在启动…'),paused:text('Paused','已暂停'),error:text('Stopped','已停止'),disposed:text('Stopped','已停止')};
-  let status=labels[state]||text('Ready to start','待启动');
+  let status=lastState.startup?.phase==='starting'?text('Opening library…','正在打开书库…'):labels[state]||text('Ready to start','待启动');
   const progress=lastState.loadProgress;
   if(progress?.totalBytes&&progress.loadedBytes!=null)status+=` ${Math.min(100,Math.round(progress.loadedBytes/progress.totalBytes*100))}%`;
   $('#runtime-status').textContent=status;
@@ -62,7 +62,7 @@ function errorText(error){
 }
 async function run(action){if(busy)return;busy=true;actionError=null;sync();try{await action();}catch(error){actionError=error;}finally{busy=false;sync();}}
 async function getRuntime(){
-  if(!runtimePromise)runtimePromise=import('./runtime.js?v=book-preload-1').then(({createPaperRuntime})=>createPaperRuntime({
+  if(!runtimePromise)runtimePromise=import('./runtime.js?v=auto-library-2').then(({createPaperRuntime})=>createPaperRuntime({
     onFrame(frame){frameCount=frame.frameNumber;stage.dataset.frames=String(frameCount);viewer?.setFrame(frame);},
     onState(state){if(state.status==='loading'&&lastState.status!=='loading'){serial='';frameCount=0;stage.dataset.frames='0';$('#serial-output').textContent='';viewer?.clear();}lastState=state;sync();},
     onSerial({data}){serial=(serial+data).slice(-32768);$('#serial-output').textContent=serial;},
@@ -84,18 +84,19 @@ $('#design-own').addEventListener('click',()=>{const p=$('#customization-panel')
 $('#hook-visible').addEventListener('change',e=>viewer?.setHook(e.target.checked));
 for(const [id,part] of [['shell-color','Case'],['front-color','Front'],['button-color','Buttons']])$('#'+id).addEventListener('input',e=>viewer?.setLook({[part]:e.target.value}));
 $('#random-colorway').addEventListener('click',()=>{const look=generateHarmoniousLook({previousCaseColor:$('#shell-color').value});$('#shell-color').value=look.caseColor;$('#front-color').value=look.frontColor;$('#button-color').value=look.buttonColor;viewer?.setLook({Case:look.caseColor,Front:look.frontColor,Buttons:look.buttonColor});});
-initViewerFullscreen(stage,'.customization-actions, #customization-panel, #firmware-controls, #firmware-details');
+initViewerFullscreen(stage,'.customization-actions, #customization-panel, #firmware-controls, #firmware-details',{compactControls:true});
 renderLanguage();
 try {
-  viewer=await createPaperViewer($('#model-canvas'),{onTouch:point=>{if(runtime&&['running','paused'].includes(runtime.state.status))runtime.touch(point).catch(()=>{});}});
+  viewer=await createPaperViewer($('#model-canvas'),{onPower:()=>run(async()=>{viewer?.release();if(!runtime?.state.firmware){await (await getRuntime()).bootDefault();}else await runtime.reset();}),onHookChange:visible=>{$('#hook-visible').checked=visible;},onTouch:point=>{if(!busy&&runtime&&['running','paused'].includes(runtime.state.status))runtime.touch(point).catch(()=>{});}});
   viewer.setMode('firmware');viewer.setLanguage(language);stage.dataset.viewerState='ready';$('#viewer-poster').hidden=true;
   for(const selector of ['#firmware-mode','#reset-view','#rotate-device','#zoom-in','#zoom-out','#random-colorway','#shell-color','#front-color','#button-color','#hook-visible'])$(selector).disabled=false;
 } catch(error){stage.dataset.viewerState='error';}
 sync();
 window.__paperS3={get runtime(){return runtime;},viewer};
+if(viewer)void boot();
 addEventListener('pagehide',event=>{
   viewer?.release();
-  if(event.persisted){if(runtime?.state.status==='running')runtime.pause().catch(()=>{});}
+  if(event.persisted){if(runtime)runtime.suspend().catch(()=>{});else runtimePromise?.then(device=>device.suspend()).catch(()=>{});}
   else runtime?.dispose();
 });
 addEventListener('pageshow',event=>{if(event.persisted)sync();});

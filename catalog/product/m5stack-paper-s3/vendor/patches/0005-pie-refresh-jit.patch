@@ -1,0 +1,565 @@
+--- a/xtensa-lx7/src/jit/wasm_pie.rs
++++ b/xtensa-lx7/src/jit/wasm_pie.rs
+@@ -34,7 +34,7 @@
+             Kind::ZeroAccx
+                 | Kind::Vld128(Mode::Ip)
+                 | Kind::Vst128(Mode::Ip)
+-                | Kind::Vmulas { accx: true, .. }
++                | Kind::Vmulas { signed: true, accx: true, .. }
+         )
+ }
+ 
+@@ -164,6 +164,8 @@
+             uleb(&mut g.bytes, code as usize);
+             set_q(g, if o.has(Role::Qz) { o.get(Role::Qz) } else { o.get(Role::Qa) });
+         }
++        Kind::Vzip { w } | Kind::Vunzip { w } => zip(g, &o, w, matches!(p.kind, Kind::Vunzip { .. })),
++        Kind::Ldxq32 => ldxq(g, bi, pc, next, last, &o),
+         Kind::Vld128(Mode::Ip) => vmem(g, bi, pc, next, last, &o, false, None),
+         Kind::Vst128(Mode::Ip) => vmem(g, bi, pc, next, last, &o, true, None),
+         Kind::ZeroAccx => {
+@@ -179,10 +181,11 @@
+                 g.cpu_const(ACCX + 4, 0);
+             }
+         }
+-        Kind::Vmulas { w, ld: LdKind::None, .. } => accumulate(g, w, o.get(Role::Qx), o.get(Role::Qy)),
+-        Kind::Vmulas { w, ld: LdKind::Ip, .. } => {
++        Kind::Vmulas { signed: false, w: 16, ld: LdKind::None, .. } => accumulate_u16(g, o.get(Role::Qx), o.get(Role::Qy)),
++        Kind::Vmulas { signed: true, w, ld: LdKind::None, .. } => accumulate(g, w, o.get(Role::Qx), o.get(Role::Qy)),
++        Kind::Vmulas { signed, w, ld: LdKind::Ip, .. } => {
+             let (x, y) = (o.get(Role::Qx), o.get(Role::Qy));
+-            vmem(g, bi, pc, next, last, &o, false, Some((w, x, y)));
++            vmem(g, bi, pc, next, last, &o, false, Some((w, x, y, signed)));
+         }
+         _ => unreachable!("PIE instruction was checked before emission"),
+     }
+@@ -294,6 +297,49 @@
+     uleb(&mut g.bytes, ACCX);
+ }
+ 
++/// Unsigned U16 products still add to a signed-40 ACCX input in the reference.
++/// Commit each instruction separately: a positive result with bit39 set is read
++/// as negative by the next instruction, so the signed held-ACCX proof cannot apply.
++fn accumulate_u16(g: &mut Gen, x: i32, y: i32) {
++    g.c64(0);
++    for high in [false, true] {
++        q(g, x);
++        q(g, y);
++        g.bytes.extend([0xfd, if high { 0xbf } else { 0xbe }, 0x01]); // i32x4.extmul_{low,high}_i16x8_u
++        g.set(V128);
++        for lane in 0..4 {
++            g.get(V128);
++            g.bytes.extend([0xfd, 0x1b, lane]); // i32x4.extract_lane
++            g.op(0xad); // i64.extend_i32_u: products may exceed i32::MAX.
++            g.op(0x7c);
++        }
++    }
++    g.get(0);
++    g.op(0x29); // i64.load
++    uleb(&mut g.bytes, 2);
++    uleb(&mut g.bytes, ACCX);
++    g.c64(24);
++    g.op(0x86);
++    g.c64(24);
++    g.op(0x87); // Signed-extend exactly the low 40 bits, ignoring unused high bits.
++    g.op(0x7c);
++    for (bound, cmp) in [((1i64 << 40) - 1, 0x55u8), (0, 0x53u8)] {
++        g.set(WIDE);
++        g.c64(bound);
++        g.get(WIDE);
++        g.get(WIDE);
++        g.c64(bound);
++        g.op(cmp);
++        g.op(0x1b);
++    }
++    g.set(WIDE);
++    g.get(0);
++    g.get(WIDE);
++    g.op(0x37); // Canonical clamped value also clears accx[1]'s unused bits.
++    uleb(&mut g.bytes, 2);
++    uleb(&mut g.bytes, ACCX);
++}
++
+ /// EX178 s1: a straight-line run of PIE post-increment vector loads through one base
+ /// register. Each address is `(ar[As] & !15) + offsets[k]`, because the hardware ignores
+ /// the low four address bits and every `.ip` immediate is a multiple of 16 (`pie_table.rs`
+@@ -322,7 +368,7 @@
+             return None;
+         }
+         let (p, o) = table(&bi.insn);
+-        let ip = matches!(p.kind, Kind::Vld128(Mode::Ip) | Kind::Vmulas { accx: true, ld: LdKind::Ip, .. });
++        let ip = matches!(p.kind, Kind::Vld128(Mode::Ip) | Kind::Vmulas { signed: true, accx: true, ld: LdKind::Ip, .. });
+         let imm = o.get(Role::Imm);
+         (ip && imm > 0).then(|| ((o.get(Role::As) & 15) as u8, imm as u32))
+     };
+@@ -424,8 +470,8 @@
+ /// multiply-accumulate of an `ee.vmulas.*.accx.ld.ip`, emitted once the load is known to
+ /// succeed and before it overwrites Q register Qu, which may be one of its operands.
+ #[allow(clippy::too_many_arguments)]
+-fn vmem(g: &mut Gen, bi: &BlockInsn, pc: u32, next: u32, last: bool, o: &Ops, store: bool, accumulate_first: Option<(u8, i32, i32)>) {
+-    if let Some((w, _, _)) = accumulate_first { prepare_accumulate(g, w); }
++fn vmem(g: &mut Gen, bi: &BlockInsn, pc: u32, next: u32, last: bool, o: &Ops, store: bool, accumulate_first: Option<(u8, i32, i32, bool)>) {
++    if let Some((w, _, _, true)) = accumulate_first { prepare_accumulate(g, w); }
+     let a = o.get(Role::As) as u8;
+     let imm = o.get(Role::Imm) as u32;
+     // The hardware ignores the low address bits.
+@@ -456,8 +502,8 @@
+         // so version arrays stay identical, not merely both changed.
+         memory::record_store(g, 4);
+     } else {
+-        if let Some((w, x, y)) = accumulate_first {
+-            accumulate(g, w, x, y);
++        if let Some((w, x, y, signed)) = accumulate_first {
++            if signed { accumulate(g, w, x, y); } else { accumulate_u16(g, x, y); }
+         }
+         g.get(0);
+         g.get(TLB);
+@@ -476,3 +522,60 @@
+     g.fallback(bi, pc, next, last, false);
+     g.end();
+ }
++
++/// Indexed word lookup (TRM 1.8.37). Both lane offsets are constants at compile
++/// time. Probe the entire aligned word before updating Qu, including Qu == Qs.
++fn ldxq(g: &mut Gen, bi: &BlockInsn, pc: u32, next: u32, last: bool, o: &Ops) {
++    g.get(0);
++    g.op(0x2f); // i32.load16_u: unsigned table index from one Q lane.
++    uleb(&mut g.bytes, 1);
++    uleb(&mut g.bytes, QR + 16 * o.get(Role::Qs) as usize + 2 * o.get(Role::Sel8) as usize);
++    g.c(2);
++    g.op(0x74);
++    g.ar(o.get(Role::As) as u8);
++    g.op(0x6a); // Address addition wraps at 32 bits, as in the interpreter.
++    g.c(!3);
++    g.op(0x71);
++    g.set(ADDR);
++    g.begin_block();
++    g.begin_block();
++    memory::probe(g, 4, false);
++    #[cfg(feature = "wasm-cache-inline")]
++    memory::emit_cache_hit(g, false, 1);
++    g.get(0);
++    g.get(TLB);
++    g.load(offset_of!(TlbEntry, base));
++    g.get(REL);
++    g.op(0x6a);
++    g.load(0);
++    g.store(QR + 16 * o.get(Role::Qu) as usize + 4 * o.get(Role::Sel4) as usize);
++    g.bytes.extend([0x0c, 1]);
++    g.end();
++    g.fallback(bi, pc, next, last, false);
++    g.end();
++}
++
++/// Fixed byte shuffles replace repeated interpreted lane extraction. Compute the
++/// high result first, but commit it last: Qs0 == Qs1 leaves the high result.
++fn zip(g: &mut Gen, o: &Ops, w: u8, unzip: bool) {
++    let (a, b) = (o.get(Role::Qs0), o.get(Role::Qs1));
++    let bytes = w / 8;
++    let lanes = 16 / bytes;
++    for half in [1, 0] {
++        if half == 0 { g.get(0); }
++        q(g, a); q(g, b);
++        g.bytes.extend([0xfd, 0x0d]); // i8x16.shuffle
++        for j in 0..16 {
++            let lane = j / bytes;
++            let byte = j % bytes;
++            let index = if unzip {
++                (lane / (lanes / 2)) * 16 + (2 * (lane % (lanes / 2)) + half) * bytes + byte
++            } else {
++                (lane % 2) * 16 + (lane / 2 + half * (lanes / 2)) * bytes + byte
++            };
++            g.bytes.push(index);
++        }
++        if half == 1 { g.set(V128); } else { set_q(g, a); }
++    }
++    g.get(0); g.get(V128); set_q(g, b);
++}
+--- a/xtensa-lx7/src/jit/wasm_policy.rs
++++ b/xtensa-lx7/src/jit/wasm_policy.rs
+@@ -248,8 +248,8 @@
+     }
+     match OPS[i.imm as usize].kind {
+         Kind::Andq | Kind::Orq | Kind::Xorq | Kind::Notq | Kind::MoviQ | Kind::ZeroQ => true,
+-        Kind::Vcmp { w, .. } => matches!(w, 8 | 16 | 32),
+-        Kind::Vld128(Mode::Ip) | Kind::Vst128(Mode::Ip) => fast,
++        Kind::Vcmp { w, .. } | Kind::Vzip { w } | Kind::Vunzip { w } => matches!(w, 8 | 16 | 32),
++        Kind::Vld128(Mode::Ip) | Kind::Vst128(Mode::Ip) | Kind::Ldxq32 => fast,
+         Kind::ZeroAccx => true,
+         // EX155: the 4-bit weight unpack (byte shift across two Q registers, lane shift, saturating
+         // subtract of the zero point); none of these touch memory or an optional PIE price.
+@@ -258,6 +258,8 @@
+         Kind::Arith { op: ArithOp::Max | ArithOp::Min, w: 8 | 16 | 32, ld: false, st: false } => true,
+         Kind::Vmulas { signed: true, w: 8 | 16, accx: true, ld: LdKind::None, qup: false } => true,
+         Kind::Vmulas { signed: true, w: 8 | 16, accx: true, ld: LdKind::Ip, qup: false } => fast,
++        Kind::Vmulas { signed: false, w: 16, accx: true, ld: LdKind::None, qup: false } => true,
++        Kind::Vmulas { signed: false, w: 16, accx: true, ld: LdKind::Ip, qup: false } => fast,
+         _ => false,
+     }
+ }
+--- a/xtensa-lx7/src/jit/wasm_tests.rs
++++ b/xtensa-lx7/src/jit/wasm_tests.rs
+@@ -15,6 +15,12 @@
+ mod reboot;
+ #[path = "wasm_tests/pie_accx.rs"]
+ mod pie_accx;
++#[path = "wasm_tests/pie_ldxq.rs"]
++mod pie_ldxq;
++#[path = "wasm_tests/pie_zip.rs"]
++mod pie_zip;
++#[path = "wasm_tests/pie_u16.rs"]
++mod pie_u16;
+ const BASE: u32 = 0x4037_0000;
+ /// A small window above the fast mapping that only the slow bus path can reach.
+ const SLOW: u32 = BASE + 0x1_0000;
+@@ -425,6 +431,9 @@
+     memory::extension_deferral,
+     memory::flat_ram_bounds,
+     regions::regions,
++    pie_zip::run_tests,
++    pie_ldxq::run_tests,
++    pie_u16::run_tests,
+     pie_accx::run_tests,
+     pie_accx::held_and_coalesced,
+     memory::code_page_flag,
+--- /dev/null
++++ b/xtensa-lx7/src/jit/wasm_tests/pie_ldxq.rs
+@@ -0,0 +1,147 @@
++//! EDCBook lookup instruction: generated WASM versus the independent table executor.
++use super::*;
++
++pub(super) fn run_tests() -> u32 {
++    let mut tests = 0;
++    for (qu, qs) in [(0, 0), (0, 7), (7, 0), (3, 5)] {
++        for sel4 in 0..4 { for sel8 in 0..8 {
++            // TRM encoding, independent of the operand table used by the emitter.
++            let raw: u32 = 0xe070_0d4e | qu << 16 | (qs & 3) << 14 | (qs >> 2)
++                | (sel4 & 1) << 19 | (sel4 >> 1) << 24
++                | (sel8 & 1) << 23 | (sel8 >> 1) << 12;
++            let decoded = crate::decode::decode(BASE, raw.to_le_bytes());
++            assert!(emitter::supported_insn(&decoded, true), "LDXQ must compile through the fast mapping");
++            assert!(!emitter::supported_insn(&decoded, false), "without fast memory use the interpreter");
++            let mut block = [BlockInsn { insn: decoded, max_ar: crate::exec::max_ar(&decoded), straddle: false, off: 0 }, insn(Op::Nop)];
++            let mut cc = CodeCache::new(0).unwrap();
++            let code = compile(&mut cc, &mut block, BASE, true).expect("LDXQ block must compile");
++            for _ in 0..HOT { ready(&cc, code, 0); }
++            assert!(ready(&cc, code, 0));
++            for mode in 0..10 { for budget in [1, 2] {
++                CONTEXT.with(|c| *c.borrow_mut() = format!("LDXQ q{qu},q{qs} sel={sel4}/{sel8} mode={mode} budget={budget}"));
++                let (mut reference, mut actual) = (cpu(15), cpu(15));
++                let indices = [0u16, 1, 3, 8, 127, 511, 0x8000, 0xffff];
++                let index = u32::from(indices[sel8 as usize]);
++                let target = match mode { 2 | 3 => BASE + 65532, 4 => BASE + 65536, 5 => 0, _ => BASE + 0x1000 };
++                for c in [&mut reference, &mut actual] {
++                    c.cpenable = if mode == 6 { 0 } else { 1 << 3 };
++                    c.approximate_pie_mode = if mode >= 8 { mode - 7 } else { 0 };
++                    c.blocks.observed = true;
++                    c.qr.fill(0x0123_4567_89ab_cdef_fedc_ba98_7654_3210);
++                    c.qr[qs as usize] = indices.iter().enumerate().fold(0, |q, (k, &v)| q | u128::from(v) << (k * 16));
++                    let unaligned = if mode == 7 { 1 } else { 3 };
++                    c.set_ar(4, target.wrapping_sub(index * 4).wrapping_add(unaligned));
++                }
++                let (mut ra, mut rb) = (Ram::new(true, false), Ram::new(true, false));
++                if mode == 1 { rb.tlb.fill(TlbEntry::EMPTY); }
++                if mode == 3 { rb.tlb[tlb_index(BASE)].span -= 1; rb.tlb[tlb_index(BASE)].hi -= 1; }
++                let fm = rb.fast_mem();
++                // SAFETY: ready module, valid entry, and helpers/mapping belong to this bus.
++                let result = unsafe { run(&cc, code, &mut actual, &mut rb, &Helpers::new::<Ram>(), budget, 0, fm) };
++                let done = result & 0xffff;
++                assert!(done > 0 && done <= budget);
++                let mut trap = None;
++                for bi in block.iter().take(done as usize) {
++                    let mut i = bi.insn;
++                    if i.op == Op::Pie { i.r = 0; } // Force independent table semantics.
++                    if let Err(t) = exec_insn(&mut reference, &mut ra, &i) { trap = Some(t); break; }
++                }
++                assert_eq!(trap, actual.jit_trap.take());
++                same(&reference, &actual);
++                assert_eq!(ra.ram.mem, rb.ram.mem);
++                assert_eq!(ra.versions, rb.versions);
++                let expected_reads = u32::from(matches!(mode, 1 | 3 | 4 | 5));
++                assert_eq!(rb.slow_reads, expected_reads, "fast path must avoid the bus; fallback reads once");
++                tests += 1;
++            }}
++        }}
++    }
++    tests += prefix_and_loop();
++    #[cfg(feature = "wasm-cache-inline")]
++    { tests += cache_hits(); }
++    tests
++}
++
++fn prefix_and_loop() -> u32 {
++    let i = crate::decode::decode(BASE + 3, 0xe072_3d4eu32.to_le_bytes());
++    let mut before = insn(Op::Addi); before.insn.t = 4; before.insn.s = 4; before.insn.imm = 4;
++    let mut after = insn(Op::Addi); after.insn.t = 7; after.insn.s = 7; after.insn.imm = 1;
++    let mut block = [before, BlockInsn { insn: i, max_ar: crate::exec::max_ar(&i), straddle: false, off: 0 }, after];
++    for bi in &mut block { bi.max_ar = crate::exec::max_ar(&bi.insn); }
++    let mut tests = 0;
++    for hint in [0, BASE + 7] {
++        let mut cc = CodeCache::new(0).unwrap();
++        let code = compile(&mut cc, &mut block, BASE, true).unwrap();
++        for _ in 0..HOT { ready(&cc, code, hint); }
++        assert!(ready(&cc, code, hint));
++        for mode in 0..6 { for count in [0, 3] { for budget in 1..=14 {
++            CONTEXT.with(|c| *c.borrow_mut() = format!("LDXQ prefix/loop mode={mode} count={count} budget={budget} hint={hint:x}"));
++            let (mut reference, mut actual) = (cpu(15), cpu(15));
++            for c in [&mut reference, &mut actual] {
++                c.cpenable = if mode == 3 { 0 } else { 8 };
++                c.qr[0] = 0; c.qr[2] = u128::MAX;
++                c.set_ar(4, match mode { 2 | 4 => SLOW - 4, 5 => SLOW - 12, _ => BASE + 0x1000 });
++                c.lbeg = BASE; c.lend = BASE + 7; c.lcount = count;
++            }
++            let (mut ra, mut rb) = (Ram::new(true, false), Ram::new(true, false));
++            if mode == 1 { rb.tlb.fill(TlbEntry::EMPTY); }
++            if mode == 4 { ra.defer_armed = true; rb.defer_armed = true; }
++            let fm = rb.fast_mem();
++            // SAFETY: ready module and valid entry with the live test bus.
++            let result = unsafe { run(&cc, code, &mut actual, &mut rb, &Helpers::new::<Ram>(), budget, 0, fm) };
++            let done = result & 0xffff;
++            assert!(done > 0 && done <= budget);
++            let mut trap = None;
++            // A deferred helper is counted in the return prefix but not retired by exec_insn.
++            for _ in 0..done {
++                let k = match reference.pc.wrapping_sub(BASE) { 0 => 0, 3 => 1, 7 => 2, x => panic!("unexpected PC offset {x}") };
++                let mut instruction = block[k].insn;
++                if instruction.op == Op::Pie { instruction.r = 0; }
++                if crate::exec::defer_instruction(&reference, &mut ra, &instruction) { break; }
++                if let Err(t) = exec_insn(&mut reference, &mut ra, &instruction) { trap = Some(t); break; }
++            }
++            assert_eq!(trap, actual.jit_trap.take());
++            same(&reference, &actual);
++            assert_eq!(ra.deferred, rb.deferred);
++            assert_eq!(ra.ram.mem, rb.ram.mem);
++            tests += 1;
++        }}}
++    }
++    tests
++}
++
++#[cfg(feature = "wasm-cache-inline")]
++fn cache_hits() -> u32 {
++    use emu_core::bus::FastCacheLine;
++    CACHE_PROBES.store(true, std::sync::atomic::Ordering::Relaxed);
++    let i = crate::decode::decode(BASE, 0xe072_3d4eu32.to_le_bytes());
++    let mut block = [BlockInsn { insn: i, max_ar: crate::exec::max_ar(&i), straddle: false, off: 0 }];
++    for way in 0..9 {
++        let mut ram = Ram::new(true, true); // A read-only fast mapping still serves loads.
++        ram.tlb[tlb_index(BASE)].src = 3;
++        let tag = (0x3000_0000u32 | 0x100) >> 6;
++        let slot = ((tag & 63) * 8) as usize;
++        let mut lines = vec![FastCacheLine::default(); 512];
++        if way < 8 { lines[slot + way] = FastCacheLine { tag, dirty: 0, valid: 1 }; }
++        ram.inline_cache = Some((lines, 0));
++        let mut cc = CodeCache::new(0).unwrap();
++        let code = queue(&mut cc, &mut block, BASE, true);
++        for _ in 0..HOT { ready(&cc, code, 0); }
++        assert!(ready(&cc, code, 0));
++        let mut actual = cpu(0); actual.cpenable = 8; actual.qr[0] = 0; actual.qr[2] = u128::MAX;
++        actual.set_ar(4, BASE + 0x100);
++        let mut reference = actual.clone(); let mut ra = Ram::new(true, true);
++        let fm = ram.fast_mem();
++        // SAFETY: ready module and live bus/mapping.
++        let result = unsafe { run(&cc, code, &mut actual, &mut ram, &Helpers::new::<Ram>(), 1, 0, fm) };
++        let mut table = i; table.r = 0;
++        exec_insn(&mut reference, &mut ra, &table).unwrap();
++        assert_eq!(result & 0xffff, 1); same(&reference, &actual);
++        let (lines, hits) = ram.inline_cache.as_ref().unwrap();
++        assert_eq!(*hits, u64::from(way < 8));
++        assert_eq!(ram.helper_accesses, u32::from(way == 8));
++        assert!(lines.iter().all(|line| line.dirty == 0));
++    }
++    CACHE_PROBES.store(false, std::sync::atomic::Ordering::Relaxed);
++    9
++}
+--- /dev/null
++++ b/xtensa-lx7/src/jit/wasm_tests/pie_zip.rs
+@@ -0,0 +1,39 @@
++//! Interleave/deinterleave SIMD must preserve both old sources, including aliases.
++use super::*;
++
++pub(super) fn run_tests() -> u32 {
++    use crate::pie::Role::{Qs0, Qs1};
++    let mut tests = 0;
++    for name in ["ee.vzip.8", "ee.vzip.16", "ee.vzip.32", "ee.vunzip.8", "ee.vunzip.16", "ee.vunzip.32"] {
++        for a in 0..8 { for b in 0..8 {
++            let bytes = asm::pie(name, &[(Qs0, a), (Qs1, b)]);
++            let mut raw = [0; 4]; raw[..bytes.len()].copy_from_slice(&bytes);
++            let i = crate::decode::decode(BASE, raw);
++            assert!(emitter::supported_insn(&i, true), "{name} must compile");
++            let mut block = [BlockInsn { insn: i, max_ar: crate::exec::max_ar(&i), straddle: false, off: 0 }, insn(Op::Nop)];
++            let mut cc = CodeCache::new(0).unwrap();
++            let code = compile(&mut cc, &mut block, BASE, true).unwrap();
++            for _ in 0..HOT { ready(&cc, code, 0); } assert!(ready(&cc, code, 0));
++            for seed in 0..4 { for budget in [1, 2] {
++                CONTEXT.with(|c| *c.borrow_mut() = format!("{name} q{a}/q{b} seed={seed} budget={budget}"));
++                let mut reference = cpu(15); reference.cpenable = if seed == 3 { 0 } else { 8 };
++                for (n, q) in reference.qr.iter_mut().enumerate() {
++                    *q = u128::from_le_bytes(core::array::from_fn(|k| ((n * 41 + k * 13 + seed * 97) & 255) as u8));
++                }
++                let mut actual = reference.clone();
++                let (mut ra, mut rb) = (Ram::new(true, false), Ram::new(true, false));
++                let fm = rb.fast_mem();
++                // SAFETY: module and entry are ready, with the live exclusively borrowed bus.
++                let result = unsafe { run(&cc, code, &mut actual, &mut rb, &Helpers::new::<Ram>(), budget, 0, fm) };
++                let done = result & 0xffff; assert!(done > 0 && done <= budget);
++                let mut trap = None;
++                for bi in block.iter().take(done as usize) {
++                    if let Err(t) = exec_insn(&mut reference, &mut ra, &bi.insn) { trap = Some(t); break; }
++                }
++                assert_eq!(trap, actual.jit_trap.take()); same(&reference, &actual);
++                assert_eq!(rb.slow_reads, 0); tests += 1;
++            }}
++        }}
++    }
++    tests
++}
+--- /dev/null
++++ b/xtensa-lx7/src/jit/wasm_tests/pie_u16.rs
+@@ -0,0 +1,135 @@
++//! Unsigned U16 ACCX: signed-40 input, unsigned products/clamp and load-fault ordering.
++use super::*;
++
++fn decoded(load: Option<i32>, step: i32) -> BlockInsn {
++    use crate::pie::Role::{As, Imm, Qu, Qx, Qy};
++    let encoded = match load {
++        None => asm::pie("ee.vmulas.u16.accx", &[(Qx, 0), (Qy, 1)]),
++        Some(q) => asm::pie("ee.vmulas.u16.accx.ld.ip", &[(Qx, 0), (Qy, 1), (Qu, q), (As, 4), (Imm, step)]),
++    };
++    let mut bytes = [0; 4]; bytes[..encoded.len()].copy_from_slice(&encoded);
++    let i = crate::decode::decode(BASE, bytes);
++    BlockInsn { insn: i, max_ar: crate::exec::max_ar(&i), straddle: false, off: 0 }
++}
++
++fn vector(lanes: [u16; 8]) -> u128 {
++    lanes.iter().enumerate().fold(0, |q, (k, &v)| q | u128::from(v) << (16 * k))
++}
++
++pub(super) fn run_tests() -> u32 {
++    let mut cases = vec![
++        ([u16::MAX; 8], [u16::MAX; 8], 0i64),
++        ([0x8000; 8], [0x8000; 8], -1),
++        ([0; 8], [u16::MAX; 8], -1),
++        ([u16::MAX; 8], [u16::MAX; 8], -(1i64 << 39)),
++        ([u16::MAX; 8], [u16::MAX; 8], (1i64 << 39) - 1),
++    ];
++    for lane in 0..8 { let mut x = [0; 8]; x[lane] = 0xffff; cases.push((x, [0x8001; 8], 17)); }
++    let mut tests = 0;
++    for load in [None, Some(0), Some(1), Some(2)] {
++        let mut block = [decoded(load, -16), insn(Op::Nop)];
++        assert!(emitter::supported_insn(&block[0].insn, true), "unsigned U16 ACCX must compile");
++        let mut cc = CodeCache::new(0).unwrap();
++        let code = compile(&mut cc, &mut block, BASE, true).unwrap();
++        for _ in 0..HOT { ready(&cc, code, 0); }
++        assert!(ready(&cc, code, 0));
++        for (case, &(x, y, initial)) in cases.iter().enumerate() {
++            for mode in 0..8 { for budget in [1, 2] {
++                CONTEXT.with(|c| *c.borrow_mut() = format!("unsigned U16 load={load:?} case={case} mode={mode} budget={budget}"));
++                let (mut reference, mut actual) = (cpu(15), cpu(15));
++                for c in [&mut reference, &mut actual] {
++                    c.cpenable = if mode == 5 { 0 } else { 8 };
++                    c.approximate_pie_mode = if mode >= 6 { mode - 5 } else { 0 };
++                    c.qr[0] = vector(x); c.qr[1] = vector(y); c.qr[2] = u128::MAX;
++                    c.accx = [initial as u32, ((initial >> 32) as u32 & 0xff) | 0xa5a5_a500];
++                    c.set_ar(4, match mode { 2 | 4 => SLOW, 3 => BASE + 65520, _ => BASE + 0x1003 });
++                    c.blocks.observed = true;
++                }
++                let (mut ra, mut rb) = (Ram::new(true, false), Ram::new(true, false));
++                if mode == 1 { rb.tlb.fill(TlbEntry::EMPTY); }
++                if mode == 3 {
++                    ra.ram.mem.truncate(65528); rb.ram.mem.truncate(65528);
++                    rb.tlb[tlb_index(BASE)].span = 65528; rb.tlb[tlb_index(BASE)].hi = BASE + 65528;
++                }
++                if mode == 4 { ra.defer_armed = true; rb.defer_armed = true; }
++                let fm = rb.fast_mem();
++                // SAFETY: ready code, valid entry and mapping belonging to this live bus.
++                let result = unsafe { run(&cc, code, &mut actual, &mut rb, &Helpers::new::<Ram>(), budget, 0, fm) };
++                let done = result & 0xffff; assert!(done > 0 && done <= budget);
++                let mut trap = None;
++                for bi in block.iter().take(done as usize) {
++                    let mut i = bi.insn; if i.op == Op::Pie { i.r = 0; }
++                    if load.is_some() && crate::exec::defer_instruction(&reference, &mut ra, &i) { break; }
++                    if let Err(t) = exec_insn(&mut reference, &mut ra, &i) { trap = Some(t); break; }
++                }
++                assert_eq!(trap, actual.jit_trap.take()); same(&reference, &actual);
++                assert_eq!(ra.deferred, rb.deferred); assert_eq!(ra.ram.mem, rb.ram.mem);
++                if mode != 5 && !(mode == 4 && load.is_some()) {
++                    let dot: i64 = x.iter().zip(y).map(|(&a, b)| i64::from(a) * i64::from(b)).sum();
++                    let want = (initial + dot).clamp(0, (1i64 << 40) - 1);
++                    assert_eq!(actual.accx, [want as u32, (want >> 32) as u32], "accumulate commits even when the following load faults");
++                }
++                if load.is_some() && mode == 0 { assert_eq!(rb.slow_reads, 0, "prove generated memory path ran"); }
++                tests += 1;
++            }}
++        }
++    }
++    tests + repeated() + held_boundary()
++}
++
++/// After a first result sets bit39, the next instruction must read it as negative.
++/// An unsigned or signed held ACCX sum, or signed load coalescing, loses that boundary.
++fn repeated() -> u32 {
++    let mut tests = 0;
++    for load in [None, Some(2)] {
++        let mut block = [decoded(load, 16), decoded(load, 16)];
++        let mut cc = CodeCache::new(0).unwrap();
++        let code = compile(&mut cc, &mut block, BASE, true).unwrap();
++        for _ in 0..HOT { ready(&cc, code, 0); }
++        assert!(ready(&cc, code, 0));
++        let (mut reference, mut actual) = (cpu(0), cpu(0));
++        for c in [&mut reference, &mut actual] {
++            c.cpenable = 8; c.qr[0] = u128::MAX; c.qr[1] = u128::MAX;
++            c.accx = [u32::MAX, 0x7f]; c.set_ar(4, BASE + 0x1000); c.blocks.observed = true;
++        }
++        let (mut ra, mut rb) = (Ram::new(true, false), Ram::new(true, false));
++        let fm = rb.fast_mem();
++        // SAFETY: ready whole block and live bus/mapping.
++        let result = unsafe { run(&cc, code, &mut actual, &mut rb, &Helpers::new::<Ram>(), 2, 0, fm) };
++        assert_eq!(result & 0xffff, 2); assert!(actual.jit_trap.is_none());
++        for bi in &block { let mut i = bi.insn; i.r = 0; exec_insn(&mut reference, &mut ra, &i).unwrap(); }
++        same(&reference, &actual); assert_eq!(actual.accx, [0, 0]);
++        tests += 1;
++    }
++    tests
++}
++
++/// A signed held sum must become authoritative before the unsigned instruction.
++fn held_boundary() -> u32 {
++    use crate::pie::Role::{Qx, Qy};
++    let decode = |bytes: Vec<u8>| {
++        let mut word = [0; 4]; word[..bytes.len()].copy_from_slice(&bytes);
++        let i = crate::decode::decode(BASE, word);
++        BlockInsn { insn: i, max_ar: crate::exec::max_ar(&i), straddle: false, off: 0 }
++    };
++    let mut block = [decode(asm::pie("ee.zero.accx", &[])),
++        decode(asm::pie("ee.vmulas.s8.accx", &[(Qx, 0), (Qy, 1)])), decoded(None, 0)];
++    let mut cc = CodeCache::new(0).unwrap();
++    let code = compile(&mut cc, &mut block, BASE, true).unwrap();
++    for _ in 0..HOT { ready(&cc, code, 0); }
++    assert!(ready(&cc, code, 0));
++    let (mut reference, mut actual) = (cpu(0), cpu(0));
++    for c in [&mut reference, &mut actual] {
++        c.cpenable = 8; c.qr[0] = u128::MAX; c.qr[1] = u128::MAX;
++        c.accx = [12345, 0]; c.blocks.observed = true;
++    }
++    let (mut ra, mut rb) = (Ram::new(true, false), Ram::new(true, false));
++    let fm = rb.fast_mem();
++    // SAFETY: ready whole block and live bus/mapping.
++    let result = unsafe { run(&cc, code, &mut actual, &mut rb, &Helpers::new::<Ram>(), 3, 0, fm) };
++    assert_eq!(result & 0xffff, 3); assert!(actual.jit_trap.is_none());
++    for bi in &block { let mut i = bi.insn; i.r = 0; exec_insn(&mut reference, &mut ra, &i).unwrap(); }
++    same(&reference, &actual);
++    assert_eq!(actual.accx, [0xfff0_0018, 7]); // 16 + 8 * 65535 * 65535.
++    1
++}
+--- a/web/platform/runtime.js
++++ b/web/platform/runtime.js
+@@ -586,7 +586,7 @@
+   };
+   const initialize = async (bundle, progress) => {
+     stopWorker();
+-    const wasmUrl = new URL('wasm/esp32sim.wasm?v=ldxq-speed-1', assetBaseUrl).href;
++    const wasmUrl = new URL('wasm/esp32sim.wasm?v=refresh-jit-1', assetBaseUrl).href;
+     const wasm = await fetchBytes(wasmUrl, { fetchImpl, maxBytes: MAX_FILE, signal: aborter.signal, onProgress: progress.file('wasm', wasmUrl) });
+     progress.prepare('worker');
+     alive();

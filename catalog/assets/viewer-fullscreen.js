@@ -1,10 +1,10 @@
 // Move the live viewer and its original controls together; keep model state and listeners.
-export function initViewerFullscreen(stage = document.querySelector('#viewer'), controlSelector = '.game-colorways, .customization-actions, #customization-panel') {
+export function initViewerFullscreen(stage = document.querySelector('#viewer'), controlSelector = '.game-colorways, .customization-actions, #customization-panel', {compactControls=false} = {}) {
   if (!stage) return;
   if (!document.querySelector('link[data-viewer-fullscreen]')) {
     const style = document.createElement('link');
     style.rel = 'stylesheet';
-    style.href = new URL('./viewer-fullscreen.css', import.meta.url).href;
+    style.href = new URL('./viewer-fullscreen.css?v=compact-1', import.meta.url).href;
     style.dataset.viewerFullscreen = '';
     document.head.append(style);
   }
@@ -21,9 +21,20 @@ export function initViewerFullscreen(stage = document.querySelector('#viewer'), 
   frame.className = 'viewer-fullscreen-frame';
   const settings = document.createElement('div');
   settings.className = 'viewer-fullscreen-settings';
+  const content=compactControls?document.createElement('div'):settings;
+  let controlsToggle,bar;
+  if(compactControls){
+    frame.classList.add('viewer-fullscreen-compact');
+    bar=document.createElement('div');bar.className='viewer-fullscreen-bar';
+    controlsToggle=document.createElement('button');controlsToggle.type='button';controlsToggle.className='viewer-controls-toggle';
+    content.className='viewer-fullscreen-controls';content.id='papers3-fullscreen-controls';content.hidden=true;
+    controlsToggle.setAttribute('aria-controls',content.id);controlsToggle.setAttribute('aria-expanded','false');
+    controlsToggle.addEventListener('click',()=>{content.hidden=!content.hidden;translate();});
+    bar.append(controlsToggle);settings.append(bar,content);
+  }
   const hint = document.createElement('p');
   hint.className = 'viewer-fullscreen-hint';
-  settings.append(hint);
+  content.append(hint);
   frame.append(settings);
   dialog.append(frame);
   stage.parentElement.append(dialog);
@@ -39,6 +50,7 @@ export function initViewerFullscreen(stage = document.querySelector('#viewer'), 
     button.querySelector('span').textContent = label;
     button.setAttribute('aria-label', label);
     button.setAttribute('aria-expanded', String(active));
+    if(controlsToggle){controlsToggle.textContent=zh?(content.hidden?'控制与配色':'收起控制'):(content.hidden?'Controls & colors':'Hide controls');controlsToggle.setAttribute('aria-expanded',String(!content.hidden));}
     const firmware=stage.dataset.interactionMode === 'firmware';
     dialog.setAttribute('aria-label', firmware ? (zh ? '全屏固件模拟' : 'Full screen firmware simulator') : (zh ? '全屏交互模型' : 'Full screen interactive model'));
     hint.textContent = stage.dataset.screenOrbit === 'true'
@@ -60,6 +72,7 @@ export function initViewerFullscreen(stage = document.querySelector('#viewer'), 
     for (const {node, marker} of markers) marker.replaceWith(node);
     markers = [];
     stage.classList.remove('viewer-fullscreen-stage');
+    if(compactControls){stage.append(button);content.hidden=true;}
     if (panel) {
       panel.hidden = savedPanelHidden;
       design?.setAttribute('aria-expanded', String(!savedPanelHidden));
@@ -93,9 +106,10 @@ export function initViewerFullscreen(stage = document.querySelector('#viewer'), 
       node.before(marker);
       markers.push({node, marker});
       if (node === stage) frame.prepend(node);
-      else settings.append(node);
+      else content.append(node);
     }
     stage.classList.add('viewer-fullscreen-stage');
+    if(compactControls){content.hidden=true;bar.prepend(button);}
     if (panel) {
       savedPanelHidden = panel.hidden;
       panel.hidden = false;

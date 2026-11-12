@@ -1,0 +1,68 @@
+--- a/xtensa-lx7/src/pie.rs
++++ b/xtensa-lx7/src/pie.rs
+@@ -321,6 +321,7 @@
+ /// when the instruction is decoded and carried in the `r`/`s`/`t` its `Insn` otherwise leaves
+ /// zero: `r` = PACKED | third Q register << 4 | AR register, `s` = first Q | second Q << 4,
+ /// `t` = the post-increment / 16 (each packed load and store scales its immediate by 16).
++/// LDXQ instead uses `s` = destination Q | source Q << 4 and `t` = sel4 | sel8 << 2.
+ /// Anything `exec_packed` does not run gets zeros and keeps the table path. The packed values
+ /// exceed 15, so `Insn::gpr_effects` masks the fields it would otherwise shift by.
+ pub fn pack(w: u32, idx: usize) -> (u8, u8, u8) {
+@@ -332,6 +333,8 @@
+     let imm = o.get(Imm);
+     let step = (imm % 16 == 0 && (-128..=127).contains(&(imm / 16))).then_some((imm / 16) as i8 as u8);
+     match (p.kind, step) {
++        (Kind::Ldxq32, _) => (PACKED | a, q(o.get(Qu)) | (q(o.get(Qs)) << 4),
++            (o.get(Sel4) as u8) | ((o.get(Sel8) as u8) << 2)),
+         (Kind::ZeroAccx, _) => (PACKED, 0, 0),
+         (Kind::Vld128(Mode::Ip), Some(t)) => (PACKED | a, q(o.get(Qu)), t),
+         (Kind::Vst128(Mode::Ip), Some(t)) => (PACKED | a, q(o.get(Qv)), t),
+@@ -375,6 +378,26 @@
+                 cpu.set_ar(a, at.wrapping_add(step));
+             }
+         }
++        Kind::Ldxq32 => {
++            // Same TRM lookup and fault ordering as exec_table. Select a 64-bit half
++            // before shifting so WASM needs no variable 128-bit shift helpers.
++            let (dst, src) = (u32::from(i.t & 3), u32::from(i.t >> 2));
++            let q = cpu.qr[q1];
++            let half = if src < 4 { q as u64 } else { (q >> 64) as u64 };
++            let index = ((half >> ((src & 3) * 16)) & 0xffff) as u32;
++            let at = cpu.get_ar(a).wrapping_add(index * 4) & !3;
++            let value = match bus.read32(at) {
++                Ok(v) => u64::from(v),
++                Err(_) => return Err(cpu.raise_mem(exc::LOAD_PROHIBITED, at)),
++            };
++            let q = cpu.qr[q0];
++            let shift = (dst & 1) * 32;
++            let mask = u64::from(u32::MAX) << shift;
++            let half = if dst < 2 { q as u64 } else { (q >> 64) as u64 };
++            let updated = (half & !mask) | (value << shift);
++            cpu.qr[q0] = if dst < 2 { (q & !(u64::MAX as u128)) | u128::from(updated) }
++                        else { u128::from(q as u64) | (u128::from(updated) << 64) };
++        }
+         Kind::ZeroAccx => cpu.accx = [0; 2],
+         _ => unreachable!("pack marks only the kinds handled here"),
+     }
+@@ -413,8 +436,8 @@
+     const BASE: u32 = 0x3fc9_0000;
+     /// Not a multiple of 16: a load aligned into the last partial block runs off the end mid-load.
+     const SIZE: usize = 0x1000 - 8;
+-    const HOT: [&str; 7] = ["ee.vld.128.ip", "ee.vst.128.ip", "ee.vmulas.s8.accx", "ee.vmulas.s8.accx.ld.ip",
+-                            "ee.vmulas.s16.accx", "ee.vmulas.s16.accx.ld.ip", "ee.zero.accx"];
++    const HOT: [&str; 8] = ["ee.vld.128.ip", "ee.vst.128.ip", "ee.vmulas.s8.accx", "ee.vmulas.s8.accx.ld.ip",
++                            "ee.vmulas.s16.accx", "ee.vmulas.s16.accx.ld.ip", "ee.zero.accx", "ee.ldxq.32"];
+ 
+     /// The same memory without a bulk read, so the packed path takes its per-word fallback.
+     struct NoBulk(FlatRam);
+--- a/web/platform/runtime.js
++++ b/web/platform/runtime.js
+@@ -586,7 +586,7 @@
+   };
+   const initialize = async (bundle, progress) => {
+     stopWorker();
+-    const wasmUrl = new URL('wasm/esp32sim.wasm', assetBaseUrl).href;
++    const wasmUrl = new URL('wasm/esp32sim.wasm?v=ldxq-speed-1', assetBaseUrl).href;
+     const wasm = await fetchBytes(wasmUrl, { fetchImpl, maxBytes: MAX_FILE, signal: aborter.signal, onProgress: progress.file('wasm', wasmUrl) });
+     progress.prepare('worker');
+     alive();

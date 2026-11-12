@@ -1,0 +1,348 @@
+{
+  "date": "2026-11-12",
+  "experiment": "EX155 follow-up: compile the EDCBook display conversion loop (LDXQ.32, VZIP/VUNZIP, unsigned U16 ACCX with/without IP load); extends EX042/EX103 without guest timing changes.",
+  "firmwareSHA256": "06eb3b595fc47bc5d35f760a16cdc5795ea8c0fad6295bcee8db5268cf906986",
+  "baselineSHA256": "811af02736ab6a855878d74b6025615925b0c367c06a41ee43ba29f74c72e6ac",
+  "candidateSHA256": "8e4c74c29db33e9bf83b9dc7b5076562a338967f317dfc4bb72fc483a5dd2ee6",
+  "method": "Local headless Chrome, fresh context per run, original BIN and ordinary touch clicks, ABBA. Refresh span: first-to-last published frame. Body hashes exclude clock/header (rows 80..900). Each page turn retains all 49 guest display scans.",
+  "limitations": "Two runs per artifact and two guide-page turns per run; host/browser-specific measurement, not a hardware-speed guarantee or exact guest-cycle replay.",
+  "pageTurnMeanMs": {
+    "baseline": 1920.2250000238419,
+    "candidate": 808.0249999761581
+  },
+  "reductionPercent": 57.92029580043352,
+  "verification": {
+    "wasmDifferentialCases": 117938,
+    "groups": 81,
+    "newCases": 6812,
+    "gpioWaveformCases": 24,
+    "wasmClippy": "pass with warnings denied",
+    "review": "Independent read-only review of lookup and shuffle emitters; unsigned accumulator reviewed before integration."
+  },
+  "runs": [
+    {
+      "arm": "baseline",
+      "turns": [
+        {
+          "name": "open",
+          "refreshMs": 2674.699999809265,
+          "guestRefresh": 0.4800000000000004,
+          "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+          "guestFrames": 148
+        },
+        {
+          "name": "page1",
+          "refreshMs": 1931.7999999523163,
+          "guestRefresh": 0.3600000000000012,
+          "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+          "guestFrames": 197
+        },
+        {
+          "name": "page2",
+          "refreshMs": 1952.5,
+          "guestRefresh": 0.35999999999999943,
+          "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+          "guestFrames": 246
+        }
+      ]
+    },
+    {
+      "arm": "candidate",
+      "turns": [
+        {
+          "name": "open",
+          "refreshMs": 1459.2999999523163,
+          "guestRefresh": 0.5,
+          "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+          "guestFrames": 148
+        },
+        {
+          "name": "page1",
+          "refreshMs": 941,
+          "guestRefresh": 0.35999999999999943,
+          "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+          "guestFrames": 197
+        },
+        {
+          "name": "page2",
+          "refreshMs": 775.2000000476837,
+          "guestRefresh": 0.360000000000003,
+          "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+          "guestFrames": 246
+        }
+      ]
+    },
+    {
+      "arm": "candidate",
+      "turns": [
+        {
+          "name": "open",
+          "refreshMs": 1513.4000000953674,
+          "guestRefresh": 0.5,
+          "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+          "guestFrames": 148
+        },
+        {
+          "name": "page1",
+          "refreshMs": 765.5,
+          "guestRefresh": 0.3600000000000012,
+          "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+          "guestFrames": 197
+        },
+        {
+          "name": "page2",
+          "refreshMs": 750.3999998569489,
+          "guestRefresh": 0.35999999999999943,
+          "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+          "guestFrames": 246
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "turns": [
+        {
+          "name": "open",
+          "refreshMs": 2651.7000000476837,
+          "guestRefresh": 0.4800000000000004,
+          "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+          "guestFrames": 148
+        },
+        {
+          "name": "page1",
+          "refreshMs": 1876.2000000476837,
+          "guestRefresh": 0.3600000000000012,
+          "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+          "guestFrames": 197
+        },
+        {
+          "name": "page2",
+          "refreshMs": 1920.4000000953674,
+          "guestRefresh": 0.35999999999999943,
+          "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+          "guestFrames": 246
+        }
+      ]
+    }
+  ],
+  "rejectedPartialCandidate": {
+    "sha256": "4e1e92481141ceba69212e85c14d3cf727fe2eee623bb6c6ae8c28ff9d681164",
+    "mechanism": "Only add LDXQ JIT; remaining VZIP/VUNZIP and unsigned multiply-accumulate still block compiling the conversion loop.",
+    "baselineMeanMs": 2013.325,
+    "candidateMeanMs": 1955.825,
+    "reductionPercent": 2.856,
+    "decision": "Not adopted independently; insufficient improvement. Retained here as negative/weak evidence.",
+    "runs": [
+      {
+        "arm": "baseline",
+        "turns": [
+          {
+            "name": "open",
+            "refreshMs": 2839.100000143051,
+            "guestRefresh": 0.5,
+            "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+            "guestFrames": 148
+          },
+          {
+            "name": "page1",
+            "refreshMs": 2016.5,
+            "guestRefresh": 0.3600000000000012,
+            "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+            "guestFrames": 197
+          },
+          {
+            "name": "page2",
+            "refreshMs": 1964.5,
+            "guestRefresh": 0.35999999999999943,
+            "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+            "guestFrames": 246
+          }
+        ]
+      },
+      {
+        "arm": "candidate",
+        "turns": [
+          {
+            "name": "open",
+            "refreshMs": 2684.100000143051,
+            "guestRefresh": 0.4800000000000004,
+            "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+            "guestFrames": 148
+          },
+          {
+            "name": "page1",
+            "refreshMs": 1953.8999998569489,
+            "guestRefresh": 0.3600000000000012,
+            "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+            "guestFrames": 197
+          },
+          {
+            "name": "page2",
+            "refreshMs": 1970.7000000476837,
+            "guestRefresh": 0.35999999999999943,
+            "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+            "guestFrames": 246
+          }
+        ]
+      },
+      {
+        "arm": "candidate",
+        "turns": [
+          {
+            "name": "open",
+            "refreshMs": 2742.5,
+            "guestRefresh": 0.5,
+            "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+            "guestFrames": 148
+          },
+          {
+            "name": "page1",
+            "refreshMs": 1914,
+            "guestRefresh": 0.3600000000000012,
+            "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+            "guestFrames": 197
+          },
+          {
+            "name": "page2",
+            "refreshMs": 1984.7000000476837,
+            "guestRefresh": 0.35999999999999943,
+            "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+            "guestFrames": 246
+          }
+        ]
+      },
+      {
+        "arm": "baseline",
+        "turns": [
+          {
+            "name": "open",
+            "refreshMs": 2783.7000000476837,
+            "guestRefresh": 0.4800000000000004,
+            "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+            "guestFrames": 148
+          },
+          {
+            "name": "page1",
+            "refreshMs": 1998.5999999046326,
+            "guestRefresh": 0.35999999999999943,
+            "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+            "guestFrames": 197
+          },
+          {
+            "name": "page2",
+            "refreshMs": 2073.7000000476837,
+            "guestRefresh": 0.35999999999999943,
+            "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+            "guestFrames": 246
+          }
+        ]
+      }
+    ]
+  },
+  "rejectedRoundMemoFollowup": {
+    "experiment": "EX195: try existing prepared memo entry in ordinary active-device rounds; same budgets, IRQ and tick boundaries.",
+    "result": "Rejected; no measured speed improvement. Production remains 8e4c74c29db33e9bf83b9dc7b5076562a338967f317dfc4bb72fc483a5dd2ee6.",
+    "baselineSHA256": "8e4c74c29db33e9bf83b9dc7b5076562a338967f317dfc4bb72fc483a5dd2ee6",
+    "candidateSHA256": "4741678a75b5a4ef9026fd892291880fabca74704515969fa3454580b450eed4",
+    "meanRefreshMs": {
+      "baseline": 759.1250000596046,
+      "candidate": 771.5499999523163
+    },
+    "runs": [
+      {
+        "arm": "baseline",
+        "turns": [
+          {
+            "name": "open",
+            "refreshMs": 1370.2999999523163,
+            "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+            "guestFrames": 148
+          },
+          {
+            "name": "page1",
+            "refreshMs": 736.8000001907349,
+            "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+            "guestFrames": 197
+          },
+          {
+            "name": "page2",
+            "refreshMs": 786.5,
+            "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+            "guestFrames": 246
+          }
+        ]
+      },
+      {
+        "arm": "candidate",
+        "turns": [
+          {
+            "name": "open",
+            "refreshMs": 1358.0999999046326,
+            "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+            "guestFrames": 148
+          },
+          {
+            "name": "page1",
+            "refreshMs": 741.2000000476837,
+            "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+            "guestFrames": 197
+          },
+          {
+            "name": "page2",
+            "refreshMs": 774.2999999523163,
+            "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+            "guestFrames": 246
+          }
+        ]
+      },
+      {
+        "arm": "candidate",
+        "turns": [
+          {
+            "name": "open",
+            "refreshMs": 1446.5999999046326,
+            "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+            "guestFrames": 148
+          },
+          {
+            "name": "page1",
+            "refreshMs": 789.8999998569489,
+            "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+            "guestFrames": 197
+          },
+          {
+            "name": "page2",
+            "refreshMs": 780.7999999523163,
+            "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+            "guestFrames": 246
+          }
+        ]
+      },
+      {
+        "arm": "baseline",
+        "turns": [
+          {
+            "name": "open",
+            "refreshMs": 1299.2000000476837,
+            "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016",
+            "guestFrames": 148
+          },
+          {
+            "name": "page1",
+            "refreshMs": 755,
+            "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943",
+            "guestFrames": 197
+          },
+          {
+            "name": "page2",
+            "refreshMs": 758.2000000476837,
+            "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3",
+            "guestFrames": 246
+          }
+        ]
+      }
+    ],
+    "validation": "Real firmware body hashes and all 49 display scans per page unchanged; candidate reverted after performance trial before full regression suite.",
+    "trialPatch": "--- a/esp-soc/src/machine.rs\t2026-11-12 08:13:24\n+++ b/esp-soc/src/machine.rs\t2026-11-12 08:13:24\n@@ -710,7 +710,16 @@\n                     let budget = (quantum - if i == resume_core { resume_at } else { 0 }) as u32;\n                     let mut left = budget;\n                     while left > 0 {\n-                        let (used, stop) = self.step_blocks(i, left);\n+                        // EX195: active devices can prohibit batching while each ordinary round\n+                        // still starts at a prepared region exit. Keep its budget and completion\n+                        // boundary unchanged; clock gates may have changed inside this round.\n+                        let prepared = if cfg!(target_arch = \"wasm32\") && !APPROXIMATE && self.probes.0 == 0\n+                            && !(S::core_state(&self.bus, 0) == CoreState::Held && S::core_state(&self.bus, i) == CoreState::Held) {\n+                            let pc = self.cores[i].pc();\n+                            S::select_core(&mut self.bus, i);\n+                            self.cores[i].run_prepared(&mut self.bus, left).map(|(used, trap)| self.finish_step(i, pc, used, trap))\n+                        } else { None };\n+                        let (used, stop) = prepared.unwrap_or_else(|| self.step_blocks(i, left));\n                         left -= used.min(left);\n                         if let Some(stop) = stop {\n                             if i == 0 { self.run_steps += u64::from(budget - left); }\n"
+  }
+}

@@ -2,11 +2,11 @@
   "repository": "https://github.com/zhuzhe1983/esp-online-tester",
   "sourceCommit": "4932dcd1803381fb64c0dd6252707c0176e8ac9e",
   "retrievedAt": "2026-11-11",
-  "javascript": "Transitive imports of web/platform/runtime.js and web/wasm/worker.js, with patches/0003-papers3-battery-host.patch initializing the PaperS3 battery ADC through the existing host analog script. Catalog reduced to PaperS3. No hardware flasher or Web Serial writer included.",
+  "javascript": "Transitive imports of web/platform/runtime.js and web/wasm/worker.js, with patches/0003-papers3-battery-host.patch initializing the PaperS3 battery ADC through the existing host analog script. Catalog reduced to PaperS3. No hardware flasher or Web Serial writer included. Patches 0004/0005 also version the WASM URL to refresh cached engines.",
   "wasm": {
-    "sha256": "15ad39d56dc7303d8632c3109d2c88c956e224427ebdc24c5bec9753d52aee8d",
-    "bytes": 5496997,
-    "sourceBuild": "Locally rebuilt from sourceCommit with patches/0001-xtensa-ldxq.patch and patches/0002-papers3-rgb.patch; Rust 1.99.1, wasm32-unknown-unknown, upstream tools/wasm-build.sh.",
+    "sha256": "8e4c74c29db33e9bf83b9dc7b5076562a338967f317dfc4bb72fc483a5dd2ee6",
+    "bytes": 5508974,
+    "sourceBuild": "Locally rebuilt from sourceCommit with patches 0001, 0002, 0004 and 0005 (CPU/display changes); Rust 1.99.1, wasm32-unknown-unknown, upstream tools/wasm-build.sh. Host patches 0003/0004/0005 are applied to the vendored runtime.",
     "publishedBaseline": {
       "url": "https://zhuzhe1983.github.io/esp-online-tester/wasm/esp32sim.wasm",
       "sha256": "2a399f6347d719b2324336ff2e7807f3f43d735f72498b955506e8ab637e53c2",
@@ -20,6 +20,14 @@
       {
         "file": "patches/0002-papers3-rgb.patch",
         "sha256": "44f4981ceaa8115c2e538b564ccc42127094cfc2892ef9de5ce12c6a3d371c6a"
+      },
+      {
+        "file": "patches/0004-pie-ldxq-speed.patch",
+        "sha256": "5cb8dfce222f0d935e058bb2cdfd33d455a557fd3b5b48690b693ffb3ed46b4c"
+      },
+      {
+        "file": "patches/0005-pie-refresh-jit.patch",
+        "sha256": "0c94c55af34eb656a0a27da4e2ea9fb6134ea858cd17d2c9e41f3277088fc71b"
       }
     ]
   },
@@ -74,7 +82,21 @@
         "regression": "scripts/check-papers3-battery.mjs (requires original EDC_FIRMWARE BIN)"
       }
     },
-    "regressions": "57 Xtensa tests; 246 S3 library tests; official UserDemo browser boot, actual touches, pause/resume, local BIN validation and fullscreen."
+    "regressions": "57 Xtensa tests; 246 S3 library tests; official UserDemo browser boot, actual touches, pause/resume, local BIN validation and fullscreen.",
+    "pageTurnPerformance": {
+      "receipt": "patches/0004-pie-ldxq-speed-results.json",
+      "baselineMeanMs": 2855.55,
+      "candidateMeanMs": 2051.5,
+      "reductionPercent": 28.16,
+      "result": "ABBA, two guide-page turns per fresh run; matching body hashes across all runs. Host-specific sample, not a hardware-speed claim. 57 Xtensa tests, native Xtensa Clippy and WASM jit-tests Clippy pass."
+    },
+    "refreshJit": {
+      "receipt": "patches/0005-pie-refresh-jit-results.json",
+      "baselineMeanMs": 1920.225,
+      "candidateMeanMs": 808.025,
+      "reductionPercent": 57.92,
+      "result": "ABBA real EDCBook turns, identical reading-body hashes and 49 guest display scans per turn; 117938 WASM differential cases and 24 GPIO waveform cases pass; WASM Clippy passes. No firmware, panel optical-model or guest timing changes."
+    }
   },
   "javascriptPatches": [
     {

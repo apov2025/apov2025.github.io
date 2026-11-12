@@ -11,7 +11,7 @@ The default firmware is EDCBook 3.1.2, fetched directly from M5Stack's CDN and v
 - Original M5Stack MIT CAD converted to `models/device.glb`; provenance and license are retained beside it. Manufacturer shell, button and hook triangles are unchanged. The presentation bezel now follows the CAD corner contour with a 2.25 mm radius; firmware screen geometry and UVs are unchanged. The current GLB SHA-256 is recorded in `models/provenance.json`. Rebuild with `python3 scripts/build-papers3-model.py` (visual inserts are defined in `scripts/papers3_hardware.py`).
 
 - Runtime JS: upstream import closure with a scoped PaperS3 virtual-battery initialization patch; the worker remains unchanged and the product catalog is reduced to PaperS3. See `vendor/PROVENANCE.json` and `vendor/licenses/`.
-- WASM: locally rebuilt with Rust 1.99.1 from the pinned upstream source plus the two source patches in `vendor/patches/`. The original published artifact and the patched build hashes are recorded in `vendor/PROVENANCE.json`. The JavaScript worker remains unchanged.
+- WASM: locally rebuilt with Rust 1.99.1 from the pinned upstream source plus the four CPU/display source patches in `vendor/patches/`. The original published artifact and the patched build hashes are recorded in `vendor/PROVENANCE.json`. The JavaScript worker remains unchanged.
 - ROM: Espressif's Apache-2.0 ROM ELF. Checksums for all vendored files are in `vendor/SHA256SUMS`.
 
 The research also found MIT-derived Paper Mono CAD and a Paper Mono runtime. Metalio INK4 Plus has manufacturer CAD and a firmware catalog entry, but its runtime is marked unavailable; it cannot be substituted for PaperS3 execution.
@@ -50,7 +50,7 @@ Two alternate merged reader images were tested without modifying their firmware:
 
 ## Rebuilding the patched runtime
 
-Check out `4932dcd1803381fb64c0dd6252707c0176e8ac9e` from the repository linked above. Apply `vendor/patches/0001-xtensa-ldxq.patch`, then `0002-papers3-rgb.patch` using `git apply`. With Rust 1.99.1 and the `wasm32-unknown-unknown` target installed, run `sh tools/wasm-build.sh`. Copy the generated `web/wasm/esp32sim.wasm` here and update `PROVENANCE.json` / `SHA256SUMS`. No EDCBook binary is checked into this repository.
+Check out `4932dcd1803381fb64c0dd6252707c0176e8ac9e` from the repository linked above. Apply `vendor/patches/0001-xtensa-ldxq.patch`, then `0002-papers3-rgb.patch`, `0003-papers3-battery-host.patch`, `0004-pie-ldxq-speed.patch` and `0005-pie-refresh-jit.patch` using `git apply`. With Rust 1.99.1 and the `wasm32-unknown-unknown` target installed, run `sh tools/wasm-build.sh`. Copy the generated `web/wasm/esp32sim.wasm` here and update `PROVENANCE.json` / `SHA256SUMS`. No EDCBook binary is checked into this repository.
 
 ### Virtual battery and page interaction
 
@@ -74,10 +74,38 @@ EDCBOOK_BIN=/path/to/edcbook-3.1.2.bin node scripts/check-papers3-book-import.mj
 
 EDCBook now seeds `/book/西游记.txt` before its first guest start, including when the same pinned image is loaded locally. It checks the existing card before importing, so restarts/reloads do not create duplicate books or replace user files. Only Journey to the West is bundled; Dream of the Red Chamber remains a local manual-import test file. The unmodified UTF-8 source and its Gutenberg credits/license are recorded in `books/README.md`.
 
-Real browser checks confirm imported TEST.TXT and its Chapter 4 reading position survive a full page reload and the same BIN loading. In this run the firmware initially showed its letter-cover lock screen after import/reload; one Restart returned to its menu. No automatic timed double boot is applied.
+Real browser checks confirm imported TEST.TXT and its Chapter 4 reading position survive a full page reload and the same BIN loading. In this run the firmware initially showed its letter-cover lock screen after import/reload; one Restart returned to its menu. Default page startup now recognizes this pinned firmware’s completed shutdown screen and performs one conditional reset. It does not reset on a timer or change firmware settings.
 
 ### Physical appearance
 
 The unchanged shell now contains a display backing, simplified PCB/battery/shield envelopes, a rear carrier with connector clearances, USB-C shell/tongue/contacts, a recessed TF socket, and rear connector inserts. Their hidden geometry is a visual approximation; original CAD openings determine visible placement. Lower rear mounts have metal hex-socket screws; upper mounts retain the brass threaded inserts shown in the official reference photograph. The original `virtual paper s3` SVG label is drawn onto a separate rear surface, clear of the connectors and fastening points.
 
 The **Loop / 吊环** checkbox under **Design my own / 自己设计** hides or restores the original CAD BottomHook mesh. It also works in fullscreen and retains the selected state through view resets and color changes. Firmware and native screen geometry are unchanged.
+
+PaperS3 fullscreen fits the device to the available viewport, including phone portrait and landscape. A compact footer provides Exit and Controls & colors; firmware, book import and customization open in an overlay sheet, so opening settings does not shrink or reposition the device. The original controls and state return to the page on exit. Other catalog fullscreen layouts retain their expanded settings.
+
+### Page-turn performance
+
+Patch `0004-pie-ldxq-speed.patch` extends upstream EX103 predecoded operands to `EE.LDXQ.32`, the EDCBook display lookup hotspot. Its variable shifts use 64-bit halves; guest instructions, timing and LCD scan processing remain unchanged. The independent selector/alias/fault tests and packed-versus-table differential checks pass (57 Xtensa tests in total).
+
+On the local Chrome comparison, four quick-start-guide turns per artifact averaged **2855.55 ms before / 2051.50 ms after** (28.16% less refresh time), with identical reading-body pixel hashes. Runs used ABBA order, fresh browser contexts and the original firmware. This measures first-to-last published refresh frame on this host; it is not a real-device timing guarantee. Numeric samples and artifact hashes are retained in `vendor/patches/0004-pie-ldxq-speed-results.json`.
+
+Reproduce with `scripts/check-papers3-page-speed.mjs`, setting `BASELINE_WASM`, `CANDIDATE_WASM`, `EDCBOOK_BIN` and, when needed, `PLAYWRIGHT_MODULE` / `BASE_URL`. Optional `SPEED_REPORT` saves the detailed JSON.
+
+The next optimization, `0005-pie-refresh-jit.patch`, compiles the complete display conversion loop: indexed word lookup, vector interleave/deinterleave and unsigned U16 multiply-accumulate. The unsigned accumulator retains the reference signed-40 input and per-instruction clamp; it is excluded from signed held-accumulator and load-coalescing shortcuts. The patch includes lookup/fault/alias, shuffle and accumulator WASM differential tests. The full **117,938-case / 81-group** WASM suite, **24 GPIO waveform** cases and WASM Clippy pass.
+
+The same ABBA browser test averaged **1920.225 ms before / 808.025 ms after** (57.92% less refresh time), with identical reading-body hashes and all 49 guest display scans retained for each turn. The earlier LDXQ-only trial measured just 2.86% less time and was not adopted independently; both trials are retained in `vendor/patches/0005-pie-refresh-jit-results.json`. Firmware, grayscale, ghosting and guest refresh timing are unchanged.
+
+### Automatic EDCBook startup
+
+The page starts EDCBook automatically and uses real GT911 touches to open `/book`, so newly imported and bundled books are visible instead of only the Recent Reading list. `edcbook-startup.js` recognizes fixed labels in settled frames of the pinned 3.1.2 image; it never taps unknown screens. The known letter-cover shutdown screen permits one reset, preserving flash and SD state. Unknown/custom screens remain available for manual interaction after a bounded wait. Local firmware and Official Demo loads retain their normal startup.
+
+The page no longer unconditionally advertises the bundled book. The actual `/book/西游记.txt` entry and its reading page were verified in EDCBook. `scripts/check-papers3-autostart.mjs` checks a fresh automatic start, the real book pixels and a reload with persisted device state, without clicking Run or Restart. Supply `EDCBOOK_BIN` for an offline pinned BIN and `PLAYWRIGHT_MODULE` when Playwright is outside this checkout.
+
+A follow-up to EX195 tried prepared JIT dispatch in ordinary active-device rounds. Four ABBA page turns averaged 759.125 ms baseline versus 771.550 ms candidate with unchanged output/scans; it was rejected and reverted. The numeric samples and experimental diff are retained in `vendor/patches/0005-pie-refresh-jit-results.json`. The shipped WASM remains the previously verified refresh-JIT build.
+
+### Physical controls in the 3D view
+
+The CAD TF socket now contains a visible inserted card edge. Clicking the side key animates its travel and actually resets the currently loaded firmware through the storage-preserving runtime reset; P is the keyboard equivalent. This follows PaperS3's [single-click power-on/reset behavior](https://docs.m5stack.com/en/core/PaperS3#learn), without inventing a GPIO button input for the PMS150G controller. Double-click power-off and long-press download mode are not implemented.
+
+Clicking either visible fixing screw reveals a small Remove loop action. The loop itself does not activate removal. After removal, clicking either original mounting hole restores the loop and both screw heads, with no permanent badge or plus sign. The Loop checkbox stays synchronized. Dragging a part continues orbiting rather than activating it; cancelled pointers and multi-touch cancel the pending action. `scripts/check-papers3-hardware.mjs` checks hit targets after rotation and loop controls, while the real-firmware startup test also verifies the side key produces a new ROM boot.

@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'@playwright/test');
+const browser=await chromium.launch({channel:'chrome',headless:true});
+try {
+ const page=await browser.newPage({viewport:{width:1100,height:1000}});
+ await page.route('**/m5stack-paper-s3/runtime.js*',r=>r.fulfill({contentType:'text/javascript',body:`export async function createPaperRuntime({onState}){let state={status:'configured',stats:{}};window.powerResets=0;const emit=()=>onState(state);return {get state(){return state},async bootDefault(){state={status:'running',stats:{},firmware:{}};emit()},async reset(){window.powerResets++;emit()},async start(){},async pause(){},async touch(){},dispose(){}}}` }));
+ await page.goto((process.env.BASE_URL||'http://127.0.0.1:5187')+'/catalog/product/m5stack-paper-s3/');
+ await page.locator('#viewer[data-viewer-state=ready]').waitFor();await page.waitForFunction(()=>window.__paperS3?.runtime?.state.status==='running');
+ await page.locator('#viewer').scrollIntoViewIfNeeded();
+ const click=async(x,y)=>{const p=await page.evaluate(([x,y])=>window.__paperS3.viewer.screenPoint(x,y),[x,y]);await page.mouse.click(p.x,p.y);};
+ await click(584,880);await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>window.powerResets),1,'Clicking the physical side key resets the current firmware');
+ await click(270,1108);assert.equal(await page.locator('#hook-visible').isChecked(),true,'Clicking the loop itself does not remove it');
+ assert.equal(await page.getByRole('button',{name:'Remove loop',exact:true}).count(),0,'Removal action is hidden until a screw is clicked');
+ const view=await page.locator('#model-canvas canvas').boundingBox();await page.mouse.move(view.x+15,view.y+view.height/2);await page.mouse.down();await page.mouse.move(view.x+15,view.y+view.height/2-150,{steps:12});await page.mouse.up();
+ const screw=await page.evaluate(()=>window.__paperS3.viewer.partPoint('HookScrew_L'));await page.mouse.click(screw.x,screw.y);
+ await page.getByRole('button',{name:'Remove loop',exact:true}).waitFor();
+ await page.screenshot({path:'/private/tmp/papers3-hook-screws.png'});
+ await page.getByRole('button',{name:'Remove loop',exact:true}).click();assert.equal(await page.locator('#hook-visible').isChecked(),false,'Only the screw action removes the loop');
+ const hole=page.getByRole('button',{name:'Attach loop',exact:true}).first();
+ assert.equal(await hole.textContent(),'','Mounting hole has no plus or other persistent text');
+ assert.equal(await hole.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)','Mounting hole hit area is invisible');
+ await page.screenshot({path:'/private/tmp/papers3-hook-removed.png'});
+ await hole.click();assert.equal(await page.locator('#hook-visible').isChecked(),true,'Clicking the mounting hole reattaches loop and screws');
+ const screwAgain=await page.evaluate(()=>window.__paperS3.viewer.partPoint('HookScrew_R'));await page.mouse.click(screwAgain.x,screwAgain.y);await page.getByRole('button',{name:'Remove loop',exact:true}).waitFor();
+ await page.locator('#rotate-device').click();await page.locator('#viewer').scrollIntoViewIfNeeded();await click(584,880);await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>window.powerResets),2,'Side key remains clickable after rotation');
+ await page.locator('#reset-view').click();
+ await page.screenshot({path:'/private/tmp/papers3-hardware-controls.png'});
+ await page.evaluate(()=>{const v=window.__paperS3.viewer;for(let i=0;i<3;i++)v.rotateDevice();v.zoom(.9);});
+ const b=await page.locator('#model-canvas canvas').boundingBox();await page.mouse.move(b.x+15,b.y+b.height/2);await page.mouse.down();await page.mouse.move(b.x+160,b.y+b.height/2,{steps:12});await page.mouse.up();
+ await page.screenshot({path:'/private/tmp/papers3-tf-card.png'});
+ console.log('PASS physical side-key hit target and rotated hit target, loop removal/reattachment and checkbox synchronization');
+}finally{await browser.close();}

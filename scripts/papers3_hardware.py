@@ -111,6 +111,9 @@ def add_hardware(mesh, materials, material):
     tf=lambda p:(-33.3+p[2],-44.1+p[0],.09+p[1])
     ring('TF_Socket',11.85,2.8,.65,.18,5,metal,tf)
     rounded('TF_Cavity',11.49,2.44,.47,.2,dark,lambda p:tf((p[0],p[1],p[2]+4.8)))
+    # Inserted microSD: exposed dark edge just inside the original socket mouth.
+    rounded('TF_Card',10.9,1.0,.16,14.8,dark,lambda p:tf((p[0],p[1],p[2]+.38)))
+    rounded('TF_Card_Grip',6.5,.18,.06,.12,tongue,lambda p:tf((p[0],p[1],p[2]+.27)))
     # Plain dark seats behind the long side recesses: no see-through inner shell.
     for side in [-1,1]:
         rounded(f'SideSeat_{side}',49.9,2.1,.8,.6,dark,lambda p,side=side:(side*(32.8-p[2]),11.25-side*p[0],p[1]))
@@ -125,7 +128,7 @@ def add_hardware(mesh, materials, material):
     for i in range(10):
         rounded(f'Rear_Header_Pad_{i}',1.1,1.8,.1,.12,gold,rear(-16+i*2,-25.5,-3.73))
 
-    def fastener(name,x,y,outer,inner,hex_socket,index):
+    def fastener(name,x,y,outer,inner,hex_socket,index,transform=None):
         # Visible mouth faces -Z, with a recessed dark socket, not a painted dot.
         o=[];inn=[]
         for i in range(48):
@@ -140,10 +143,15 @@ def add_hardware(mesh, materials, material):
             tris.extend([((*a,0),(*d,0),(*b,0)),((*a,0),(*c,0),(*d,0)),
                          ((*c,0),(*c,.55),(*d,.55)),((*c,0),(*d,.55),(*d,0)),
                          ((*a,0),(*b,0),(*b,.4)),((*a,0),(*b,.4),(*a,.4))])
-        emit(name,tris,index,lambda p:(x+p[0],y+p[1],-3.93+p[2]))
-        emit(name+'_Recess',extrude(inn,.03),dark,lambda p:(x+p[0],y+p[1],-3.83+p[2]))
+        transform=transform or (lambda p:(x+p[0],y+p[1],-3.93+p[2]))
+        emit(name,tris,index,transform)
+        emit(name+'_Recess',extrude(inn,.03),dark,lambda p:transform((p[0],p[1],p[2]+.1)))
     for x in [-28.48,28.52]:fastener('RearScrew_'+str(x),x,-31.55,1.8,.75,True,metal)
     for x in [-30.5,30.5]:fastener('ThreadedInsert_'+str(x),x,57.75,1.03,.62,False,gold)
+
+    # Original hook countersinks: centres x=+/-12 mm, z=0, seat y=-61.75 mm.
+    for side,x in [('L',-12),('R',12)]:
+        fastener('HookScrew_'+side,0,0,1.82,.65,True,metal,lambda p,x=x:(x+p[0],-61.86+p[2],-p[1]))
 
     # Label clears the header (y=-23) and all four fastening locations.
     poly=contour(54,76,1.4);positions=[];uv=[]
@@ -155,4 +163,4 @@ def add_hardware(mesh, materials, material):
     mesh('RearLabel',positions,[(0,0,-1)]*len(positions),label,uv,{'basis':'original apov virtual paper s3 graphic; screw/connector clearances'})
     return {'basis':'Original apov simplified visual inserts, bounded by the unchanged manufacturer shell. Concealed board/battery/component shapes are estimates; connector mouths and fastener centres measured from CAD and checked against official product photos.',
             'sticker':'Original vector design: ../media/virtual-paper-s3-label.svg; not the manufacturer photograph.',
-            'screws':'Two recessed metal hex-socket heads at rear lower mounts; two brass-coloured threaded inserts at upper mounts.'}
+            'screws':'Two recessed metal hex-socket heads at rear lower mounts; two brass-coloured threaded inserts at upper mounts; two removable hex-socket screw heads in the original bottom-hook countersinks.'}

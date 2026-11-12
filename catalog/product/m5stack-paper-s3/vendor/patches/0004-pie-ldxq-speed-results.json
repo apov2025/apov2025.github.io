@@ -1,0 +1,108 @@
+{
+  "date": "2026-11-11",
+  "experiment": "EX103: extend predecoded PIE operands to EE.LDXQ.32 and use 64-bit half selection for variable shifts",
+  "firmwareSHA256": "06eb3b595fc47bc5d35f760a16cdc5795ea8c0fad6295bcee8db5268cf906986",
+  "baselineSHA256": "15ad39d56dc7303d8632c3109d2c88c956e224427ebdc24c5bec9753d52aee8d",
+  "candidateSHA256": "811af02736ab6a855878d74b6025615925b0c367c06a41ee43ba29f74c72e6ac",
+  "method": "Headless local Chrome, fresh browser context per run, original firmware upload and ordinary screen clicks; ABBA order. Refresh span is first-to-last host frame of a turn. Host draw and publication policies unchanged. Body hashes exclude clock/header (rows 80..900).",
+  "limitations": "Two runs per artifact, two quick-start-guide turns each; timings are specific to this computer/browser. Host frame sampling is not an exact guest-cycle checkpoint or a real-hardware comparison.",
+  "pageTurnMeanMs": {
+    "baseline": 2855.5500000715256,
+    "candidate": 2051.5
+  },
+  "reductionPercent": 28.157447778935264,
+  "runs": [
+    {
+      "arm": "baseline",
+      "turns": [
+        {
+          "name": "open",
+          "refreshMs": 3705.2999999523163,
+          "guestRefresh": 0.5,
+          "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016"
+        },
+        {
+          "name": "page1",
+          "refreshMs": 2847.2000000476837,
+          "guestRefresh": 0.3600000000000012,
+          "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943"
+        },
+        {
+          "name": "page2",
+          "refreshMs": 2810.4000000953674,
+          "guestRefresh": 0.35999999999999943,
+          "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3"
+        }
+      ]
+    },
+    {
+      "arm": "candidate",
+      "turns": [
+        {
+          "name": "open",
+          "refreshMs": 2599.5,
+          "guestRefresh": 0.46000000000000085,
+          "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016"
+        },
+        {
+          "name": "page1",
+          "refreshMs": 2073.899999856949,
+          "guestRefresh": 0.3600000000000012,
+          "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943"
+        },
+        {
+          "name": "page2",
+          "refreshMs": 2037.2999999523163,
+          "guestRefresh": 0.35999999999999943,
+          "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3"
+        }
+      ]
+    },
+    {
+      "arm": "candidate",
+      "turns": [
+        {
+          "name": "open",
+          "refreshMs": 2795.5,
+          "guestRefresh": 0.5,
+          "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016"
+        },
+        {
+          "name": "page1",
+          "refreshMs": 1974.4000000953674,
+          "guestRefresh": 0.3600000000000012,
+          "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943"
+        },
+        {
+          "name": "page2",
+          "refreshMs": 2120.4000000953674,
+          "guestRefresh": 0.35999999999999943,
+          "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "turns": [
+        {
+          "name": "open",
+          "refreshMs": 3760.9000000953674,
+          "guestRefresh": 0.4800000000000004,
+          "bodyHash": "da0f50845c4f7689a71db343e6cb8137eb9acc38446716868708fdde97594016"
+        },
+        {
+          "name": "page1",
+          "refreshMs": 2763.100000143051,
+          "guestRefresh": 0.3600000000000012,
+          "bodyHash": "f022b7391a6dd437988dc828fa7e688e97082de18cbf43bb10b1fbca2be1c943"
+        },
+        {
+          "name": "page2",
+          "refreshMs": 3001.5,
+          "guestRefresh": 0.35999999999999943,
+          "bodyHash": "7a140c7083d4a1598cbbe70d1e71eaac9cdae9c6c610838cce1ce9719de1dca3"
+        }
+      ]
+    }
+  ]
+}

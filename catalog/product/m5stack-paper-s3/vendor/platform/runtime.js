@@ -586,7 +586,7 @@ export function createPlatformRuntime({ catalog: initialCatalog, onEvent, fetchI
   };
   const initialize = async (bundle, progress) => {
     stopWorker();
-    const wasmUrl = new URL('wasm/esp32sim.wasm', assetBaseUrl).href;
+    const wasmUrl = new URL('wasm/esp32sim.wasm?v=refresh-jit-1', assetBaseUrl).href;
     const wasm = await fetchBytes(wasmUrl, { fetchImpl, maxBytes: MAX_FILE, signal: aborter.signal, onProgress: progress.file('wasm', wasmUrl) });
     progress.prepare('worker');
     alive();

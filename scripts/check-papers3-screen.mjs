@@ -36,6 +36,7 @@ try{
    await page.locator('#rotate-device').click();
   }
  }
+ await page.getByRole('button',{name:'Controls & colors',exact:true}).click();
  await page.locator('#shell-color').fill('#347165');
  assert.equal(await page.locator('#viewer').getAttribute('data-shell-color'),'#347165');
  await page.screenshot({path:'/private/tmp/papers3-flat-mobile-fullscreen.png'});

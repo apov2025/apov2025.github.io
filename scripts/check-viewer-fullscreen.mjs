@@ -18,6 +18,7 @@ async function open(page, id) {
   await page.waitForSelector('#viewer[data-viewer-state=ready]');
   await page.getByRole('button', {name:'Full screen', exact:true}).click({timeout:5000});
   await page.waitForSelector('dialog[open]');
+  if(id==='m5stack-paper-s3')await page.getByRole('button',{name:'Controls & colors',exact:true}).click();
   assert(await page.locator('dialog #customization-panel').isVisible(), `${id}: colors visible in fullscreen`);
   assert.equal(await page.locator('#model-canvas canvas').evaluate(el => getComputedStyle(el).touchAction), 'none');
 }
